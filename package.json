@@ -1,16 +1,9 @@
 {
-	"name": "reguroute-monorepo",
+	"name": "reguroute",
 	"private": true,
-	"version": "1.0.0",
-	"description": "Monorepo for the ReguRoute application",
 	"scripts": {
-		"backend": "pnpm --filter backend",
-		"frontend": "pnpm --filter frontend",
-		"set-map": "tsx ./scripts/set-map.ts"
+		"build": "pnpm --filter backend run build"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
 	"devDependencies": {
 		"@types/node": "^18.19.130"
 	}

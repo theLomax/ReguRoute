@@ -1,0 +1,9 @@
+# This file tells Docker which files and directories to ignore when building an image.
+
+# Ignore local dependencies, as they will be installed inside the container.
+node_modules
+**/node_modules
+
+# Ignore build artifacts and environment files
+**/dist
+.env*

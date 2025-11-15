@@ -1,26 +1,43 @@
-# Use an official Node.js runtime as a parent image
-FROM node:18-alpine
+# ---- Base ----
+# Sets up pnpm in a base image to be reused.
+FROM node:20-alpine AS base
+RUN corepack enable
+ENV CI=true
 
-# Set the working directory in the container
-WORKDIR /usr/src/app
+# ---- Builder ----
+# This stage builds the application. It installs all dependencies
+# (including devDependencies) and runs the build script.
+FROM base AS builder
+WORKDIR /usr/src/app/
 
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy the root package.json and the workspace config to the container
-COPY package.json pnpm-workspace.yaml ./
-
-# Copy the backend's package.json
+# First, copy only the dependency manifests to leverage Docker's cache.
+# The lockfile is the most important file for a reproducible install.
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY package.json ./
 COPY apps/backend/package.json ./apps/backend/
 
-# Install dependencies using pnpm. This leverages the Docker cache.
-RUN pnpm install --filter backend
+# Install all monorepo dependencies based on the lockfile.
+RUN pnpm install --frozen-lockfile
 
-# Copy the rest of your app's source code from your host to your image filesystem.
+# Now, copy the rest of the project source code.
 COPY . .
 
-# Your app binds to port 3000 so you'll use the EXPOSE instruction to have it mapped by the docker daemon
-EXPOSE 3000
+# Build the backend application.
+RUN pnpm -w run build
 
-# Define the command to run your app
-CMD [ "pnpm", "--filter", "backend", "run", "dev" ]
+# ---- Production ----
+# This is the final, lean image. It copies only the necessary
+# artifacts from the builder stage.
+FROM base AS production
+WORKDIR /usr/src/app/
+
+# Copy the compiled code and the backend's package.json
+COPY --from=builder /usr/src/app/apps/backend/dist ./dist
+COPY --from=builder /usr/src/app/apps/backend/package.json ./package.json
+
+# Install only production dependencies.
+RUN pnpm install --prod
+
+EXPOSE 3000
+CMD [ "node", "dist/index.js" ]
