@@ -1,0 +1,13 @@
+{
+	"name": "reguroute-monorepo",
+	"private": true,
+	"version": "1.0.0",
+	"description": "Monorepo for the ReguRoute application",
+	"scripts": {
+		"backend": "pnpm --filter backend",
+		"frontend": "pnpm --filter frontend"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC"
+}
