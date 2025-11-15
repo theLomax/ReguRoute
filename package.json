@@ -5,9 +5,13 @@
 	"description": "Monorepo for the ReguRoute application",
 	"scripts": {
 		"backend": "pnpm --filter backend",
-		"frontend": "pnpm --filter frontend"
+		"frontend": "pnpm --filter frontend",
+		"set-map": "tsx ./scripts/set-map.ts"
 	},
 	"keywords": [],
 	"author": "",
-	"license": "ISC"
+	"license": "ISC",
+	"devDependencies": {
+		"@types/node": "^18.19.130"
+	}
 }

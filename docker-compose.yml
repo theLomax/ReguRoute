@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with PostGIS extension
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: reguroute-db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=reguroute
+    ports:
+      - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d reguroute"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # OpenRouteService (ORS) for routing
+  ors-app:
+    container_name: reguroute-ors
+    image: openrouteservice/openrouteservice:latest
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./ors/graphs:/ors-core/data/graphs
+      - ./ors/elevation_cache:/ors-core/data/elevation_cache
+      - ./ors/conf:/ors-core/conf
+      - ./ors/data:/ors-core/data/osm_file
+    environment:
+      - BUILD_GRAPHS=True
+      - "JAVA_OPTS=-Djava.awt.headless=true -server -XX:TargetSurvivorRatio=75 -XX:SurvivorRatio=64 -XX:MaxTenuringThreshold=3 -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:ParallelGCThreads=4 -Xms1g -Xmx2g"
+      - "ORS_CONFIG_LOCATION=/ors-core/conf/ors-config.json"
+
+  # The Fastify Backend Application
+  backend:
+    container_name: reguroute-backend
+    build:
+      context: .
+      dockerfile: ./apps/backend/Dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./apps/backend:/usr/src/app/apps/backend
+      - /usr/src/app/apps/backend/node_modules # Exclude node_modules from being overwritten by the volume mount
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

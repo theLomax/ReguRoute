@@ -1,1 +1,15 @@
 _project-plan.md
+
+# Dependency directories
+node_modules
+
+# Build output
+/apps/backend/dist
+
+# Expo (for the frontend)
+.expo/
+
+# OpenRouteService generated data files
+ors/data/
+ors/graphs/
+ors/elevation_cache/
