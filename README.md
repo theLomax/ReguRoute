@@ -71,3 +71,20 @@ After running `pnpm install` from the project root, you can start the developmen
 ```sh
 pnpm --filter backend run dev
 ```
+
+---
+
+#### How Docker and pnpm Work Together
+You might notice a few places where Docker and pnpm seem to override each other. This is intentional and allows us to use the same Dockerfile for both a lean production build and a powerful development environment with live-reloading. Here's how it works:
+
+##### 1. The Production Dockerfile
+The apps/backend/Dockerfile is optimized for production. It performs a multi-stage build to create a small, efficient image that contains only the compiled JavaScript (dist folder) and production node_modules. Its final command (CMD) is node dist/index.js, which is meant to run the pre-built application.
+
+##### 2. The Development docker-compose.yml
+The docker-compose.yml file adapts this production-ready image for development using two key overrides:
+
+**volumes:** The line volumes: - ./apps/backend:/usr/src/app/apps/backend mounts your local apps/backend folder directly into the container. This is what enables live-reloading. When you change a file on your machine, it's instantly updated inside the container. However, this also means your local folder hides the dist folder that was created inside the image during the build.
+
+**command:** Because the dist folder is hidden, the Dockerfile's default CMD would fail. To fix this, we override it with command: pnpm run dev. This tells the container to run the development script, which uses nodemon and ts-node to execute your TypeScript source code directly from the mounted volume.
+
+By combining these two overrides, you get a development environment where your code changes are reflected immediately, without needing to rebuild the Docker image.

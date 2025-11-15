@@ -9,6 +9,11 @@ server.get('/', async (request, reply) => {
     return { hello: 'world' };
 });
 
+// Health check endpoint
+server.get('/health', async (request, reply) => {
+    return { status: 'ok' };
+});
+
 // Run the server!
 const start = async () => {
     try {
@@ -16,7 +21,7 @@ const start = async () => {
         const host = process.env.HOST || '0.0.0.0';
         await server.listen({ port, host });
     } catch (err) {
-        server.log.error(err);
+        server.log.error(err, 'Failed to start server');
         process.exit(1);
     }
 };
@@ -30,7 +35,7 @@ for (const signal of signals) {
             await server.close();
             process.exit(0);
         } catch (err) {
-            server.log.error('Error during graceful shutdown', err);
+            server.log.error(err, 'Error during graceful shutdown');
             process.exit(1);
         }
     });
