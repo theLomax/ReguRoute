@@ -4,8 +4,12 @@
 		"outDir": "./dist",
 		"rootDir": "./src"
 	},
+	"ts-node": {
+		"transpileOnly": true
+	},
 	"include": [
-		"src/**/*"
+		"src/**/*.ts",
+		"migrations/**/*.ts"
 	],
 	"exclude": [
 		"node_modules"
