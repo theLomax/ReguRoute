@@ -41,6 +41,7 @@ services:
     build:
       context: .
       dockerfile: ./apps/backend/Dockerfile
+      target: builder
     ports:
       - '3000:3000'
     volumes:

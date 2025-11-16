@@ -1,43 +1,38 @@
 # ---- Base ----
-# Sets up pnpm in a base image to be reused.
 FROM node:20-alpine AS base
 RUN corepack enable
+RUN apk add --no-cache curl
 ENV CI=true
 
 # ---- Builder ----
-# This stage builds the application. It installs all dependencies
-# (including devDependencies) and runs the build script.
 FROM base AS builder
 WORKDIR /usr/src/app/
 
-# First, copy only the dependency manifests to leverage Docker's cache.
-# The lockfile is the most important file for a reproducible install.
-COPY pnpm-lock.yaml ./
-COPY pnpm-workspace.yaml ./
-COPY package.json ./
-COPY apps/backend/package.json ./apps/backend/
+# Copy root manifests and npmrc
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .npmrc ./
+COPY apps/backend/package.json apps/backend/tsconfig.json ./apps/backend/
 
-# Install all monorepo dependencies based on the lockfile.
+# Install workspace dependencies
 RUN pnpm install --frozen-lockfile
 
-# Now, copy the rest of the project source code.
+# Copy entire monorepo
 COPY . .
 
-# Build the backend application.
-RUN pnpm -w run build
+# Build only backend
+RUN pnpm --filter backend... run build
+
+# Prepare backend for production
+# Ensure a clean deploy folder and use legacy deploy to avoid workspace injection issues
+RUN rm -rf /prod-backend \
+  && pnpm --filter backend deploy --prod /prod-backend --legacy
 
 # ---- Production ----
-# This is the final, lean image. It copies only the necessary
-# artifacts from the builder stage.
-FROM base AS production
+FROM node:20-alpine AS production
+RUN corepack enable
 WORKDIR /usr/src/app/
 
-# Copy the compiled code and the backend's package.json
-COPY --from=builder /usr/src/app/apps/backend/dist ./dist
-COPY --from=builder /usr/src/app/apps/backend/package.json ./package.json
-
-# Install only production dependencies.
-RUN pnpm install --prod
+# Copy built backend with production node_modules
+COPY --from=builder /prod-backend ./
 
 EXPOSE 3000
-CMD [ "node", "dist/index.js" ]
+CMD ["node", "dist/index.js"]

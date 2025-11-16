@@ -29,7 +29,7 @@ server.get('/db-test', async (request, reply) => {
     }
 });
 
-// Register plugins
+
 server.register(postgres, {
     connectionString: process.env.DATABASE_URL,
 });
@@ -37,6 +37,7 @@ server.register(postgres, {
 // Run the server!
 const start = async () => {
     try {
+
         const port = Number(process.env.PORT) || 3000;
         const host = process.env.HOST || '0.0.0.0';
         await server.listen({ port, host });
