@@ -1,4 +1,6 @@
 import Fastify from 'fastify';
+import 'dotenv/config';
+import postgres from '@fastify/postgres';
 
 const server = Fastify({
     logger: true,
@@ -12,6 +14,24 @@ server.get('/', async (request, reply) => {
 // Health check endpoint
 server.get('/health', async (request, reply) => {
     return { status: 'ok' };
+});
+
+// Database test endpoint
+server.get('/db-test', async (request, reply) => {
+    try {
+        const client = await server.pg.connect();
+        const { rows } = await client.query('SELECT NOW()');
+        client.release();
+        return { timestamp: rows[0].now };
+    } catch (err) {
+        server.log.error(err, 'Database connection test failed');
+        reply.code(500).send({ error: 'Database connection failed' });
+    }
+});
+
+// Register plugins
+server.register(postgres, {
+    connectionString: process.env.DATABASE_URL,
 });
 
 // Run the server!

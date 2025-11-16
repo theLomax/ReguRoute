@@ -1,5 +1,6 @@
-## Project Brief: ReguRoute App
-This document outlines the plan, architecture, and timeline for a new native mobile application designed to assist users with navigating state and local regulations when traveling with firearms, ammunition, and accessories.
+# ReguRoute Project Plan
+
+This document outlines the project brief, architecture, and development task list for the ReguRoute application.
 
 ### 1. App Description
 The application is a route-planning utility for US-based travel. Users will input their origin, destination, and a profile of the regulated items they are transporting (e.g., firearm type, magazine capacity). The app will then calculate and present route options that minimize or avoid jurisdictions where the user's cargo would face increased legal restrictions. The core value is providing peace of mind and compliance-aware logistical planning, not legal advice.
@@ -94,3 +95,37 @@ The biggest non-technical challenge. The initial launch will depend on a manuall
 
 #### Geographic Precision:
 Initial implementation should focus on state-level regulations. A future iteration must incorporate a system for handling stricter city- or county-level ordinances (e.g., New York City, Chicago).
+
+---
+
+## Development Task List
+
+This section tracks the major development tasks, marking what has been completed and what remains.
+
+### Phase 1: Backend & Infrastructure Setup (✓ Complete)
+- [x] Initialize pnpm monorepo for frontend and backend workspaces.
+- [x] Create a basic Fastify server for the backend using TypeScript.
+- [x] Develop a multi-stage `Dockerfile` for production-ready backend containerization.
+- [x] Set up `docker-compose.yml` to orchestrate the backend, database (PostGIS), and routing engine (ORS).
+- [x] Implement live-reloading for the backend service in the Docker Compose environment.
+- [x] Add a health check endpoint to the backend and configure it in Docker Compose.
+- [x] Establish and test a database connection from the backend to the PostGIS container.
+- [x] Document the project setup and development workflow in `README.md`.
+
+### Phase 2: Core Backend Logic (Next Steps)
+- [ ] Set up a database migration system (e.g., `node-pg-migrate`).
+- [ ] Define initial database schema for regulations, states, and user data.
+- [ ] Create API endpoints for core features (e.g., user registration, saving routes).
+- [ ] Develop logic to query the OpenRouteService (ORS) API for route calculation.
+- [ ] Implement business logic to analyze routes against regulation data from the database.
+
+### Phase 3: Frontend Development
+- [ ] Scaffold the frontend application (e.g., using React/Vite).
+- [ ] Create a `Dockerfile` for the frontend service.
+- [ ] Integrate the frontend service into `docker-compose.yml`.
+- [ ] Develop UI components for user input (start/end points, cargo details).
+- [ ] Integrate a mapping library (e.g., Leaflet, Mapbox) to display routes.
+
+### Phase 4: Deployment & CI/CD
+- [ ] Create a CI/CD pipeline (e.g., using GitHub Actions) to build and test on push.
+- [ ] Prepare the application for deployment to a cloud provider.

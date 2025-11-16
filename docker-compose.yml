@@ -47,6 +47,8 @@ services:
     volumes:
       - ./apps/backend:/usr/src/app/apps/backend
       - /usr/src/app/apps/backend/node_modules # Exclude node_modules from being overwritten by the volume mount
+    env_file:
+      - ./apps/backend/.env
     depends_on:
       db:
         condition: service_healthy
