@@ -112,10 +112,12 @@ This section tracks the major development tasks, marking what has been completed
 - [x] Establish and test a database connection from the backend to the PostGIS container.
 - [x] Document the project setup and development workflow in `README.md`.
 
-### Phase 2: Core Backend Logic (Next Steps)
-- [ ] Set up a database migration system (e.g., `node-pg-migrate`).
-- [ ] Define initial database schema for regulations, states, and user data.
-- [ ] Create API endpoints for core features (e.g., user registration, saving routes).
+### Phase 2: Core Backend Logic (In Progress)
+- [x] Set up a database migration system using `node-pg-migrate`.
+- [x] Create initial user authentication table with UUID primary keys and secure password storage.
+- [ ] Define database schema for regulations, states, and jurisdictions.
+- [ ] Create API endpoints for user registration and authentication.
+- [ ] Create API endpoints for saving and retrieving user routes.
 - [ ] Develop logic to query the OpenRouteService (ORS) API for route calculation.
 - [ ] Implement business logic to analyze routes against regulation data from the database.
 

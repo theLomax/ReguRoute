@@ -46,6 +46,8 @@ services:
       - '3000:3000'
     volumes:
       - ./apps/backend/src:/usr/src/app/apps/backend/src
+      - ./apps/backend/migrations:/usr/src/app/apps/backend/migrations
+      - ./apps/backend/package.json:/usr/src/app/apps/backend/package.json
       - ./apps/backend/tsconfig.json:/usr/src/app/apps/backend/tsconfig.json
       - ./apps/backend/tsconfig.migrations.json:/usr/src/app/apps/backend/tsconfig.migrations.json
       - ./apps/backend/dev-entrypoint.sh:/usr/src/app/apps/backend/dev-entrypoint.sh

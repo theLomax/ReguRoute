@@ -9,8 +9,8 @@
 		"start": "node dist/index.js",
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"migrate:create": "node-pg-migrate -m migrations create -j ts",
-		"migrate:up": "rm -rf dist-migrations-build && pnpm tsc -p tsconfig.migrations.json && node-pg-migrate -m dist-migrations-build up",
-		"migrate:down": "rm -rf dist-migrations-build && pnpm tsc -p tsconfig.migrations.json && node-pg-migrate -m dist-migrations-build down"
+		"migrate:up": "rm -rf dist-migrations-build && pnpm tsc -p tsconfig.migrations.json && node-pg-migrate -m dist-migrations-build/migrations up",
+		"migrate:down": "rm -rf dist-migrations-build && pnpm tsc -p tsconfig.migrations.json && node-pg-migrate -m dist-migrations-build/migrations down"
 	},
 	"keywords": [],
 	"author": "",

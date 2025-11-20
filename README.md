@@ -46,6 +46,33 @@ This is the recommended way to run the entire application stack, including the b
     - **Routing Engine**: Visit `http://localhost:8080/ors/v2/health`. You should see `{"status":"ready"}`.
     - **Database**: Connect to the database using a client like DBeaver or TablePlus with the credentials from the `docker-compose.yml` file (host: `localhost`, port: `5432`).
 
+## Database Migrations
+
+The backend uses `node-pg-migrate` to manage database schema changes. Migrations are version-controlled TypeScript files that allow you to evolve your database schema safely.
+
+### Running Migrations
+
+To apply all pending migrations:
+```bash
+docker compose exec backend sh -c "cd apps/backend && pnpm run migrate:up"
+```
+
+### Creating New Migrations
+
+To create a new migration file:
+```bash
+docker compose exec backend sh -c "cd apps/backend && pnpm run migrate:create <migration-name>"
+```
+
+This will create a new TypeScript file in `apps/backend/migrations/` with an `up` function (to apply changes) and a `down` function (to roll back changes).
+
+### Rolling Back Migrations
+
+To roll back the last migration:
+```bash
+docker compose exec backend sh -c "cd apps/backend && pnpm run migrate:down"
+```
+
 ## Advanced Development: Running Services in Isolation
 
 If you need to work on a single service, you can run it independently of the Docker Compose environment.
