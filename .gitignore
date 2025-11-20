@@ -11,3 +11,24 @@ node_modules
 ors/data/
 ors/graphs/
 ors/elevation_cache/
+
+# Large raw data files (download locally, don't commit)
+data/raw/**/*.csv
+data/raw/**/*.dta
+data/raw/**/*.zip
+data/raw/**/*.xlsx
+data/raw/**/*.xls
+data/raw/**/*.sav
+data/raw/**/*.por
+data/raw/**/*.rdata
+data/raw/**/*.rds
+
+# Keep documentation and small metadata files
+!data/raw/**/*.md
+!data/raw/**/*.txt
+!data/raw/**/*.pdf
+!data/raw/**/README*
+!data/raw/**/CODEBOOK*
+
+# Backend build artifacts
+apps/backend/dist-migrations-build/

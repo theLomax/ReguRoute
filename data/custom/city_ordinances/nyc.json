@@ -1,0 +1,41 @@
+{
+  "jurisdiction": {
+    "type": "city",
+    "name": "New York City",
+    "state": "NY",
+    "fips_code": "3651000"
+  },
+  "effective_date": "2025-01-01",
+  "source": "NYC Administrative Code",
+  "regulations": {
+    "assault_weapons_ban": true,
+    "large_capacity_magazine_ban": true,
+    "magazine_capacity_limit": 10,
+    "concealed_carry_permit_type": "may-issue",
+    "premises_permit_required": true,
+    "transport_requirements": {
+      "must_be_unloaded": true,
+      "must_be_locked": true,
+      "must_be_in_locked_container": true,
+      "ammunition_separate": true,
+      "direct_route_only": true
+    },
+    "special_restrictions": [
+      "Firearms must be transported directly to/from authorized locations only",
+      "No stopping except for emergencies",
+      "Trigger locks required even when in locked case",
+      "NYC permit required for mere possession within city limits"
+    ],
+    "authorized_destinations": [
+      "Licensed shooting range",
+      "Gunsmith",
+      "Authorized dealer",
+      "Residence outside NYC",
+      "Law enforcement facility"
+    ],
+    "severity_score": 10,
+    "notes": "NYC has some of the strictest firearm regulations in the US. Consider avoiding if possible."
+  },
+  "last_verified": "2025-11-19",
+  "verified_by": "Manual curation"
+}

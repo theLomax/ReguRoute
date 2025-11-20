@@ -1,0 +1,99 @@
+{
+  "description": "Sample test data for ReguRoute - 5 state subset with known regulations",
+  "version": "1.0",
+  "last_updated": "2025-11-19",
+  "states": [
+    {
+      "state_code": "CA",
+      "state_name": "California",
+      "regulations": {
+        "assault_weapons_ban": true,
+        "large_capacity_magazine_ban": true,
+        "magazine_capacity_limit": 10,
+        "background_check_required": true,
+        "waiting_period_days": 10,
+        "concealed_carry_permit_type": "may-issue",
+        "open_carry_allowed": false,
+        "transport_requirements": {
+          "must_be_unloaded": true,
+          "must_be_locked": true,
+          "ammunition_separate": true
+        }
+      }
+    },
+    {
+      "state_code": "TX",
+      "state_name": "Texas",
+      "regulations": {
+        "assault_weapons_ban": false,
+        "large_capacity_magazine_ban": false,
+        "magazine_capacity_limit": null,
+        "background_check_required": true,
+        "waiting_period_days": 0,
+        "concealed_carry_permit_type": "shall-issue",
+        "open_carry_allowed": true,
+        "transport_requirements": {
+          "must_be_unloaded": false,
+          "must_be_locked": false,
+          "ammunition_separate": false
+        }
+      }
+    },
+    {
+      "state_code": "NY",
+      "state_name": "New York",
+      "regulations": {
+        "assault_weapons_ban": true,
+        "large_capacity_magazine_ban": true,
+        "magazine_capacity_limit": 10,
+        "background_check_required": true,
+        "waiting_period_days": 0,
+        "concealed_carry_permit_type": "may-issue",
+        "open_carry_allowed": false,
+        "transport_requirements": {
+          "must_be_unloaded": true,
+          "must_be_locked": true,
+          "ammunition_separate": false
+        },
+        "notes": "NYC has stricter local ordinances"
+      }
+    },
+    {
+      "state_code": "AZ",
+      "state_name": "Arizona",
+      "regulations": {
+        "assault_weapons_ban": false,
+        "large_capacity_magazine_ban": false,
+        "magazine_capacity_limit": null,
+        "background_check_required": true,
+        "waiting_period_days": 0,
+        "concealed_carry_permit_type": "constitutional-carry",
+        "open_carry_allowed": true,
+        "transport_requirements": {
+          "must_be_unloaded": false,
+          "must_be_locked": false,
+          "ammunition_separate": false
+        }
+      }
+    },
+    {
+      "state_code": "NJ",
+      "state_name": "New Jersey",
+      "regulations": {
+        "assault_weapons_ban": true,
+        "large_capacity_magazine_ban": true,
+        "magazine_capacity_limit": 10,
+        "background_check_required": true,
+        "waiting_period_days": 7,
+        "concealed_carry_permit_type": "may-issue",
+        "open_carry_allowed": false,
+        "transport_requirements": {
+          "must_be_unloaded": true,
+          "must_be_locked": true,
+          "ammunition_separate": true
+        },
+        "notes": "One of the strictest states for transport"
+      }
+    }
+  ]
+}
