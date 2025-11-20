@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import postgres from '@fastify/postgres';
 
 const server = Fastify({
@@ -29,14 +29,17 @@ server.get('/db-test', async (request, reply) => {
     }
 });
 
-
-server.register(postgres, {
-    connectionString: process.env.DATABASE_URL,
-});
-
 // Run the server!
 const start = async () => {
     try {
+        // Explicitly load environment variables first
+        dotenv.config();
+
+        // Register plugins that depend on environment variables
+        // This ensures the line above has completed before they are configured.
+        await server.register(postgres, {
+            connectionString: process.env.DATABASE_URL,
+        });
 
         const port = Number(process.env.PORT) || 3000;
         const host = process.env.HOST || '0.0.0.0';

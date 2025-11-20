@@ -45,12 +45,11 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - ./apps/backend:/usr/src/app/apps/backend
-      - ./package.json:/usr/src/app/package.json
-      - ./pnpm-lock.yaml:/usr/src/app/pnpm-lock.yaml
-      - ./pnpm-workspace.yaml:/usr/src/app/pnpm-workspace.yaml
+      - ./apps/backend/src:/usr/src/app/apps/backend/src
+      - ./apps/backend/tsconfig.json:/usr/src/app/apps/backend/tsconfig.json
+      - ./apps/backend/tsconfig.migrations.json:/usr/src/app/apps/backend/tsconfig.migrations.json
+      - ./apps/backend/dev-entrypoint.sh:/usr/src/app/apps/backend/dev-entrypoint.sh
       - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
-      - /usr/src/app/node_modules
     env_file: ./apps/backend/.env
     depends_on:
       db:
@@ -60,7 +59,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    command: sh -c "pnpm install && pnpm --filter backend run dev"
+    command: sh ./apps/backend/dev-entrypoint.sh
     restart: unless-stopped
 
 volumes:

@@ -19,7 +19,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Build only backend
-RUN pnpm --filter backend... run build
+RUN pnpm --filter backend exec tsc -p tsconfig.json
 
 # Prepare backend for production
 # Ensure a clean deploy folder and use legacy deploy to avoid workspace injection issues
@@ -35,4 +35,4 @@ WORKDIR /usr/src/app/
 COPY --from=builder /prod-backend ./
 
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+CMD ["node", "index.js"]

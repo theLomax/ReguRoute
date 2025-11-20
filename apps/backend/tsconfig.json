@@ -3,14 +3,13 @@
 	"compilerOptions": {
 		"outDir": "dist",
 		"module": "NodeNext",
-		"rootDir": ".",
+		"rootDir": "src",
 		"moduleResolution": "NodeNext",
 		"esModuleInterop": true,
 		"resolveJsonModule": true
 	},
 	"include": [
-		"src/**/*.ts",
-		"migrations/**/*.ts"
+		"src/**/*.ts"
 	],
 	"exclude": [
 		"node_modules"

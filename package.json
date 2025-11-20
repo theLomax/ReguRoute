@@ -2,9 +2,12 @@
 	"name": "reguroute",
 	"private": true,
 	"scripts": {
-		"build": "pnpm --filter backend run build"
+		"build": "pnpm --filter backend run build",
+		"dev:build": "tsc -p ./apps/backend/tsconfig.json",
+		"dev:watch": "tsc -p ./apps/backend/tsconfig.json --watch"
 	},
 	"devDependencies": {
-		"@types/node": "^18.19.130"
+		"@types/node": "^18.19.130",
+		"typescript": "^5.5.2"
 	}
 }

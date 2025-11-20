@@ -1,14 +1,11 @@
 {
-	"compilerOptions": {
-		"target": "es2020",
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
-		"strict": true,
-		"esModuleInterop": false,
-		"skipLibCheck": true,
-		"outDir": "dist-migrations-build"
-	},
-	"include": [
-		"migrations/**/*.ts"
-	]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist-migrations-build",
+    "module": "CommonJS",
+    "moduleResolution": "Node"
+  },
+  "include": [
+    "migrations/**/*.ts"
+  ]
 }
