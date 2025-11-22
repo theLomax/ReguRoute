@@ -1,10 +1,138 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect, useCallback } from 'react';
+import {
+	View,
+	Text,
+	StyleSheet,
+	FlatList,
+	RefreshControl,
+	TouchableOpacity,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import type { Route } from '@reguroute/types';
+import type { MainTabsParamList } from '../navigation';
+import { useRoutes } from '../contexts';
 import { colors } from '../theme';
+import { Card, Badge, EmptyState, LoadingSpinner } from '../components';
+
+type HomeNavigationProp = BottomTabNavigationProp<MainTabsParamList, 'Home'>;
+
+function RouteCard({ route, onPress }: { route: Route; onPress: () => void }) {
+	const criticalCount = route.regulation_alerts?.filter(
+		(a) => a.severity === 'critical'
+	).length ?? 0;
+	const warningCount = route.regulation_alerts?.filter(
+		(a) => a.severity === 'warning'
+	).length ?? 0;
+
+	const formatDate = (dateStr: string) => {
+		const date = new Date(dateStr);
+		return date.toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric',
+		});
+	};
+
+	return (
+		<Card onPress={onPress} style={styles.routeCard}>
+			<View style={styles.routeHeader}>
+				<Text style={styles.routeName} numberOfLines={1}>
+					{route.name}
+				</Text>
+				<View style={styles.badges}>
+					{criticalCount > 0 && (
+						<Badge value={criticalCount} variant="error" size="small" />
+					)}
+					{warningCount > 0 && (
+						<Badge
+							value={warningCount}
+							variant="warning"
+							size="small"
+							style={styles.badgeSpacing}
+						/>
+					)}
+				</View>
+			</View>
+			<View style={styles.routeDetails}>
+				<Ionicons name="location" size={14} color={colors.textMuted} />
+				<Text style={styles.routeText} numberOfLines={1}>
+					{route.origin_name}
+				</Text>
+				<Ionicons name="arrow-forward" size={12} color={colors.textMuted} />
+				<Text style={styles.routeText} numberOfLines={1}>
+					{route.destination_name}
+				</Text>
+			</View>
+			<Text style={styles.routeDate}>
+				Updated {formatDate(route.updated_at)}
+			</Text>
+		</Card>
+	);
+}
 
 export default function HomeScreen() {
+	const navigation = useNavigation<HomeNavigationProp>();
+	const { routes, isLoading, fetchRoutes } = useRoutes();
+
+	useEffect(() => {
+		fetchRoutes();
+	}, [fetchRoutes]);
+
+	const handleRefresh = useCallback(() => {
+		fetchRoutes();
+	}, [fetchRoutes]);
+
+	const handlePlanRoute = useCallback(() => {
+		navigation.navigate('PlanRoute');
+	}, [navigation]);
+
+	const handleRoutePress = useCallback((route: Route) => {
+		// TODO: Navigate to route detail screen
+		console.log('Route pressed:', route.id);
+	}, []);
+
+	if (isLoading && routes.length === 0) {
+		return <LoadingSpinner fullScreen message="Loading routes..." />;
+	}
+
+	if (routes.length === 0) {
+		return (
+			<View style={styles.container}>
+				<EmptyState
+					icon="map-outline"
+					title="No Routes Yet"
+					description="Plan your first compliant travel route to get started."
+					actionLabel="Plan a Route"
+					onAction={handlePlanRoute}
+				/>
+			</View>
+		);
+	}
+
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>My Routes</Text>
+			<FlatList
+				data={routes}
+				keyExtractor={(item) => item.id}
+				renderItem={({ item }) => (
+					<RouteCard route={item} onPress={() => handleRoutePress(item)} />
+				)}
+				contentContainerStyle={styles.listContent}
+				refreshControl={
+					<RefreshControl
+						refreshing={isLoading}
+						onRefresh={handleRefresh}
+						colors={[colors.primary]}
+						tintColor={colors.primary}
+					/>
+				}
+				ItemSeparatorComponent={() => <View style={styles.separator} />}
+			/>
+			<TouchableOpacity style={styles.fab} onPress={handlePlanRoute}>
+				<Ionicons name="add" size={28} color={colors.white} />
+			</TouchableOpacity>
 		</View>
 	);
 }
@@ -13,12 +141,65 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: colors.background,
+	},
+	listContent: {
+		padding: 16,
+		paddingBottom: 80,
+	},
+	separator: {
+		height: 12,
+	},
+	routeCard: {
+		padding: 16,
+	},
+	routeHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	routeName: {
+		fontSize: 16,
+		fontWeight: '600',
+		color: colors.text,
+		flex: 1,
+		marginRight: 8,
+	},
+	badges: {
+		flexDirection: 'row',
+	},
+	badgeSpacing: {
+		marginLeft: 4,
+	},
+	routeDetails: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		gap: 4,
+		marginBottom: 8,
+	},
+	routeText: {
+		fontSize: 13,
+		color: colors.textSecondary,
+		flex: 1,
+	},
+	routeDate: {
+		fontSize: 12,
+		color: colors.textMuted,
+	},
+	fab: {
+		position: 'absolute',
+		right: 20,
+		bottom: 20,
+		width: 56,
+		height: 56,
+		borderRadius: 28,
+		backgroundColor: colors.primary,
 		alignItems: 'center',
 		justifyContent: 'center',
-	},
-	title: {
-		fontSize: 24,
-		fontWeight: 'bold',
-		color: colors.text,
+		shadowColor: colors.black,
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.25,
+		shadowRadius: 4,
+		elevation: 5,
 	},
 });

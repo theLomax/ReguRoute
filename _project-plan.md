@@ -128,50 +128,52 @@ This section tracks the major development tasks, marking what has been completed
 - [x] Implement authentication screens (login, register).
 - [x] Implement secure token storage with expo-secure-store.
 
-#### 3.1 Navigation & Layout
-- [ ] Set up bottom tab navigator (Home, Plan Route, Cargo, Account).
-- [ ] Create persistent header component with user avatar/initials.
-- [ ] Add authenticated indicator to header.
+#### 3.1 Navigation & Layout (✓ Complete)
+- [x] Set up bottom tab navigator (Home, Plan Route, Cargo, Account).
+- [x] Create Account screen with user avatar/initials and logout.
+- [x] Add theme system with centralized color variables.
 
-#### 3.2 Shared UI Components
-- [ ] Create reusable component library:
-  - [ ] Avatar (user initials or image)
-  - [ ] Card (container component)
-  - [ ] Button (primary, secondary, danger variants)
-  - [ ] Input (text input with label/error states)
-  - [ ] Alert (severity-colored display)
-  - [ ] Badge (count/status indicators)
-  - [ ] LoadingSpinner
-  - [ ] EmptyState (illustration + CTA pattern)
+#### 3.2 Shared UI Components (✓ Complete)
+- [x] Create reusable component library:
+  - [x] Avatar (user initials or image)
+  - [x] Card (container component)
+  - [x] Button (primary, secondary, danger variants)
+  - [x] Input (text input with label/error states)
+  - [x] Alert (severity-colored display)
+  - [x] Badge (count/status indicators)
+  - [x] LoadingSpinner
+  - [x] EmptyState (illustration + CTA pattern)
 
-#### 3.3 Home Screen
-- [ ] Build empty state with CTA to plan first route.
-- [ ] Implement routes list with card layout:
-  - [ ] Route name, origin → destination
-  - [ ] Alert count badges (critical/warning)
-  - [ ] Last updated timestamp
-- [ ] Add FAB for quick "Plan Route" action.
-- [ ] Implement pull-to-refresh.
+#### 3.3 Home Screen (✓ Complete)
+- [x] Build empty state with CTA to plan first route.
+- [x] Implement routes list with card layout:
+  - [x] Route name, origin → destination
+  - [x] Alert count badges (critical/warning)
+  - [x] Last updated timestamp
+- [x] Add FAB for quick "Plan Route" action.
+- [x] Implement pull-to-refresh.
+- [x] Create RoutesContext for state management.
 
-#### 3.4 Cargo Profile Screen
-- [ ] Build cargo profile form:
-  - [ ] Firearms toggle
-  - [ ] Firearm types multi-select (handgun, rifle, shotgun)
-  - [ ] Concealed carry permit toggle + state selector
-  - [ ] Magazine capacity input
-  - [ ] Assault weapon designation toggle
-- [ ] Connect to API for save/update.
-- [ ] Create CargoContext for state management.
+#### 3.4 Cargo Profile Screen (✓ Complete)
+- [x] Build cargo profile form:
+  - [x] Firearms toggle
+  - [x] Firearm types multi-select (handgun, rifle, shotgun)
+  - [x] Concealed carry permit toggle + state selector
+  - [x] Magazine capacity input
+  - [x] Assault weapon designation toggle
+- [x] Local storage persistence with SecureStore.
+- [x] Create CargoContext for state management.
+- [x] Add Toggle and Chip shared components.
 
-#### 3.5 Route Planning
-- [ ] Build multi-step route wizard:
-  - [ ] Step 1: Origin input (search/autocomplete or map pin)
-  - [ ] Step 2: Destination input
-  - [ ] Step 3: Optional waypoints
-  - [ ] Step 4: Cargo profile selection
-  - [ ] Step 5: Calculate route preview
-- [ ] Connect to ORS route calculation API.
-- [ ] Create RoutesContext for state management.
+#### 3.5 Route Planning (✓ Complete)
+- [x] Build route planning wizard:
+  - [x] Origin/destination input with city lookup
+  - [x] Route calculation via ORS API
+  - [x] Route preview with distance/duration stats
+  - [x] Cargo profile awareness indicator
+  - [x] Save route functionality
+- [x] Connect to ORS route calculation API.
+- [x] RoutesContext already created in 3.3.
 
 #### 3.6 Map Integration
 - [ ] Integrate react-native-maps.

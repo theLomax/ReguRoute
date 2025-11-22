@@ -4,6 +4,10 @@ import type {
 	RegisterRequest,
 	AuthResponse,
 	User,
+	Route,
+	CreateRouteRequest,
+	CalculateRouteRequest,
+	CalculateRouteResponse,
 } from '@reguroute/types';
 
 class ApiError extends Error {
@@ -64,6 +68,27 @@ export const authApi = {
 
 	getMe: (token: string): Promise<{ user: User }> =>
 		request('/auth/me', { token }),
+};
+
+// Routes API
+export const routesApi = {
+	getAll: (token: string): Promise<{ routes: Route[] }> =>
+		request('/routes', { token }),
+
+	getById: (token: string, id: string): Promise<{ route: Route }> =>
+		request(`/routes/${id}`, { token }),
+
+	create: (token: string, data: CreateRouteRequest): Promise<{ route: Route }> =>
+		request('/routes', { method: 'POST', body: data, token }),
+
+	update: (token: string, id: string, data: Partial<CreateRouteRequest>): Promise<{ route: Route }> =>
+		request(`/routes/${id}`, { method: 'PATCH', body: data, token }),
+
+	delete: (token: string, id: string): Promise<void> =>
+		request(`/routes/${id}`, { method: 'DELETE', token }),
+
+	calculate: (data: CalculateRouteRequest): Promise<CalculateRouteResponse> =>
+		request('/calculate', { method: 'POST', body: data }),
 };
 
 export { ApiError };
