@@ -271,6 +271,105 @@ curl -X POST http://localhost:3000/calculate/save \
 
 This calculates the route and saves it to the database in one request.
 
+## Regulation Analysis API
+
+Analyze routes or states against firearm transport regulations to generate compliance alerts.
+
+### Analyze by States
+
+Analyze a list of state postal codes against regulation data:
+
+```bash
+curl -X POST http://localhost:3000/analyze/states \
+  -H "Content-Type: application/json" \
+  -d '{
+    "states": ["DE", "MD", "NJ"],
+    "cargo_profile": {
+      "has_firearms": true,
+      "magazine_capacity": 15,
+      "has_assault_weapon": false
+    }
+  }'
+```
+
+**Response:**
+```json
+{
+  "analysis": {
+    "jurisdictions_crossed": ["Delaware (DE)", "Maryland (MD)", "New Jersey (NJ)"],
+    "alerts": [
+      {
+        "jurisdiction": "Maryland",
+        "postal_code": "MD",
+        "severity": "critical",
+        "category": "Magazine Capacity",
+        "message": "Maryland limits magazine capacity to 10 rounds. Your 15-round magazines are prohibited.",
+        "citation": "Md. Code, Crim. Law § 4-305"
+      }
+    ],
+    "summary": {
+      "total_jurisdictions": 3,
+      "critical_alerts": 4,
+      "warning_alerts": 3,
+      "info_alerts": 0
+    }
+  }
+}
+```
+
+### Analyze by Route Geometry
+
+Analyze a GeoJSON LineString route geometry:
+
+```bash
+curl -X POST http://localhost:3000/analyze/geometry \
+  -H "Content-Type: application/json" \
+  -d '{
+    "route_geometry": {
+      "type": "LineString",
+      "coordinates": [[-75.5, 39.7], [-75.3, 39.8], [-75.1, 39.9]]
+    },
+    "cargo_profile": {
+      "has_firearms": true,
+      "has_concealed_carry_permit": true,
+      "permit_states": ["PA"]
+    }
+  }'
+```
+
+### Analyze a Saved Route (Protected)
+
+Analyze a previously saved route by ID:
+
+```bash
+curl -X POST http://localhost:3000/analyze/route/<route-id> \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-token>" \
+  -d '{
+    "cargo_profile": {
+      "has_firearms": true,
+      "magazine_capacity": 10
+    }
+  }'
+```
+
+### Cargo Profile Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `has_firearms` | boolean | **Required.** Whether transporting firearms |
+| `firearm_types` | string[] | Types: `handgun`, `rifle`, `shotgun` |
+| `has_concealed_carry_permit` | boolean | Whether user has a CCW permit |
+| `permit_states` | string[] | States where permit is valid |
+| `magazine_capacity` | number | Maximum magazine capacity being transported |
+| `has_assault_weapon` | boolean | Whether transporting assault-style weapons |
+
+### Alert Severity Levels
+
+- **critical** - Immediate legal concern (e.g., banned items, no-issue states)
+- **warning** - Permit or transport requirements may apply
+- **info** - General information about local regulations
+
 ## Advanced Development: Running Services in Isolation
 
 If you need to work on a single service, you can run it independently of the Docker Compose environment.
