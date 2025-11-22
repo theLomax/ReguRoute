@@ -73,6 +73,69 @@ To roll back the last migration:
 docker compose exec backend sh -c "cd apps/backend && pnpm run migrate:down"
 ```
 
+## Authentication API
+
+The backend provides JWT-based authentication endpoints. You'll need a valid JWT token to access protected routes.
+
+### Environment Setup
+
+Create a `.env` file in `apps/backend/` with:
+```
+DATABASE_URL=postgres://postgres:postgres@db:5432/reguroute
+JWT_SECRET=your-secret-key-here
+```
+
+### Register a New User
+
+```bash
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
+**Response:**
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "test@example.com",
+    "created_at": "2024-01-01T00:00:00.000Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+### Login
+
+```bash
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
+**Response:** Same format as register.
+
+### Get Current User (Protected)
+
+```bash
+curl http://localhost:3000/auth/me \
+  -H "Authorization: Bearer <your-token>"
+```
+> Use the token from the login response above.
+
+
+**Response:**
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "test@example.com",
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
 ## Advanced Development: Running Services in Isolation
 
 If you need to work on a single service, you can run it independently of the Docker Compose environment.

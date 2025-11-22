@@ -115,8 +115,8 @@ This section tracks the major development tasks, marking what has been completed
 ### Phase 2: Core Backend Logic (In Progress)
 - [x] Set up a database migration system using `node-pg-migrate`.
 - [x] Create initial user authentication table with UUID primary keys and secure password storage.
-- [ ] Define database schema for regulations, states, and jurisdictions.
-- [ ] Create API endpoints for user registration and authentication.
+- [x] Define database schema for regulations, states, and jurisdictions.
+- [x] Create API endpoints for user registration and authentication (JWT-based).
 - [ ] Create API endpoints for saving and retrieving user routes.
 - [ ] Develop logic to query the OpenRouteService (ORS) API for route calculation.
 - [ ] Implement business logic to analyze routes against regulation data from the database.
