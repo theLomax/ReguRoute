@@ -124,13 +124,75 @@ This section tracks the major development tasks, marking what has been completed
 ### Phase 3: Mobile App Development (In Progress)
 - [x] Scaffold React Native app using Expo with TypeScript (`apps/mobile`).
 - [x] Create shared types package (`packages/types`) for API interfaces.
-- [ ] Set up React Navigation for screen navigation.
-- [ ] Implement authentication screens (login, register).
-- [ ] Build cargo profile input form.
-- [ ] Integrate react-native-maps for route visualization.
-- [ ] Develop route planning screen (origin/destination input).
-- [ ] Display regulation alerts on route view.
-- [ ] Implement secure token storage with expo-secure-store.
+- [x] Set up React Navigation for screen navigation.
+- [x] Implement authentication screens (login, register).
+- [x] Implement secure token storage with expo-secure-store.
+
+#### 3.1 Navigation & Layout
+- [ ] Set up bottom tab navigator (Home, Plan Route, Cargo, Account).
+- [ ] Create persistent header component with user avatar/initials.
+- [ ] Add authenticated indicator to header.
+
+#### 3.2 Shared UI Components
+- [ ] Create reusable component library:
+  - [ ] Avatar (user initials or image)
+  - [ ] Card (container component)
+  - [ ] Button (primary, secondary, danger variants)
+  - [ ] Input (text input with label/error states)
+  - [ ] Alert (severity-colored display)
+  - [ ] Badge (count/status indicators)
+  - [ ] LoadingSpinner
+  - [ ] EmptyState (illustration + CTA pattern)
+
+#### 3.3 Home Screen
+- [ ] Build empty state with CTA to plan first route.
+- [ ] Implement routes list with card layout:
+  - [ ] Route name, origin → destination
+  - [ ] Alert count badges (critical/warning)
+  - [ ] Last updated timestamp
+- [ ] Add FAB for quick "Plan Route" action.
+- [ ] Implement pull-to-refresh.
+
+#### 3.4 Cargo Profile Screen
+- [ ] Build cargo profile form:
+  - [ ] Firearms toggle
+  - [ ] Firearm types multi-select (handgun, rifle, shotgun)
+  - [ ] Concealed carry permit toggle + state selector
+  - [ ] Magazine capacity input
+  - [ ] Assault weapon designation toggle
+- [ ] Connect to API for save/update.
+- [ ] Create CargoContext for state management.
+
+#### 3.5 Route Planning
+- [ ] Build multi-step route wizard:
+  - [ ] Step 1: Origin input (search/autocomplete or map pin)
+  - [ ] Step 2: Destination input
+  - [ ] Step 3: Optional waypoints
+  - [ ] Step 4: Cargo profile selection
+  - [ ] Step 5: Calculate route preview
+- [ ] Connect to ORS route calculation API.
+- [ ] Create RoutesContext for state management.
+
+#### 3.6 Map Integration
+- [ ] Integrate react-native-maps.
+- [ ] Display route polyline on map.
+- [ ] Add origin/destination markers.
+- [ ] Implement map gestures (zoom, pan).
+
+#### 3.7 Route Detail Screen
+- [ ] Build map view with route visualization.
+- [ ] Display turn-by-turn segments (scrollable list).
+- [ ] Show regulation alerts inline with route:
+  - [ ] Color-coded by severity (critical=red, warning=yellow, info=blue)
+  - [ ] Expandable for full details + citation
+- [ ] Show route metadata (distance, duration, states crossed).
+- [ ] Add actions: Edit, Delete, Share.
+
+#### 3.8 Account Screen
+- [ ] Display user info (email, avatar/initials).
+- [ ] Add legal disclaimer link.
+- [ ] Implement logout functionality.
+- [ ] Placeholder for future settings (notifications, units).
 
 ### Phase 4: Deployment & CI/CD
 - [ ] Configure EAS Build for iOS and Android builds.
