@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
 import postgres from '@fastify/postgres';
+import jwtPlugin from './plugins/jwt.js';
+import { authRoutes } from './routes/auth.js';
 
 const server = Fastify({
     logger: true,
@@ -40,6 +42,12 @@ const start = async () => {
         await server.register(postgres, {
             connectionString: process.env.DATABASE_URL,
         });
+
+        // Register JWT authentication plugin
+        await server.register(jwtPlugin);
+
+        // Register routes
+        await server.register(authRoutes, { prefix: '/auth' });
 
         const port = Number(process.env.PORT) || 3000;
         const host = process.env.HOST || '0.0.0.0';
