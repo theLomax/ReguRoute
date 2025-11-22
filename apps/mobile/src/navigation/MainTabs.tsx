@@ -6,6 +6,7 @@ import {
 	CargoProfileScreen,
 	AccountScreen,
 } from '../screens';
+import { colors } from '../theme';
 
 export type MainTabsParamList = {
 	Home: undefined;
@@ -41,18 +42,19 @@ export default function MainTabs() {
 					const iconName = getTabIcon(route.name, focused);
 					return <Ionicons name={iconName} size={size} color={color} />;
 				},
-				tabBarActiveTintColor: '#2563eb',
-				tabBarInactiveTintColor: '#999',
+				tabBarActiveTintColor: colors.primary,
+				tabBarInactiveTintColor: colors.textMuted,
 				tabBarStyle: {
-					paddingBottom: 4,
-					height: 60,
+					paddingBottom: 18,
+					paddingTop: 6,
+					height: 70,
 				},
 				tabBarLabelStyle: {
 					fontSize: 12,
 					fontWeight: '500',
 				},
 				headerStyle: {
-					backgroundColor: '#fff',
+					backgroundColor: colors.backgroundWhite,
 					elevation: 1,
 					shadowOpacity: 0.1,
 				},
@@ -75,7 +77,7 @@ export default function MainTabs() {
 			<Tab.Screen
 				name="Cargo"
 				component={CargoProfileScreen}
-				options={{ title: 'Cargo' }}
+				options={{ title: 'Gear' }}
 			/>
 			<Tab.Screen
 				name="Account"

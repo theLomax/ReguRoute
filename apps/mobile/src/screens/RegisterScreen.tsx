@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { AuthStackParamList } from '../navigation';
 import { useAuth, ApiError } from '../contexts';
+import { colors } from '../theme';
 
 type RegisterNavigationProp = StackNavigationProp<AuthStackParamList, 'Register'>;
 
@@ -70,7 +71,7 @@ export default function RegisterScreen() {
 					<TextInput
 						style={styles.input}
 						placeholder="Email"
-						placeholderTextColor="#999"
+						placeholderTextColor={colors.textMuted}
 						value={email}
 						onChangeText={setEmail}
 						autoCapitalize="none"
@@ -82,7 +83,7 @@ export default function RegisterScreen() {
 					<TextInput
 						style={styles.input}
 						placeholder="Password (min 8 characters)"
-						placeholderTextColor="#999"
+						placeholderTextColor={colors.textMuted}
 						value={password}
 						onChangeText={setPassword}
 						secureTextEntry
@@ -93,7 +94,7 @@ export default function RegisterScreen() {
 					<TextInput
 						style={styles.input}
 						placeholder="Confirm Password"
-						placeholderTextColor="#999"
+						placeholderTextColor={colors.textMuted}
 						value={confirmPassword}
 						onChangeText={setConfirmPassword}
 						secureTextEntry
@@ -107,7 +108,7 @@ export default function RegisterScreen() {
 						disabled={isLoading}
 					>
 						{isLoading ? (
-							<ActivityIndicator color="#fff" />
+							<ActivityIndicator color={colors.white} />
 						) : (
 							<Text style={styles.buttonText}>Create Account</Text>
 						)}
@@ -131,7 +132,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f5f5f5',
+		backgroundColor: colors.background,
 	},
 	content: {
 		flex: 1,
@@ -141,13 +142,13 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 36,
 		fontWeight: 'bold',
-		color: '#1a1a1a',
+		color: colors.text,
 		textAlign: 'center',
 		marginBottom: 8,
 	},
 	subtitle: {
 		fontSize: 16,
-		color: '#666',
+		color: colors.textSecondary,
 		textAlign: 'center',
 		marginBottom: 48,
 	},
@@ -155,17 +156,17 @@ const styles = StyleSheet.create({
 		gap: 16,
 	},
 	input: {
-		backgroundColor: '#fff',
+		backgroundColor: colors.backgroundWhite,
 		borderRadius: 12,
 		paddingHorizontal: 16,
 		paddingVertical: 14,
 		fontSize: 16,
 		borderWidth: 1,
-		borderColor: '#e0e0e0',
-		color: '#1a1a1a',
+		borderColor: colors.border,
+		color: colors.text,
 	},
 	button: {
-		backgroundColor: '#2563eb',
+		backgroundColor: colors.primary,
 		borderRadius: 12,
 		paddingVertical: 16,
 		alignItems: 'center',
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
 		opacity: 0.7,
 	},
 	buttonText: {
-		color: '#fff',
+		color: colors.white,
 		fontSize: 18,
 		fontWeight: '600',
 	},
@@ -185,10 +186,10 @@ const styles = StyleSheet.create({
 	},
 	linkText: {
 		fontSize: 15,
-		color: '#666',
+		color: colors.textSecondary,
 	},
 	linkTextBold: {
-		color: '#2563eb',
+		color: colors.primary,
 		fontWeight: '600',
 	},
 });

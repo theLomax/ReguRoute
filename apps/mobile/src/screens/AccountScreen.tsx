@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useAuth } from '../contexts';
+import { colors } from '../theme';
 
 export default function AccountScreen() {
 	const { user, logout } = useAuth();
@@ -48,7 +49,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#f5f5f5',
+		backgroundColor: colors.background,
 		padding: 24,
 	},
 	avatarContainer: {
@@ -60,22 +61,22 @@ const styles = StyleSheet.create({
 		width: 80,
 		height: 80,
 		borderRadius: 40,
-		backgroundColor: '#2563eb',
+		backgroundColor: colors.primary,
 		alignItems: 'center',
 		justifyContent: 'center',
 		marginBottom: 12,
 	},
 	avatarText: {
-		color: '#fff',
+		color: colors.white,
 		fontSize: 28,
 		fontWeight: 'bold',
 	},
 	email: {
 		fontSize: 16,
-		color: '#666',
+		color: colors.textSecondary,
 	},
 	section: {
-		backgroundColor: '#fff',
+		backgroundColor: colors.backgroundWhite,
 		borderRadius: 12,
 		marginBottom: 24,
 		overflow: 'hidden',
@@ -84,22 +85,22 @@ const styles = StyleSheet.create({
 		paddingVertical: 16,
 		paddingHorizontal: 16,
 		borderBottomWidth: 1,
-		borderBottomColor: '#eee',
+		borderBottomColor: colors.borderLight,
 	},
 	menuText: {
 		fontSize: 16,
-		color: '#1a1a1a',
+		color: colors.text,
 	},
 	logoutButton: {
-		backgroundColor: '#fff',
+		backgroundColor: colors.backgroundWhite,
 		borderRadius: 12,
 		paddingVertical: 16,
 		alignItems: 'center',
 		borderWidth: 1,
-		borderColor: '#dc2626',
+		borderColor: colors.error,
 	},
 	logoutText: {
-		color: '#dc2626',
+		color: colors.error,
 		fontSize: 16,
 		fontWeight: '600',
 	},

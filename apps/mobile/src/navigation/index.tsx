@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useAuth } from '../contexts';
+import { colors } from '../theme';
 import AuthStack from './AuthStack';
 import MainStack from './MainStack';
 
@@ -14,7 +15,7 @@ export default function RootNavigator() {
 	if (isLoading) {
 		return (
 			<View style={styles.loading}>
-				<ActivityIndicator size="large" color="#2563eb" />
+				<ActivityIndicator size="large" color={colors.primary} />
 			</View>
 		);
 	}
@@ -31,6 +32,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		justifyContent: 'center',
 		alignItems: 'center',
-		backgroundColor: '#f5f5f5',
+		backgroundColor: colors.background,
 	},
 });
