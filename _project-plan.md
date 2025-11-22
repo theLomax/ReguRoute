@@ -112,7 +112,7 @@ This section tracks the major development tasks, marking what has been completed
 - [x] Establish and test a database connection from the backend to the PostGIS container.
 - [x] Document the project setup and development workflow in `README.md`.
 
-### Phase 2: Core Backend Logic (In Progress)
+### Phase 2: Core Backend Logic (✓ Complete)
 - [x] Set up a database migration system using `node-pg-migrate`.
 - [x] Create initial user authentication table with UUID primary keys and secure password storage.
 - [x] Define database schema for regulations, states, and jurisdictions.
@@ -121,13 +121,25 @@ This section tracks the major development tasks, marking what has been completed
 - [x] Develop logic to query the OpenRouteService (ORS) API for route calculation.
 - [x] Implement business logic to analyze routes against regulation data from the database.
 
-### Phase 3: Frontend Development
-- [ ] Scaffold the frontend application (e.g., using React/Vite).
-- [ ] Create a `Dockerfile` for the frontend service.
-- [ ] Integrate the frontend service into `docker-compose.yml`.
-- [ ] Develop UI components for user input (start/end points, cargo details).
-- [ ] Integrate a mapping library (e.g., Leaflet, Mapbox) to display routes.
+### Phase 3: Mobile App Development (In Progress)
+- [ ] Scaffold React Native app using Expo with TypeScript (`apps/mobile`).
+- [ ] Create shared types package (`packages/types`) for API interfaces.
+- [ ] Set up React Navigation for screen navigation.
+- [ ] Implement authentication screens (login, register).
+- [ ] Build cargo profile input form.
+- [ ] Integrate react-native-maps for route visualization.
+- [ ] Develop route planning screen (origin/destination input).
+- [ ] Display regulation alerts on route view.
+- [ ] Implement secure token storage with expo-secure-store.
 
 ### Phase 4: Deployment & CI/CD
-- [ ] Create a CI/CD pipeline (e.g., using GitHub Actions) to build and test on push.
-- [ ] Prepare the application for deployment to a cloud provider.
+- [ ] Configure EAS Build for iOS and Android builds.
+- [ ] Set up CI/CD pipeline (GitHub Actions) for automated testing.
+- [ ] Deploy backend to cloud provider (Render).
+- [ ] Submit to App Store and Google Play (TestFlight/Internal Testing first).
+
+### Phase 5: Web App (Future - If Demand Emerges)
+- [ ] Scaffold React + Vite web app (`apps/web`).
+- [ ] Extract shared API client to `packages/api-client`.
+- [ ] Integrate Leaflet/Mapbox GL JS for web maps.
+- [ ] Deploy web app to Vercel/Netlify.
