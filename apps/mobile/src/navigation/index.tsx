@@ -6,6 +6,7 @@ import MainStack from './MainStack';
 
 export type { AuthStackParamList } from './AuthStack';
 export type { MainStackParamList } from './MainStack';
+export type { MainTabsParamList } from './MainTabs';
 
 export default function RootNavigator() {
 	const { isAuthenticated, isLoading } = useAuth();
