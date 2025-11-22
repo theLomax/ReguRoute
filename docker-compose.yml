@@ -25,14 +25,14 @@ services:
     ports:
       - '8080:8082'
     volumes:
-      - ./ors/graphs:/ors-core/data/graphs
-      - ./ors/elevation_cache:/ors-core/data/elevation_cache
-      - ./ors/conf:/ors-core/conf
-      - ./ors/data:/ors-core/data/osm_file
+      - ./ors/graphs:/home/ors/graphs
+      - ./ors/elevation_cache:/home/ors/elevation_cache
+      - ./ors/data:/home/ors/files
     environment:
-      - BUILD_GRAPHS=True
-      - "JAVA_OPTS=-Djava.awt.headless=true -server -XX:TargetSurvivorRatio=75 -XX:SurvivorRatio=64 -XX:MaxTenuringThreshold=3 -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:ParallelGCThreads=4 -Xms1g -Xmx2g"
-      - "ORS_CONFIG_LOCATION=/ors-core/conf/ors-config.json"
+      - REBUILD_GRAPHS=True
+      - ors.engine.profile_default.build.source_file=/home/ors/files/delaware-251114.osm.pbf
+      - XMS=1g
+      - XMX=2g
     restart: unless-stopped
 
   # The Fastify Backend Application
