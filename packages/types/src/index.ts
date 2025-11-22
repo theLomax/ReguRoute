@@ -3,6 +3,8 @@
  * Used by both backend and mobile apps
  */
 
+import type { LineString } from 'geojson';
+
 // ============================================
 // Auth Types
 // ============================================
@@ -64,7 +66,7 @@ export interface Route {
 	destination_lat: string;
 	destination_lng: string;
 	waypoints: Coordinates[];
-	route_geometry: GeoJSON.LineString | null;
+	route_geometry: LineString | null;
 	route_metadata: RouteMetadata | null;
 	cargo_profile: CargoProfile | null;
 	regulation_alerts: RegulationAlert[];
@@ -100,7 +102,7 @@ export interface CalculateRouteRequest {
 
 export interface CalculateRouteResponse {
 	route: {
-		geometry: GeoJSON.LineString;
+		geometry: LineString;
 		summary: RouteMetadata;
 		segments: unknown[];
 		bbox: [number, number, number, number];
@@ -140,7 +142,7 @@ export interface AnalyzeByStatesRequest {
 }
 
 export interface AnalyzeByGeometryRequest {
-	route_geometry: GeoJSON.LineString;
+	route_geometry: LineString;
 	cargo_profile: CargoProfile;
 }
 
