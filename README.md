@@ -136,6 +136,81 @@ curl http://localhost:3000/auth/me \
 }
 ```
 
+## Routes API
+
+The backend provides endpoints for saving and managing user routes. All routes endpoints require authentication.
+
+### Create a Route
+
+```bash
+curl -X POST http://localhost:3000/routes \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-token>" \
+  -d '{
+    "name": "Trip to Delaware",
+    "origin_name": "Philadelphia, PA",
+    "origin_lat": 39.9526,
+    "origin_lng": -75.1652,
+    "destination_name": "Wilmington, DE",
+    "destination_lat": 39.7447,
+    "destination_lng": -75.5484
+  }'
+```
+
+**Response:**
+```json
+{
+  "route": {
+    "id": "uuid",
+    "user_id": "uuid",
+    "name": "Trip to Delaware",
+    "origin_name": "Philadelphia, PA",
+    "origin_lat": "39.9526000",
+    "origin_lng": "-75.1652000",
+    "destination_name": "Wilmington, DE",
+    "destination_lat": "39.7447000",
+    "destination_lng": "-75.5484000",
+    "waypoints": [],
+    "route_geometry": null,
+    "route_metadata": null,
+    "cargo_profile": null,
+    "regulation_alerts": [],
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+### List All Routes
+
+```bash
+curl http://localhost:3000/routes \
+  -H "Authorization: Bearer <your-token>"
+```
+
+### Get a Specific Route
+
+```bash
+curl http://localhost:3000/routes/<route-id> \
+  -H "Authorization: Bearer <your-token>"
+```
+
+### Update a Route
+
+```bash
+curl -X PUT http://localhost:3000/routes/<route-id> \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-token>" \
+  -d '{"name": "Updated Trip Name"}'
+```
+
+### Delete a Route
+
+```bash
+curl -X DELETE http://localhost:3000/routes/<route-id> \
+  -H "Authorization: Bearer <your-token>"
+```
+
 ## Advanced Development: Running Services in Isolation
 
 If you need to work on a single service, you can run it independently of the Docker Compose environment.
