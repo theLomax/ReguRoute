@@ -211,6 +211,66 @@ curl -X DELETE http://localhost:3000/routes/<route-id> \
   -H "Authorization: Bearer <your-token>"
 ```
 
+## Route Calculation API
+
+The backend integrates with OpenRouteService (ORS) to calculate driving routes.
+
+### Check ORS Status
+
+```bash
+curl http://localhost:3000/calculate/health
+```
+
+**Response (when ready):**
+```json
+{"status":"ready","ready":true}
+```
+
+### Calculate a Route
+
+```bash
+curl -X POST http://localhost:3000/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origin": {"lat": 39.9526, "lng": -75.1652},
+    "destination": {"lat": 39.7447, "lng": -75.5484},
+    "profile": "driving-car"
+  }'
+```
+
+**Response:**
+```json
+{
+  "route": {
+    "geometry": { "type": "LineString", "coordinates": [...] },
+    "summary": {
+      "distance_meters": 45000,
+      "distance_km": 45.0,
+      "distance_miles": 28.0,
+      "duration_seconds": 2700,
+      "duration_minutes": 45
+    },
+    "segments": [...],
+    "bbox": [-75.55, 39.74, -75.16, 39.95]
+  }
+}
+```
+
+### Calculate and Save a Route (Protected)
+
+```bash
+curl -X POST http://localhost:3000/calculate/save \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-token>" \
+  -d '{
+    "name": "Philly to Wilmington",
+    "origin": {"lat": 39.9526, "lng": -75.1652},
+    "destination": {"lat": 39.7447, "lng": -75.5484}
+  }'
+```
+
+This calculates the route and saves it to the database in one request.
+
 ## Advanced Development: Running Services in Isolation
 
 If you need to work on a single service, you can run it independently of the Docker Compose environment.

@@ -26,6 +26,7 @@
 	},
 	"devDependencies": {
 		"@types/bcryptjs": "^2.4.6",
+		"@types/geojson": "^7946.0.16",
 		"@types/node": "^18.19.39",
 		"@types/pg": "^8.11.6",
 		"ts-node": "^10.9.2"

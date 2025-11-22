@@ -23,7 +23,7 @@ services:
     container_name: reguroute-ors
     image: openrouteservice/openrouteservice:latest
     ports:
-      - '8080:8080'
+      - '8080:8082'
     volumes:
       - ./ors/graphs:/ors-core/data/graphs
       - ./ors/elevation_cache:/ors-core/data/elevation_cache
