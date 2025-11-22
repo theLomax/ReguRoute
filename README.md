@@ -2,6 +2,19 @@
 
 ReguRoute is a route-planning utility for US-based travel designed to assist users with navigating state and local regulations when traveling with regulated items. The app calculates and presents route options that minimize or avoid jurisdictions where a user's cargo would face increased legal restrictions and storage requirements.
 
+## Project Structure
+
+```
+ReguRoute/
+├── apps/
+│   ├── backend/          # Fastify API server (TypeScript)
+│   └── mobile/           # React Native app with Expo (TypeScript)
+├── packages/
+│   └── types/            # Shared TypeScript interfaces
+├── data/                 # Map data and regulation datasets
+└── docker-compose.yml    # Development environment orchestration
+```
+
 ## Getting Started
 
 ### Prerequisites
@@ -369,6 +382,39 @@ curl -X POST http://localhost:3000/analyze/route/<route-id> \
 - **critical** - Immediate legal concern (e.g., banned items, no-issue states)
 - **warning** - Permit or transport requirements may apply
 - **info** - General information about local regulations
+
+## Mobile App Development
+
+The mobile app is a React Native application built with Expo, located in `apps/mobile/`.
+
+### Prerequisites
+
+- **Expo Go app** on your iOS or Android device (available from App Store / Google Play)
+- Backend services running via `docker compose up`
+
+### Running the Mobile App
+
+```bash
+pnpm --filter mobile start
+```
+
+This starts the Expo development server. You can then:
+- Scan the QR code with Expo Go (Android) or Camera app (iOS)
+- Press `a` to open in Android emulator
+- Press `i` to open in iOS simulator (macOS only)
+
+### Shared Types
+
+The mobile app uses shared TypeScript interfaces from `packages/types`. This ensures type consistency between the backend API and mobile client:
+
+```typescript
+import { User, Route, CargoProfile } from '@reguroute/types';
+```
+
+To check types across all packages:
+```bash
+pnpm --filter @reguroute/types typecheck
+```
 
 ## Advanced Development: Running Services in Isolation
 

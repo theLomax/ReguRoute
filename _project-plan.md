@@ -122,8 +122,8 @@ This section tracks the major development tasks, marking what has been completed
 - [x] Implement business logic to analyze routes against regulation data from the database.
 
 ### Phase 3: Mobile App Development (In Progress)
-- [ ] Scaffold React Native app using Expo with TypeScript (`apps/mobile`).
-- [ ] Create shared types package (`packages/types`) for API interfaces.
+- [x] Scaffold React Native app using Expo with TypeScript (`apps/mobile`).
+- [x] Create shared types package (`packages/types`) for API interfaces.
 - [ ] Set up React Navigation for screen navigation.
 - [ ] Implement authentication screens (login, register).
 - [ ] Build cargo profile input form.
