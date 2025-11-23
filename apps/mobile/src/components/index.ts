@@ -7,4 +7,5 @@ export { default as Chip } from './Chip';
 export { default as EmptyState } from './EmptyState';
 export { default as Input } from './Input';
 export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as LocationAutocomplete } from './LocationAutocomplete';
 export { default as Toggle } from './Toggle';

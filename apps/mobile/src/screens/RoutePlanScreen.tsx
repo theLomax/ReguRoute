@@ -11,10 +11,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Coordinates, CalculateRouteResponse } from '@reguroute/types';
-import { useAuth, useRoutes, useCargo } from '../contexts';
+import { useRoutes, useCargo } from '../contexts';
 import { routesApi } from '../api';
 import { colors } from '../theme';
-import { Card, Button, LoadingSpinner } from '../components';
+import { Card, Button, LoadingSpinner, LocationAutocomplete } from '../components';
 
 interface LocationInput {
 	name: string;
@@ -24,7 +24,6 @@ interface LocationInput {
 type WizardStep = 'locations' | 'preview';
 
 export default function RoutePlanScreen() {
-	const { token } = useAuth();
 	const { createRoute, fetchRoutes } = useRoutes();
 	const { cargoProfile } = useCargo();
 
@@ -36,81 +35,25 @@ export default function RoutePlanScreen() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [routePreview, setRoutePreview] = useState<CalculateRouteResponse | null>(null);
 
-	// US Northeast region locations (NY, NJ, PA, DE, MD, CT, MA, VT, NH, ME, RI)
-	const SAMPLE_LOCATIONS: Record<string, Coordinates> = {
-		// New York
-		'new york': { lat: 40.7128, lng: -74.0060 },
-		'nyc': { lat: 40.7128, lng: -74.0060 },
-		'albany': { lat: 42.6526, lng: -73.7562 },
-		'buffalo': { lat: 42.8864, lng: -78.8784 },
-		'rochester': { lat: 43.1566, lng: -77.6088 },
-		'syracuse': { lat: 43.0481, lng: -76.1474 },
-		// New Jersey
-		'newark': { lat: 40.7357, lng: -74.1724 },
-		'jersey city': { lat: 40.7178, lng: -74.0431 },
-		'trenton': { lat: 40.2206, lng: -74.7597 },
-		'atlantic city': { lat: 39.3643, lng: -74.4229 },
-		// Pennsylvania
-		'philadelphia': { lat: 39.9526, lng: -75.1652 },
-		'philly': { lat: 39.9526, lng: -75.1652 },
-		'pittsburgh': { lat: 40.4406, lng: -79.9959 },
-		'harrisburg': { lat: 40.2732, lng: -76.8867 },
-		'allentown': { lat: 40.6084, lng: -75.4902 },
-		// Delaware
-		'wilmington': { lat: 39.7391, lng: -75.5398 },
-		'dover': { lat: 39.1582, lng: -75.5244 },
-		// Maryland
-		'baltimore': { lat: 39.2904, lng: -76.6122 },
-		'annapolis': { lat: 38.9784, lng: -76.4922 },
-		// Washington DC
-		'washington': { lat: 38.9072, lng: -77.0369 },
-		'dc': { lat: 38.9072, lng: -77.0369 },
-		// Connecticut
-		'hartford': { lat: 41.7658, lng: -72.6734 },
-		'new haven': { lat: 41.3083, lng: -72.9279 },
-		'stamford': { lat: 41.0534, lng: -73.5387 },
-		// Massachusetts
-		'boston': { lat: 42.3601, lng: -71.0589 },
-		'worcester': { lat: 42.2626, lng: -71.8023 },
-		'springfield': { lat: 42.1015, lng: -72.5898 },
-		// Rhode Island
-		'providence': { lat: 41.8240, lng: -71.4128 },
-		// Vermont
-		'burlington': { lat: 44.4759, lng: -73.2121 },
-		'montpelier': { lat: 44.2601, lng: -72.5754 },
-		// New Hampshire
-		'manchester': { lat: 42.9956, lng: -71.4548 },
-		'concord': { lat: 43.2081, lng: -71.5376 },
-		// Maine
-		'portland': { lat: 43.6591, lng: -70.2568 },
-		'augusta': { lat: 44.3106, lng: -69.7795 },
-	};
-
-	const parseLocation = (input: string): Coordinates | null => {
-		const normalized = input.toLowerCase().trim();
-		return SAMPLE_LOCATIONS[normalized] || null;
-	};
-
 	const handleOriginChange = (text: string) => {
-		setOrigin({
-			name: text,
-			coordinates: parseLocation(text),
-		});
+		setOrigin({ name: text, coordinates: null });
+	};
+
+	const handleOriginSelect = (name: string, coordinates: Coordinates) => {
+		setOrigin({ name, coordinates });
 	};
 
 	const handleDestinationChange = (text: string) => {
-		setDestination({
-			name: text,
-			coordinates: parseLocation(text),
-		});
+		setDestination({ name: text, coordinates: null });
+	};
+
+	const handleDestinationSelect = (name: string, coordinates: Coordinates) => {
+		setDestination({ name, coordinates });
 	};
 
 	const handleCalculateRoute = useCallback(async () => {
 		if (!origin.coordinates || !destination.coordinates) {
-			Alert.alert(
-				'Invalid Locations',
-				'Please enter valid city names (e.g., "New York", "Los Angeles")'
-			);
+			Alert.alert('Invalid Locations', 'Please select valid cities from the suggestions.');
 			return;
 		}
 
@@ -255,52 +198,41 @@ export default function RoutePlanScreen() {
 			behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 			style={styles.container}
 		>
-			<ScrollView contentContainerStyle={styles.content}>
+			<ScrollView
+				contentContainerStyle={styles.content}
+				keyboardShouldPersistTaps="handled"
+			>
 				<Text style={styles.stepTitle}>Plan Your Route</Text>
 				<Text style={styles.description}>
-					Enter your origin and destination cities to calculate a route.
+					Start typing to search for cities in the US Northeast region.
 				</Text>
 
 				<Card style={styles.inputCard}>
-					<View style={styles.inputRow}>
-						<View style={styles.iconContainer}>
-							<Ionicons name="location" size={20} color={colors.success} />
-						</View>
-						<TextInput
-							style={styles.locationInput}
-							value={origin.name}
-							onChangeText={handleOriginChange}
-							placeholder="Origin (e.g., New York)"
-							placeholderTextColor={colors.textMuted}
-							autoCapitalize="words"
-						/>
-						{origin.coordinates && (
-							<Ionicons name="checkmark-circle" size={20} color={colors.success} />
-						)}
-					</View>
+					<LocationAutocomplete
+						value={origin.name}
+						onChangeText={handleOriginChange}
+						onSelectLocation={handleOriginSelect}
+						placeholder="Origin (e.g., Boston)"
+						icon="location"
+						iconColor={colors.success}
+						isSelected={!!origin.coordinates}
+					/>
 
 					<View style={styles.divider} />
 
-					<View style={styles.inputRow}>
-						<View style={styles.iconContainer}>
-							<Ionicons name="flag" size={20} color={colors.error} />
-						</View>
-						<TextInput
-							style={styles.locationInput}
-							value={destination.name}
-							onChangeText={handleDestinationChange}
-							placeholder="Destination (e.g., Los Angeles)"
-							placeholderTextColor={colors.textMuted}
-							autoCapitalize="words"
-						/>
-						{destination.coordinates && (
-							<Ionicons name="checkmark-circle" size={20} color={colors.success} />
-						)}
-					</View>
+					<LocationAutocomplete
+						value={destination.name}
+						onChangeText={handleDestinationChange}
+						onSelectLocation={handleDestinationSelect}
+						placeholder="Destination (e.g., New York)"
+						icon="flag"
+						iconColor={colors.error}
+						isSelected={!!destination.coordinates}
+					/>
 				</Card>
 
 				<Text style={styles.hint}>
-					Try: NYC, Boston, Philadelphia, Baltimore, DC, Pittsburgh, Hartford, Providence, Portland
+					Covering NY, NJ, PA, DE, MD, DC, CT, MA, RI, VT, NH, ME
 				</Text>
 
 				{isCalculating ? (
@@ -343,21 +275,6 @@ const styles = StyleSheet.create({
 	inputCard: {
 		padding: 0,
 		overflow: 'hidden',
-	},
-	inputRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		padding: 16,
-	},
-	iconContainer: {
-		width: 32,
-		alignItems: 'center',
-	},
-	locationInput: {
-		flex: 1,
-		fontSize: 16,
-		color: colors.text,
-		marginLeft: 8,
 	},
 	divider: {
 		height: 1,
