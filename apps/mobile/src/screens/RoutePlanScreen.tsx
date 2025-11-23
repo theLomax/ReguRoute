@@ -36,20 +36,54 @@ export default function RoutePlanScreen() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [routePreview, setRoutePreview] = useState<CalculateRouteResponse | null>(null);
 
-	// Sample Delaware locations (ORS is configured with Delaware OSM data only)
-	// Routes must be within ~100km distance limit
+	// US Northeast region locations (NY, NJ, PA, DE, MD, CT, MA, VT, NH, ME, RI)
 	const SAMPLE_LOCATIONS: Record<string, Coordinates> = {
-		// Delaware cities
+		// New York
+		'new york': { lat: 40.7128, lng: -74.0060 },
+		'nyc': { lat: 40.7128, lng: -74.0060 },
+		'albany': { lat: 42.6526, lng: -73.7562 },
+		'buffalo': { lat: 42.8864, lng: -78.8784 },
+		'rochester': { lat: 43.1566, lng: -77.6088 },
+		'syracuse': { lat: 43.0481, lng: -76.1474 },
+		// New Jersey
+		'newark': { lat: 40.7357, lng: -74.1724 },
+		'jersey city': { lat: 40.7178, lng: -74.0431 },
+		'trenton': { lat: 40.2206, lng: -74.7597 },
+		'atlantic city': { lat: 39.3643, lng: -74.4229 },
+		// Pennsylvania
+		'philadelphia': { lat: 39.9526, lng: -75.1652 },
+		'philly': { lat: 39.9526, lng: -75.1652 },
+		'pittsburgh': { lat: 40.4406, lng: -79.9959 },
+		'harrisburg': { lat: 40.2732, lng: -76.8867 },
+		'allentown': { lat: 40.6084, lng: -75.4902 },
+		// Delaware
 		'wilmington': { lat: 39.7391, lng: -75.5398 },
 		'dover': { lat: 39.1582, lng: -75.5244 },
-		'newark': { lat: 39.6837, lng: -75.7497 },
-		'middletown': { lat: 39.4496, lng: -75.7163 },
-		'smyrna': { lat: 39.2998, lng: -75.6047 },
-		'milford': { lat: 38.9126, lng: -75.4280 },
-		'seaford': { lat: 38.6412, lng: -75.6110 },
-		'georgetown': { lat: 38.6901, lng: -75.3855 },
-		'lewes': { lat: 38.7746, lng: -75.1394 },
-		'rehoboth': { lat: 38.7210, lng: -75.0760 },
+		// Maryland
+		'baltimore': { lat: 39.2904, lng: -76.6122 },
+		'annapolis': { lat: 38.9784, lng: -76.4922 },
+		// Washington DC
+		'washington': { lat: 38.9072, lng: -77.0369 },
+		'dc': { lat: 38.9072, lng: -77.0369 },
+		// Connecticut
+		'hartford': { lat: 41.7658, lng: -72.6734 },
+		'new haven': { lat: 41.3083, lng: -72.9279 },
+		'stamford': { lat: 41.0534, lng: -73.5387 },
+		// Massachusetts
+		'boston': { lat: 42.3601, lng: -71.0589 },
+		'worcester': { lat: 42.2626, lng: -71.8023 },
+		'springfield': { lat: 42.1015, lng: -72.5898 },
+		// Rhode Island
+		'providence': { lat: 41.8240, lng: -71.4128 },
+		// Vermont
+		'burlington': { lat: 44.4759, lng: -73.2121 },
+		'montpelier': { lat: 44.2601, lng: -72.5754 },
+		// New Hampshire
+		'manchester': { lat: 42.9956, lng: -71.4548 },
+		'concord': { lat: 43.2081, lng: -71.5376 },
+		// Maine
+		'portland': { lat: 43.6591, lng: -70.2568 },
+		'augusta': { lat: 44.3106, lng: -69.7795 },
 	};
 
 	const parseLocation = (input: string): Coordinates | null => {
@@ -266,7 +300,7 @@ export default function RoutePlanScreen() {
 				</Card>
 
 				<Text style={styles.hint}>
-					Delaware cities: Wilmington, Dover, Newark, Middletown, Smyrna, Milford, Lewes, Rehoboth
+					Try: NYC, Boston, Philadelphia, Baltimore, DC, Pittsburgh, Hartford, Providence, Portland
 				</Text>
 
 				{isCalculating ? (

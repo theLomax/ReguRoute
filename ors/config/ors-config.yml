@@ -1,0 +1,53 @@
+ors:
+  cors:
+    allowed_origins:
+      - "*"
+    allowed_headers:
+      - Content-Type
+      - Authorization
+  endpoints:
+    routing:
+      enabled: true
+    matrix:
+      enabled: true
+      maximum_routes: 2500
+      maximum_search_radius: 5000
+    isochrones:
+      enabled: true
+  engine:
+    profile_default:
+      build:
+        source_file: /home/ors/files/us-northeast-latest.osm.pbf
+      service:
+        maximum_distance: 1000000
+        maximum_distance_dynamic_weights: 1000000
+        maximum_distance_avoid_areas: 1000000
+        maximum_waypoints: 50
+        maximum_distance_alternative_routes: 1000000
+        maximum_distance_round_trip_routes: 500000
+    profiles:
+      driving-car:
+        enabled: true
+        elevation: true
+        elevation_smoothing: true
+        encoder_options:
+          turn_costs: true
+          block_fords: false
+        preparation:
+          min_network_size: 200
+          methods:
+            lm:
+              enabled: true
+              threads: 1
+              weightings: recommended,shortest
+              landmarks: 16
+            core:
+              enabled: true
+              threads: 1
+              weightings: recommended,shortest
+        execution:
+          methods:
+            lm:
+              active_landmarks: 8
+            core:
+              active_landmarks: 6

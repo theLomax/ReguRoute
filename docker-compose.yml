@@ -28,11 +28,12 @@ services:
       - ./ors/graphs:/home/ors/graphs
       - ./ors/elevation_cache:/home/ors/elevation_cache
       - ./ors/data:/home/ors/files
+      - ./ors/config/ors-config.yml:/home/ors/ors-config.yml:ro
     environment:
-      - REBUILD_GRAPHS=True
-      - ors.engine.profile_default.build.source_file=/home/ors/files/delaware-251114.osm.pbf
-      - XMS=1g
-      - XMX=2g
+      - REBUILD_GRAPHS=False
+      - XMS=2g
+      - XMX=6g
+      - ORS_CONFIG_LOCATION=/home/ors/ors-config.yml
     restart: unless-stopped
 
   # The Fastify Backend Application
