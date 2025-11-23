@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
 	View,
 	Text,
@@ -6,10 +6,42 @@ import {
 	TouchableOpacity,
 	StyleSheet,
 	FlatList,
+	ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Coordinates } from '@reguroute/types';
 import { colors } from '../theme';
+
+// Photon API response types
+interface PhotonFeature {
+	type: 'Feature';
+	geometry: {
+		coordinates: [number, number]; // [lng, lat]
+		type: 'Point';
+	};
+	properties: {
+		osm_id: number;
+		osm_type: string;
+		country: string;
+		countrycode: string;
+		state?: string;
+		city?: string;
+		name?: string;
+		type: string;
+	};
+}
+
+interface PhotonResponse {
+	type: 'FeatureCollection';
+	features: PhotonFeature[];
+}
+
+interface LocationSuggestion {
+	key: string;
+	name: string;
+	state: string;
+	coordinates: Coordinates;
+}
 
 // US Northeast region locations with display names and state abbreviations
 const LOCATIONS: Array<{
@@ -73,6 +105,23 @@ interface LocationAutocompleteProps {
 	isSelected: boolean;
 }
 
+// US State abbreviation mapping
+const STATE_ABBREVIATIONS: Record<string, string> = {
+	'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+	'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+	'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+	'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+	'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+	'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+	'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+	'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+	'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+	'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+	'District of Columbia': 'DC',
+};
+
+const DEBOUNCE_MS = 300;
+
 export default function LocationAutocomplete({
 	value,
 	onChangeText,
@@ -83,8 +132,12 @@ export default function LocationAutocomplete({
 	isSelected,
 }: LocationAutocompleteProps) {
 	const [isFocused, setIsFocused] = useState(false);
+	const [apiSuggestions, setApiSuggestions] = useState<LocationSuggestion[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const suggestions = useMemo(() => {
+	// Local suggestions for instant feedback (fallback/offline)
+	const localSuggestions = useMemo(() => {
 		if (!value.trim() || isSelected) return [];
 
 		const query = value.toLowerCase().trim();
@@ -96,10 +149,76 @@ export default function LocationAutocomplete({
 		).slice(0, 5);
 	}, [value, isSelected]);
 
-	const showSuggestions = isFocused && suggestions.length > 0;
+	// Fetch from Photon API with debouncing
+	useEffect(() => {
+		// Clear any pending request
+		if (debounceRef.current) {
+			clearTimeout(debounceRef.current);
+		}
 
-	const handleSelect = (location: (typeof LOCATIONS)[0]) => {
+		// Don't fetch if selected, empty, or too short
+		if (isSelected || !value.trim() || value.trim().length < 2) {
+			setApiSuggestions([]);
+			setIsLoading(false);
+			return;
+		}
+
+		setIsLoading(true);
+
+		debounceRef.current = setTimeout(async () => {
+			try {
+				const query = encodeURIComponent(value.trim());
+				// Photon API - filter to US cities/towns
+				const url = `https://photon.komoot.io/api/?q=${query}&limit=8&lang=en&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`;
+
+				const response = await fetch(url);
+				if (!response.ok) throw new Error('Geocoding failed');
+
+				const data: PhotonResponse = await response.json();
+
+				// Filter to US only and map to our format
+				const suggestions: LocationSuggestion[] = data.features
+					.filter(f => f.properties.countrycode === 'US' && f.properties.state)
+					.map(f => {
+						const stateAbbr = STATE_ABBREVIATIONS[f.properties.state || ''] || f.properties.state || '';
+						const cityName = f.properties.name || f.properties.city || '';
+						return {
+							key: `${f.properties.osm_id}`,
+							name: cityName,
+							state: stateAbbr,
+							coordinates: {
+								lat: f.geometry.coordinates[1],
+								lng: f.geometry.coordinates[0],
+							},
+						};
+					})
+					.filter(s => s.name && s.state)
+					.slice(0, 5);
+
+				setApiSuggestions(suggestions);
+			} catch (error) {
+				console.warn('Photon geocoding error:', error);
+				// Fall back to local suggestions on error
+				setApiSuggestions([]);
+			} finally {
+				setIsLoading(false);
+			}
+		}, DEBOUNCE_MS);
+
+		return () => {
+			if (debounceRef.current) {
+				clearTimeout(debounceRef.current);
+			}
+		};
+	}, [value, isSelected]);
+
+	// Use API suggestions if available, otherwise local
+	const suggestions = apiSuggestions.length > 0 ? apiSuggestions : localSuggestions;
+	const showSuggestions = isFocused && (suggestions.length > 0 || isLoading);
+
+	const handleSelect = (location: LocationSuggestion) => {
 		onSelectLocation(`${location.name}, ${location.state}`, location.coordinates);
+		setApiSuggestions([]); // Clear API suggestions on select
 		setIsFocused(false);
 	};
 
@@ -127,25 +246,32 @@ export default function LocationAutocomplete({
 
 			{showSuggestions && (
 				<View style={styles.suggestionsContainer}>
-					<FlatList
-						data={suggestions}
-						keyExtractor={(item) => item.key}
-						keyboardShouldPersistTaps="handled"
-						scrollEnabled={false}
-						renderItem={({ item, index }) => (
-							<TouchableOpacity
-								style={[
-									styles.suggestionItem,
-									index === suggestions.length - 1 && styles.lastSuggestionItem,
-								]}
-								onPress={() => handleSelect(item)}
-							>
-								<Ionicons name="location-outline" size={16} color={colors.textMuted} />
-								<Text style={styles.suggestionName}>{item.name}</Text>
-								<Text style={styles.suggestionState}>{item.state}</Text>
-							</TouchableOpacity>
-						)}
-					/>
+					{isLoading && suggestions.length === 0 ? (
+						<View style={styles.loadingContainer}>
+							<ActivityIndicator size="small" color={colors.primary} />
+							<Text style={styles.loadingText}>Searching...</Text>
+						</View>
+					) : (
+						<FlatList
+							data={suggestions}
+							keyExtractor={(item) => item.key}
+							keyboardShouldPersistTaps="handled"
+							scrollEnabled={false}
+							renderItem={({ item, index }) => (
+								<TouchableOpacity
+									style={[
+										styles.suggestionItem,
+										index === suggestions.length - 1 && styles.lastSuggestionItem,
+									]}
+									onPress={() => handleSelect(item)}
+								>
+									<Ionicons name="location-outline" size={16} color={colors.textMuted} />
+									<Text style={styles.suggestionName}>{item.name}</Text>
+									<Text style={styles.suggestionState}>{item.state}</Text>
+								</TouchableOpacity>
+							)}
+						/>
+					)}
 				</View>
 			)}
 		</View>
@@ -197,6 +323,18 @@ const styles = StyleSheet.create({
 	},
 	suggestionState: {
 		fontSize: 13,
+		color: colors.textMuted,
+		marginLeft: 8,
+	},
+	loadingContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		paddingVertical: 16,
+		paddingHorizontal: 8,
+	},
+	loadingText: {
+		fontSize: 14,
 		color: colors.textMuted,
 		marginLeft: 8,
 	},
