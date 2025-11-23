@@ -290,6 +290,147 @@ export async function analyzeRoute(
 }
 
 /**
+ * Get avoidance polygons for jurisdictions that have restrictions based on cargo profile
+ * Returns a GeoJSON MultiPolygon that can be passed to ORS to avoid restricted areas
+ */
+export async function getAvoidancePolygons(
+	client: PoolClient,
+	cargoProfile: CargoProfile
+): Promise<{
+	avoidPolygons: GeoJSON.MultiPolygon | null;
+	restrictedJurisdictions: Array<{
+		name: string;
+		postal_code: string;
+		reasons: string[];
+		citations: string[];
+	}>;
+}> {
+	// If no firearms, no restrictions apply
+	if (!cargoProfile.has_firearms) {
+		return { avoidPolygons: null, restrictedJurisdictions: [] };
+	}
+
+	// Build conditions for restricted jurisdictions based on cargo profile
+	const conditions: string[] = [];
+	const params: unknown[] = [];
+	let paramIndex = 1;
+
+	// Critical restrictions that warrant route avoidance:
+
+	// 1. Assault weapons ban - if user has assault weapon
+	if (cargoProfile.has_assault_weapon) {
+		conditions.push(`(r.category = 'assault_weapons' AND r.is_restricted = true)`);
+	}
+
+	// 2. Magazine capacity limits - if user's magazines exceed limit
+	if (cargoProfile.magazine_capacity) {
+		conditions.push(
+			`(r.category = 'magazine_capacity' AND r.magazine_capacity_limit IS NOT NULL AND r.magazine_capacity_limit < $${paramIndex})`
+		);
+		params.push(cargoProfile.magazine_capacity);
+		paramIndex++;
+	}
+
+	// 3. No-issue states for concealed carry - if user doesn't have a recognized permit
+	if (cargoProfile.has_concealed_carry_permit && cargoProfile.permit_states?.length) {
+		// User has permit, avoid states that don't recognize it
+		// For now, we'll flag may-issue and no-issue states
+		conditions.push(
+			`(r.category = 'concealed_carry' AND r.permit_type IN ('no_issue', 'may_issue') AND r.is_restricted = true)`
+		);
+	} else if (!cargoProfile.has_concealed_carry_permit) {
+		// No permit - avoid states requiring permits for concealed carry
+		conditions.push(
+			`(r.category = 'concealed_carry' AND r.permit_required = true AND r.is_restricted = true AND r.restriction_level >= 7)`
+		);
+	}
+
+	if (conditions.length === 0) {
+		return { avoidPolygons: null, restrictedJurisdictions: [] };
+	}
+
+	// Query for restricted jurisdictions with their geometries
+	const query = `
+		SELECT DISTINCT ON (j.id)
+			j.id,
+			j.name,
+			j.postal_code,
+			ST_AsGeoJSON(j.geometry)::json as geometry,
+			array_agg(DISTINCT r.category) as categories,
+			array_agg(DISTINCT r.statutory_citation) FILTER (WHERE r.statutory_citation IS NOT NULL) as citations
+		FROM jurisdictions j
+		JOIN regulations r ON r.jurisdiction_id = j.id
+		WHERE j.type = 'state'
+			AND j.geometry IS NOT NULL
+			AND (${conditions.join(' OR ')})
+		GROUP BY j.id, j.name, j.postal_code, j.geometry
+		ORDER BY j.id, j.name
+	`;
+
+	const result = await client.query(query, params);
+
+	if (result.rows.length === 0) {
+		return { avoidPolygons: null, restrictedJurisdictions: [] };
+	}
+
+	// Build MultiPolygon from all restricted jurisdiction geometries
+	const polygons: GeoJSON.Polygon[] = [];
+	const restrictedJurisdictions: Array<{
+		name: string;
+		postal_code: string;
+		reasons: string[];
+		citations: string[];
+	}> = [];
+
+	for (const row of result.rows) {
+		const geometry = row.geometry as GeoJSON.MultiPolygon | GeoJSON.Polygon;
+
+		// Build human-readable reasons
+		const reasons: string[] = [];
+		for (const category of row.categories) {
+			switch (category) {
+				case 'assault_weapons':
+					reasons.push('Assault weapons prohibited');
+					break;
+				case 'magazine_capacity':
+					reasons.push('Magazine capacity exceeds limit');
+					break;
+				case 'concealed_carry':
+					reasons.push('Concealed carry permit not recognized');
+					break;
+			}
+		}
+
+		restrictedJurisdictions.push({
+			name: row.name,
+			postal_code: row.postal_code,
+			reasons,
+			citations: row.citations || [],
+		});
+
+		// Extract polygons from geometry (could be Polygon or MultiPolygon)
+		if (geometry.type === 'Polygon') {
+			polygons.push(geometry);
+		} else if (geometry.type === 'MultiPolygon') {
+			for (const coords of geometry.coordinates) {
+				polygons.push({
+					type: 'Polygon',
+					coordinates: coords,
+				});
+			}
+		}
+	}
+
+	// Combine all polygons into a single MultiPolygon
+	const avoidPolygons: GeoJSON.MultiPolygon = {
+		type: 'MultiPolygon',
+		coordinates: polygons.map((p) => p.coordinates),
+	};
+
+	return { avoidPolygons, restrictedJurisdictions };
+}
+
+/**
  * Analyze a route by postal codes (fallback when no geometry data)
  * Takes an array of state postal codes the route passes through
  */

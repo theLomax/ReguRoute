@@ -6,6 +6,7 @@ import { authRoutes } from './routes/auth.js';
 import { routesRoutes } from './routes/routes.js';
 import { calculateRoutes } from './routes/calculate.js';
 import { analyzeRoutes } from './routes/analyze.js';
+import { equipmentRoutes } from './routes/equipment.js';
 
 const server = Fastify({
     logger: true,
@@ -54,6 +55,7 @@ const start = async () => {
         await server.register(routesRoutes, { prefix: '/routes' });
         await server.register(calculateRoutes, { prefix: '/calculate' });
         await server.register(analyzeRoutes, { prefix: '/analyze' });
+        await server.register(equipmentRoutes, { prefix: '/equipment' });
 
         const port = Number(process.env.PORT) || 3000;
         const host = process.env.HOST || '0.0.0.0';

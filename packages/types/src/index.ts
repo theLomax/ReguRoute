@@ -98,6 +98,7 @@ export interface CalculateRouteRequest {
 	destination: Coordinates;
 	waypoints?: Coordinates[];
 	profile?: 'driving-car' | 'driving-hgv';
+	avoid_polygons?: GeoJSON.MultiPolygon;
 }
 
 export interface CalculateRouteResponse {
@@ -152,4 +153,54 @@ export interface AnalyzeRouteByIdRequest {
 
 export interface AnalysisResponse {
 	analysis: RouteAnalysis;
+}
+
+// ============================================
+// Equipment Types
+// ============================================
+
+export interface Equipment {
+	id: string;
+	user_id: string;
+	name: string;
+	description: string | null;
+	cargo_profile: CargoProfile;
+	is_default: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface CreateEquipmentRequest {
+	name: string;
+	description?: string;
+	cargo_profile: CargoProfile;
+	is_default?: boolean;
+}
+
+export interface UpdateEquipmentRequest {
+	name?: string;
+	description?: string;
+	cargo_profile?: CargoProfile;
+	is_default?: boolean;
+}
+
+// ============================================
+// Avoidance Polygon Types
+// ============================================
+
+export interface RestrictedJurisdiction {
+	name: string;
+	postal_code: string;
+	reasons: string[];
+	citations: string[];
+}
+
+export interface AvoidancePolygonsRequest {
+	cargo_profile: CargoProfile;
+}
+
+export interface AvoidancePolygonsResponse {
+	avoid_polygons: GeoJSON.MultiPolygon | null;
+	restricted_jurisdictions: RestrictedJurisdiction[];
+	has_restrictions: boolean;
 }

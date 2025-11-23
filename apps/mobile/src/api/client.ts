@@ -8,6 +8,11 @@ import type {
 	CreateRouteRequest,
 	CalculateRouteRequest,
 	CalculateRouteResponse,
+	Equipment,
+	CreateEquipmentRequest,
+	UpdateEquipmentRequest,
+	CargoProfile,
+	AvoidancePolygonsResponse,
 } from '@reguroute/types';
 
 class ApiError extends Error {
@@ -89,6 +94,33 @@ export const routesApi = {
 
 	calculate: (data: CalculateRouteRequest): Promise<CalculateRouteResponse> =>
 		request('/calculate', { method: 'POST', body: data }),
+};
+
+// Equipment API
+export const equipmentApi = {
+	getAll: (token: string): Promise<{ equipment: Equipment[] }> =>
+		request('/equipment', { token }),
+
+	getById: (token: string, id: string): Promise<{ equipment: Equipment }> =>
+		request(`/equipment/${id}`, { token }),
+
+	getDefault: (token: string): Promise<{ equipment: Equipment | null }> =>
+		request('/equipment/default', { token }),
+
+	create: (token: string, data: CreateEquipmentRequest): Promise<{ equipment: Equipment }> =>
+		request('/equipment', { method: 'POST', body: data, token }),
+
+	update: (token: string, id: string, data: UpdateEquipmentRequest): Promise<{ equipment: Equipment }> =>
+		request(`/equipment/${id}`, { method: 'PUT', body: data, token }),
+
+	delete: (token: string, id: string): Promise<{ success: boolean; id: string }> =>
+		request(`/equipment/${id}`, { method: 'DELETE', token }),
+};
+
+// Analyze API
+export const analyzeApi = {
+	getAvoidancePolygons: (cargoProfile: CargoProfile): Promise<AvoidancePolygonsResponse> =>
+		request('/analyze/avoidance', { method: 'POST', body: { cargo_profile: cargoProfile } }),
 };
 
 export { ApiError };

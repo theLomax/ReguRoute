@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import {
 	analyzeRoute,
 	analyzeRouteByStates,
+	getAvoidancePolygons,
 	type CargoProfile,
 } from '../services/regulations.js';
 
@@ -12,6 +13,10 @@ interface AnalyzeByGeometryBody {
 
 interface AnalyzeByStatesBody {
 	states: string[];
+	cargo_profile: CargoProfile;
+}
+
+interface AvoidancePolygonsBody {
 	cargo_profile: CargoProfile;
 }
 
@@ -189,6 +194,42 @@ export async function analyzeRoutes(fastify: FastifyInstance) {
 			} catch (error) {
 				const message = error instanceof Error ? error.message : 'Analysis failed';
 				fastify.log.error(error, 'Saved route analysis failed');
+				return reply.code(500).send({ error: message });
+			} finally {
+				client.release();
+			}
+		}
+	);
+
+	// POST /analyze/avoidance - Get avoidance polygons for routing based on cargo profile
+	fastify.post<{ Body: AvoidancePolygonsBody }>(
+		'/avoidance',
+		{
+			schema: {
+				body: {
+					type: 'object',
+					required: ['cargo_profile'],
+					properties: {
+						cargo_profile: cargoProfileSchema,
+					},
+				},
+			},
+		},
+		async (request, reply) => {
+			const { cargo_profile } = request.body;
+
+			const client = await fastify.pg.connect();
+			try {
+				const result = await getAvoidancePolygons(client, cargo_profile);
+
+				return {
+					avoid_polygons: result.avoidPolygons,
+					restricted_jurisdictions: result.restrictedJurisdictions,
+					has_restrictions: result.restrictedJurisdictions.length > 0,
+				};
+			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Failed to get avoidance polygons';
+				fastify.log.error(error, 'Avoidance polygon fetch failed');
 				return reply.code(500).send({ error: message });
 			} finally {
 				client.release();
