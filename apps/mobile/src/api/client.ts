@@ -13,6 +13,16 @@ import type {
 	UpdateEquipmentRequest,
 	CargoProfile,
 	AvoidancePolygonsResponse,
+	// New types for loadout system
+	EquipmentItem,
+	CreateEquipmentItemRequest,
+	UpdateEquipmentItemRequest,
+	Loadout,
+	CreateLoadoutRequest,
+	UpdateLoadoutRequest,
+	AddLoadoutItemRequest,
+	UserPermit,
+	CreateUserPermitRequest,
 } from '@reguroute/types';
 
 class ApiError extends Error {
@@ -121,6 +131,78 @@ export const equipmentApi = {
 export const analyzeApi = {
 	getAvoidancePolygons: (cargoProfile: CargoProfile): Promise<AvoidancePolygonsResponse> =>
 		request('/analyze/avoidance', { method: 'POST', body: { cargo_profile: cargoProfile } }),
+};
+
+// ============================================
+// New Loadout System APIs
+// ============================================
+
+// Equipment Items API - individual firearms, suppressors, etc.
+export const equipmentItemsApi = {
+	getAll: (token: string): Promise<{ items: EquipmentItem[] }> =>
+		request('/equipment-items', { token }),
+
+	getById: (token: string, id: string): Promise<{ item: EquipmentItem }> =>
+		request(`/equipment-items/${id}`, { token }),
+
+	create: (token: string, data: CreateEquipmentItemRequest): Promise<{ item: EquipmentItem }> =>
+		request('/equipment-items', { method: 'POST', body: data, token }),
+
+	update: (token: string, id: string, data: UpdateEquipmentItemRequest): Promise<{ item: EquipmentItem }> =>
+		request(`/equipment-items/${id}`, { method: 'PUT', body: data, token }),
+
+	delete: (token: string, id: string): Promise<{ success: boolean; id: string }> =>
+		request(`/equipment-items/${id}`, { method: 'DELETE', token }),
+};
+
+// Loadouts API - named collections of equipment items
+export const loadoutsApi = {
+	getAll: (token: string): Promise<{ loadouts: Loadout[] }> =>
+		request('/loadouts', { token }),
+
+	getById: (token: string, id: string): Promise<{ loadout: Loadout }> =>
+		request(`/loadouts/${id}`, { token }),
+
+	getDefault: (token: string): Promise<{ loadout: Loadout | null }> =>
+		request('/loadouts/default', { token }),
+
+	create: (token: string, data: CreateLoadoutRequest): Promise<{ loadout: Loadout }> =>
+		request('/loadouts', { method: 'POST', body: data, token }),
+
+	update: (token: string, id: string, data: UpdateLoadoutRequest): Promise<{ loadout: Loadout }> =>
+		request(`/loadouts/${id}`, { method: 'PUT', body: data, token }),
+
+	delete: (token: string, id: string): Promise<{ success: boolean; id: string }> =>
+		request(`/loadouts/${id}`, { method: 'DELETE', token }),
+
+	// Add item to loadout
+	addItem: (token: string, loadoutId: string, data: AddLoadoutItemRequest): Promise<{ success: boolean }> =>
+		request(`/loadouts/${loadoutId}/items`, { method: 'POST', body: data, token }),
+
+	// Remove item from loadout
+	removeItem: (token: string, loadoutId: string, itemId: string): Promise<{ success: boolean }> =>
+		request(`/loadouts/${loadoutId}/items/${itemId}`, { method: 'DELETE', token }),
+};
+
+// Permits API - CCW permits separate from equipment
+export const permitsApi = {
+	getAll: (token: string): Promise<{ permits: UserPermit[] }> =>
+		request('/permits', { token }),
+
+	getActive: (token: string): Promise<{ permits: UserPermit[] }> =>
+		request('/permits/active', { token }),
+
+	getById: (token: string, id: string): Promise<{ permit: UserPermit }> =>
+		request(`/permits/${id}`, { token }),
+
+	create: (token: string, data: CreateUserPermitRequest): Promise<{ permit: UserPermit }> =>
+		request('/permits', { method: 'POST', body: data, token }),
+
+	update: (token: string, id: string, data: Partial<CreateUserPermitRequest & { is_active: boolean }>): Promise<{ permit: UserPermit }> =>
+		request(`/permits/${id}`, { method: 'PUT', body: data, token }),
+
+	delete: (token: string, id: string): Promise<{ success: boolean; id: string }> =>
+		request(`/permits/${id}`, { method: 'DELETE', token }),
 };
 
 export { ApiError };

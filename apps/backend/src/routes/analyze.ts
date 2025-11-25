@@ -39,8 +39,7 @@ const cargoProfileSchema = {
 		},
 		has_concealed_carry_permit: { type: 'boolean' },
 		permit_states: { type: 'array', items: { type: 'string' } },
-		magazine_capacity: { type: 'number' },
-		has_assault_weapon: { type: 'boolean' },
+		ammunition_capacity: { type: 'number' },
 	},
 };
 

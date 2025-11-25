@@ -16,8 +16,7 @@ const DEFAULT_CARGO_PROFILE: CargoProfile = {
 	firearm_types: [],
 	has_concealed_carry_permit: false,
 	permit_states: [],
-	magazine_capacity: undefined,
-	has_assault_weapon: false,
+	ammunition_capacity: undefined,
 };
 
 interface CargoContextValue {

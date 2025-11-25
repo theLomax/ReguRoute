@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import {
 	View,
 	Text,
@@ -13,12 +13,15 @@ import { Ionicons } from '@expo/vector-icons';
 import type {
 	Coordinates,
 	CalculateRouteResponse,
-	CargoProfile,
-	Equipment,
 	RestrictedJurisdiction,
+	EquipmentItem,
+	Loadout,
+	UserPermit,
+	CreateEquipmentItemRequest,
 } from '@reguroute/types';
+import { buildCargoProfile } from '@reguroute/types';
 import { useRoutes, useAuth } from '../contexts';
-import { routesApi, equipmentApi, analyzeApi } from '../api';
+import { routesApi, equipmentItemsApi, loadoutsApi, permitsApi, analyzeApi } from '../api';
 import { colors } from '../theme';
 import { Card, Button, LoadingSpinner, LocationAutocomplete, EquipmentSelector } from '../components';
 
@@ -33,10 +36,11 @@ export default function RoutePlanScreen() {
 	const { createRoute, fetchRoutes } = useRoutes();
 	const { token } = useAuth();
 
-	// Equipment state
-	const [equipment, setEquipment] = useState<Equipment[]>([]);
-	const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
-	const [customCargoProfile, setCustomCargoProfile] = useState<CargoProfile | null>(null);
+	// Equipment and loadout state
+	const [equipmentItems, setEquipmentItems] = useState<EquipmentItem[]>([]);
+	const [loadouts, setLoadouts] = useState<Loadout[]>([]);
+	const [selectedLoadouts, setSelectedLoadouts] = useState<Loadout[]>([]);
+	const [permits, setPermits] = useState<UserPermit[]>([]);
 	const [isLoadingEquipment, setIsLoadingEquipment] = useState(true);
 
 	// Route state
@@ -51,43 +55,101 @@ export default function RoutePlanScreen() {
 	// Restriction analysis state
 	const [restrictedJurisdictions, setRestrictedJurisdictions] = useState<RestrictedJurisdiction[]>([]);
 
-	// Get active cargo profile
-	const activeCargoProfile = selectedEquipment?.cargo_profile || customCargoProfile;
+	// Compute cargo profile from selected loadouts and permits
+	const activeCargoProfile = useMemo(() => {
+		return buildCargoProfile(selectedLoadouts, permits);
+	}, [selectedLoadouts, permits]);
 
-	// Load user's equipment presets
+	// Load user's equipment items, loadouts, and permits
 	useEffect(() => {
-		async function loadEquipment() {
+		async function loadData() {
 			if (!token) {
 				setIsLoadingEquipment(false);
 				return;
 			}
 			try {
-				const { equipment: items } = await equipmentApi.getAll(token);
-				setEquipment(items);
-				// Auto-select default if exists
-				const defaultItem = items.find(e => e.is_default);
-				if (defaultItem) {
-					setSelectedEquipment(defaultItem);
+				// Load all data in parallel
+				const [itemsResult, loadoutsResult, permitsResult] = await Promise.all([
+					equipmentItemsApi.getAll(token),
+					loadoutsApi.getAll(token),
+					permitsApi.getActive(token),
+				]);
+
+				setEquipmentItems(itemsResult.items);
+				setLoadouts(loadoutsResult.loadouts);
+				setPermits(permitsResult.permits);
+
+				// Auto-select default loadout if exists
+				const defaultLoadout = loadoutsResult.loadouts.find(l => l.is_default);
+				if (defaultLoadout) {
+					setSelectedLoadouts([defaultLoadout]);
 				}
 			} catch (error) {
-				console.error('Failed to load equipment:', error);
+				console.error('Failed to load equipment data:', error);
 			} finally {
 				setIsLoadingEquipment(false);
 			}
 		}
-		loadEquipment();
+		loadData();
 	}, [token]);
 
-	// Handler to create new equipment preset
-	const handleCreateEquipment = async (name: string, profile: CargoProfile) => {
-		if (!token) return;
-		const { equipment: newItem } = await equipmentApi.create(token, {
+	// Handler to create new equipment item
+	const handleCreateItem = async (data: CreateEquipmentItemRequest): Promise<EquipmentItem> => {
+		if (!token) throw new Error('Not authenticated');
+		const { item } = await equipmentItemsApi.create(token, data);
+		setEquipmentItems(prev => [...prev, item]);
+		return item;
+	};
+
+	// Handler to create new loadout
+	const handleCreateLoadout = async (name: string, itemIds: string[]): Promise<Loadout> => {
+		if (!token) throw new Error('Not authenticated');
+		const { loadout } = await loadoutsApi.create(token, {
 			name,
-			cargo_profile: profile,
+			item_ids: itemIds,
 		});
-		setEquipment(prev => [...prev, newItem]);
-		setSelectedEquipment(newItem);
-		setCustomCargoProfile(null);
+		setLoadouts(prev => [...prev, loadout]);
+		setSelectedLoadouts(prev => [...prev, loadout]);
+		return loadout;
+	};
+
+	// Handler to update loadout (name and items)
+	const handleUpdateLoadout = async (loadoutId: string, name: string, itemIds: string[]): Promise<Loadout> => {
+		if (!token) throw new Error('Not authenticated');
+
+		// Update name first
+		await loadoutsApi.update(token, loadoutId, { name });
+
+		// Get current loadout to find items to add/remove
+		const currentLoadout = loadouts.find(l => l.id === loadoutId);
+		const currentItemIds = currentLoadout?.items?.map(i => i.equipment_item_id) || [];
+
+		// Remove items no longer selected
+		for (const itemId of currentItemIds) {
+			if (!itemIds.includes(itemId)) {
+				await loadoutsApi.removeItem(token, loadoutId, itemId);
+			}
+		}
+
+		// Add new items
+		for (const itemId of itemIds) {
+			if (!currentItemIds.includes(itemId)) {
+				await loadoutsApi.addItem(token, loadoutId, { equipment_item_id: itemId });
+			}
+		}
+
+		// Fetch updated loadout
+		const { loadout } = await loadoutsApi.getById(token, loadoutId);
+		setLoadouts(prev => prev.map(l => l.id === loadoutId ? loadout : l));
+		return loadout;
+	};
+
+	// Handler to delete loadout
+	const handleDeleteLoadout = async (loadoutId: string): Promise<void> => {
+		if (!token) throw new Error('Not authenticated');
+		await loadoutsApi.delete(token, loadoutId);
+		setLoadouts(prev => prev.filter(l => l.id !== loadoutId));
+		setSelectedLoadouts(prev => prev.filter(l => l.id !== loadoutId));
 	};
 
 	const handleOriginChange = (text: string) => {
@@ -210,13 +272,15 @@ export default function RoutePlanScreen() {
 					</Text>
 
 					<EquipmentSelector
-						equipment={equipment}
-						selectedEquipment={selectedEquipment}
-						customCargoProfile={customCargoProfile}
+						loadouts={loadouts}
+						selectedLoadouts={selectedLoadouts}
+						equipmentItems={equipmentItems}
 						isLoading={isLoadingEquipment}
-						onSelectEquipment={setSelectedEquipment}
-						onSetCustomProfile={setCustomCargoProfile}
-						onCreateEquipment={token ? handleCreateEquipment : undefined}
+						onSelectLoadouts={setSelectedLoadouts}
+						onCreateItem={token ? handleCreateItem : undefined}
+						onCreateLoadout={token ? handleCreateLoadout : undefined}
+						onUpdateLoadout={token ? handleUpdateLoadout : undefined}
+						onDeleteLoadout={token ? handleDeleteLoadout : undefined}
 					/>
 
 					<Button
@@ -377,13 +441,22 @@ export default function RoutePlanScreen() {
 					Search for any US city - powered by OpenStreetMap
 				</Text>
 
-				{/* Equipment summary */}
-				{activeCargoProfile?.has_firearms && (
+				{/* Loadout summary */}
+				{selectedLoadouts.length > 0 && (
 					<Card style={styles.equipmentSummary}>
 						<View style={styles.equipmentSummaryRow}>
 							<Ionicons name="briefcase" size={18} color={colors.primary} />
 							<Text style={styles.equipmentSummaryText}>
-								{selectedEquipment?.name || 'Custom Equipment'}
+								{selectedLoadouts.length === 1
+									? selectedLoadouts[0].name
+									: `${selectedLoadouts.length} loadouts`}
+								{(() => {
+									const totalItems = selectedLoadouts.reduce(
+										(sum, l) => sum + (l.items?.length || 0),
+										0
+									);
+									return totalItems > 0 ? ` (${totalItems} items)` : '';
+								})()}
 							</Text>
 							<Button
 								title="Change"

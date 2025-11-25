@@ -70,14 +70,14 @@ export default function MainTabs() {
 				options={{ title: 'My Routes' }}
 			/>
 			<Tab.Screen
+				name="Cargo"
+				component={CargoProfileScreen}
+				options={{ title: 'Loadout' }}
+			/>
+			<Tab.Screen
 				name="PlanRoute"
 				component={RoutePlanScreen}
 				options={{ title: 'Plan Route' }}
-			/>
-			<Tab.Screen
-				name="Cargo"
-				component={CargoProfileScreen}
-				options={{ title: 'Gear' }}
 			/>
 			<Tab.Screen
 				name="Account"

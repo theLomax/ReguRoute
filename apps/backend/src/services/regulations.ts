@@ -10,8 +10,8 @@ export interface CargoProfile {
 	firearm_types?: ('handgun' | 'rifle' | 'shotgun')[];
 	has_concealed_carry_permit?: boolean;
 	permit_states?: string[]; // States where permit is valid
-	magazine_capacity?: number;
-	has_assault_weapon?: boolean;
+	ammunition_capacity?: number; // Max rounds (magazine, tube, cylinder, etc.)
+	// TODO: Future - add firearm_id to reference a firearms database
 }
 
 export interface JurisdictionRegulation {
@@ -152,39 +152,27 @@ export function generateAlerts(
 			}
 		}
 
-		// Check magazine capacity limits
+		// Check ammunition capacity limits (magazine, tube, cylinder, etc.)
 		if (
 			reg.category === 'magazine_capacity' &&
 			reg.magazine_capacity_limit &&
-			cargoProfile.magazine_capacity
+			cargoProfile.ammunition_capacity
 		) {
-			if (cargoProfile.magazine_capacity > reg.magazine_capacity_limit) {
+			if (cargoProfile.ammunition_capacity > reg.magazine_capacity_limit) {
 				alerts.push({
 					jurisdiction: reg.jurisdiction_name,
 					postal_code: reg.postal_code,
 					severity: 'critical',
-					category: 'Magazine Capacity',
-					message: `${reg.jurisdiction_name} limits magazine capacity to ${reg.magazine_capacity_limit} rounds. Your ${cargoProfile.magazine_capacity}-round magazines are prohibited.`,
+					category: 'Ammunition Capacity',
+					message: `${reg.jurisdiction_name} limits ammunition capacity to ${reg.magazine_capacity_limit} rounds. Your ${cargoProfile.ammunition_capacity}-round capacity exceeds the limit.`,
 					citation: reg.statutory_citation || undefined,
 				});
 			}
 		}
 
-		// Check assault weapons ban
-		if (
-			reg.category === 'assault_weapons' &&
-			reg.is_restricted &&
-			cargoProfile.has_assault_weapon
-		) {
-			alerts.push({
-				jurisdiction: reg.jurisdiction_name,
-				postal_code: reg.postal_code,
-				severity: 'critical',
-				category: 'Assault Weapons',
-				message: `${reg.jurisdiction_name} prohibits assault weapons. Your firearm may be classified as prohibited.`,
-				citation: reg.statutory_citation || undefined,
-			});
-		}
+		// Note: Assault weapons regulations are state-specific and variable
+		// TODO: Implement assault weapon classification logic based on state definitions
+		// For now, this check is disabled until we have proper state-specific rules
 
 		// Check vehicle transport requirements
 		if (
@@ -317,19 +305,17 @@ export async function getAvoidancePolygons(
 
 	// Critical restrictions that warrant route avoidance:
 
-	// 1. Assault weapons ban - if user has assault weapon
-	if (cargoProfile.has_assault_weapon) {
-		conditions.push(`(r.category = 'assault_weapons' AND r.is_restricted = true)`);
-	}
-
-	// 2. Magazine capacity limits - if user's magazines exceed limit
-	if (cargoProfile.magazine_capacity) {
+	// 1. Ammunition capacity limits - if user's capacity exceeds state limit
+	if (cargoProfile.ammunition_capacity) {
 		conditions.push(
 			`(r.category = 'magazine_capacity' AND r.magazine_capacity_limit IS NOT NULL AND r.magazine_capacity_limit < $${paramIndex})`
 		);
-		params.push(cargoProfile.magazine_capacity);
+		params.push(cargoProfile.ammunition_capacity);
 		paramIndex++;
 	}
+
+	// Note: Assault weapons avoidance is disabled until we have state-specific definitions
+	// TODO: Implement assault weapon classification based on state-specific rules
 
 	// 3. No-issue states for concealed carry - if user doesn't have a recognized permit
 	if (cargoProfile.has_concealed_carry_permit && cargoProfile.permit_states?.length) {
@@ -389,11 +375,8 @@ export async function getAvoidancePolygons(
 		const reasons: string[] = [];
 		for (const category of row.categories) {
 			switch (category) {
-				case 'assault_weapons':
-					reasons.push('Assault weapons prohibited');
-					break;
 				case 'magazine_capacity':
-					reasons.push('Magazine capacity exceeds limit');
+					reasons.push('Ammunition capacity exceeds state limit');
 					break;
 				case 'concealed_carry':
 					reasons.push('Concealed carry permit not recognized');
