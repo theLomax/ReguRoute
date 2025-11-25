@@ -22,7 +22,6 @@ export interface JurisdictionRegulation {
 	is_restricted: boolean;
 	restriction_level: number;
 	permit_required: boolean;
-	permit_type: string | null;
 	magazine_capacity_limit: number | null;
 	minimum_age: number | null;
 	waiting_period_days: number | null;
@@ -95,7 +94,6 @@ export async function getRegulationsForJurisdictions(
 		   r.is_restricted,
 		   r.restriction_level,
 		   r.permit_required,
-		   r.permit_type,
 		   r.magazine_capacity_limit,
 		   r.minimum_age,
 		   r.waiting_period_days,
@@ -135,18 +133,6 @@ export function generateAlerts(
 					severity: reg.restriction_level >= 7 ? 'critical' : 'warning',
 					category: 'Concealed Carry',
 					message: `${reg.jurisdiction_name} requires a concealed carry permit. Your permit may not be recognized.`,
-					citation: reg.statutory_citation || undefined,
-				});
-			} else if (
-				reg.permit_type === 'may_issue' ||
-				reg.permit_type === 'no_issue'
-			) {
-				alerts.push({
-					jurisdiction: reg.jurisdiction_name,
-					postal_code: reg.postal_code,
-					severity: 'critical',
-					category: 'Concealed Carry',
-					message: `${reg.jurisdiction_name} is a ${reg.permit_type === 'no_issue' ? 'no-issue' : 'may-issue'} state. Concealed carry may not be permitted.`,
 					citation: reg.statutory_citation || undefined,
 				});
 			}
@@ -317,14 +303,8 @@ export async function getAvoidancePolygons(
 	// Note: Assault weapons avoidance is disabled until we have state-specific definitions
 	// TODO: Implement assault weapon classification based on state-specific rules
 
-	// 3. No-issue states for concealed carry - if user doesn't have a recognized permit
-	if (cargoProfile.has_concealed_carry_permit && cargoProfile.permit_states?.length) {
-		// User has permit, avoid states that don't recognize it
-		// For now, we'll flag may-issue and no-issue states
-		conditions.push(
-			`(r.category = 'concealed_carry' AND r.permit_type IN ('no_issue', 'may_issue') AND r.is_restricted = true)`
-		);
-	} else if (!cargoProfile.has_concealed_carry_permit) {
+	// 3. Concealed carry restrictions
+	if (!cargoProfile.has_concealed_carry_permit) {
 		// No permit - avoid states requiring permits for concealed carry
 		conditions.push(
 			`(r.category = 'concealed_carry' AND r.permit_required = true AND r.is_restricted = true AND r.restriction_level >= 7)`
