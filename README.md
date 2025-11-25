@@ -59,6 +59,74 @@ This is the recommended way to run the entire application stack, including the b
     - **Routing Engine**: Visit `http://localhost:8080/ors/v2/health`. You should see `{"status":"ready"}`.
     - **Database**: Connect to the database using a client like DBeaver or TablePlus with the credentials from the `docker-compose.yml` file (host: `localhost`, port: `5432`).
 
+### Docker Commands Reference
+
+#### Starting Services
+```bash
+# Start all services (build if needed)
+docker compose up --build
+
+# Start services in detached mode (background)
+docker compose up -d
+
+# Start only specific services
+docker compose up backend db
+```
+
+#### Stopping Services
+```bash
+# Stop all running services (keeps containers)
+docker compose stop
+
+# Stop and remove containers, networks
+docker compose down
+
+# Stop and remove containers, networks, and volumes (WARNING: deletes database data)
+docker compose down -v
+```
+
+#### Viewing Logs
+```bash
+# View logs from all services (follow mode)
+docker compose logs -f
+
+# View logs from a specific service
+docker compose logs -f backend
+docker compose logs -f db
+docker compose logs -f reguroute-ors
+
+# View last 100 lines of logs
+docker compose logs --tail=100 backend
+```
+
+#### Service Status and Management
+```bash
+# List running containers
+docker compose ps
+
+# Restart a specific service
+docker compose restart backend
+
+# Restart all services
+docker compose restart
+
+# Execute commands in a running container
+docker compose exec backend sh
+docker compose exec db psql -U postgres -d reguroute
+```
+
+#### Cleanup
+```bash
+# Remove stopped containers
+docker compose rm
+
+# Remove all unused images, containers, networks
+docker system prune
+
+# Remove all unused images, containers, networks, and volumes (WARNING: aggressive cleanup)
+docker system prune -a --volumes
+```
+
 ## Database Migrations
 
 The backend uses `node-pg-migrate` to manage database schema changes. Migrations are version-controlled TypeScript files that allow you to evolve your database schema safely.
@@ -394,14 +462,66 @@ The mobile app is a React Native application built with Expo, located in `apps/m
 
 ### Running the Mobile App
 
+#### Start Development Server
 ```bash
+# Start the Expo development server
 pnpm --filter mobile start
+
+# Start with cache cleared
+pnpm --filter mobile start --clear
 ```
 
 This starts the Expo development server. You can then:
 - Scan the QR code with Expo Go (Android) or Camera app (iOS)
 - Press `a` to open in Android emulator
 - Press `i` to open in iOS simulator (macOS only)
+- Press `w` to open in web browser
+
+#### Expo Commands Reference
+
+```bash
+# Start the development server
+pnpm --filter mobile start
+
+# Run on Android device/emulator
+pnpm --filter mobile android
+
+# Run on iOS simulator (macOS only)
+pnpm --filter mobile ios
+
+# Run in web browser
+pnpm --filter mobile web
+
+# TypeScript type checking
+pnpm --filter mobile typecheck
+
+# Lint the code
+pnpm --filter mobile lint
+
+# Run tests
+pnpm --filter mobile test
+
+# Clear Expo cache and restart
+pnpm --filter mobile start --clear
+```
+
+#### Environment Configuration
+
+The mobile app connects to the backend API. Make sure to configure the API URL:
+
+**For local development:**
+- Android Emulator: `http://10.0.2.2:3000`
+- iOS Simulator: `http://localhost:3000`
+- Physical Device: `http://<your-computer-ip>:3000`
+
+You can find your computer's IP address:
+```bash
+# macOS/Linux
+ipconfig getifaddr en0
+
+# Windows
+ipconfig
+```
 
 ### Shared Types
 
