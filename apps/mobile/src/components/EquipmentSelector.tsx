@@ -629,9 +629,7 @@ export default function EquipmentSelector({
 						<Text style={styles.modalTitle}>
 							{editingLoadout ? 'Edit Loadout' : 'New Loadout'}
 						</Text>
-						<TouchableOpacity onPress={handleSaveLoadout}>
-							<Text style={styles.modalDone}>Save</Text>
-						</TouchableOpacity>
+						<View style={styles.modalHeaderSpacer} />
 					</View>
 
 					<ScrollView style={styles.modalContent}>
@@ -686,6 +684,12 @@ export default function EquipmentSelector({
 								</>
 							)}
 						</Card>
+
+						<Button
+							title="Save Loadout"
+							onPress={handleSaveLoadout}
+							style={styles.saveButton}
+						/>
 
 						{editingLoadout && onDeleteLoadout && (
 							<Button
@@ -900,6 +904,9 @@ const styles = StyleSheet.create({
 		fontWeight: '600',
 		color: colors.primary,
 	},
+	modalHeaderSpacer: {
+		width: 60,
+	},
 	modalContent: {
 		flex: 1,
 		padding: 16,
@@ -968,8 +975,11 @@ const styles = StyleSheet.create({
 		color: colors.textMuted,
 		fontStyle: 'italic',
 	},
+	saveButton: {
+		marginTop: 8,
+	},
 	deleteButton: {
-		marginTop: 16,
+		marginTop: 8,
 		marginBottom: 32,
 	},
 });
