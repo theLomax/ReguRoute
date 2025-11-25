@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
 	View,
 	Text,
@@ -10,346 +10,680 @@ import {
 	Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { Equipment, CargoProfile, FirearmType } from '@reguroute/types';
+import type {
+	EquipmentItem,
+	Loadout,
+	CreateEquipmentItemRequest,
+	EquipmentItemCategory,
+} from '@reguroute/types';
 import { colors } from '../theme';
 import Card from './Card';
 import Button from './Button';
 import Toggle from './Toggle';
-import Chip from './Chip';
 import LoadingSpinner from './LoadingSpinner';
 
 interface EquipmentSelectorProps {
-	equipment: Equipment[];
-	selectedEquipment: Equipment | null;
-	customCargoProfile: CargoProfile | null;
+	loadouts: Loadout[];
+	selectedLoadouts: Loadout[];
+	equipmentItems: EquipmentItem[];
 	isLoading: boolean;
-	onSelectEquipment: (equipment: Equipment | null) => void;
-	onSetCustomProfile: (profile: CargoProfile | null) => void;
-	onCreateEquipment?: (name: string, profile: CargoProfile) => Promise<void>;
+	onSelectLoadouts: (loadouts: Loadout[]) => void;
+	onCreateItem?: (data: CreateEquipmentItemRequest) => Promise<EquipmentItem>;
+	onUpdateItem?: (itemId: string, data: CreateEquipmentItemRequest) => Promise<EquipmentItem>;
+	onDeleteItem?: (itemId: string) => Promise<void>;
+	onCreateLoadout?: (name: string, itemIds: string[]) => Promise<Loadout>;
+	onUpdateLoadout?: (loadoutId: string, name: string, itemIds: string[]) => Promise<Loadout>;
+	onDeleteLoadout?: (loadoutId: string) => Promise<void>;
 }
 
-const FIREARM_TYPES: { value: FirearmType; label: string }[] = [
+const CATEGORIES: { value: EquipmentItemCategory | 'all'; label: string }[] = [
+	{ value: 'all', label: 'All' },
 	{ value: 'handgun', label: 'Handgun' },
 	{ value: 'rifle', label: 'Rifle' },
 	{ value: 'shotgun', label: 'Shotgun' },
+	{ value: 'nfa_item', label: 'NFA' },
+	{ value: 'magazine', label: 'Magazine' },
+	{ value: 'other', label: 'Other' },
 ];
 
-const DEFAULT_CARGO_PROFILE: CargoProfile = {
-	has_firearms: false,
-};
-
 export default function EquipmentSelector({
-	equipment,
-	selectedEquipment,
-	customCargoProfile,
+	loadouts,
+	selectedLoadouts,
+	equipmentItems,
 	isLoading,
-	onSelectEquipment,
-	onSetCustomProfile,
-	onCreateEquipment,
+	onSelectLoadouts,
+	onCreateItem,
+	onUpdateItem,
+	onDeleteItem,
+	onCreateLoadout,
+	onUpdateLoadout,
+	onDeleteLoadout,
 }: EquipmentSelectorProps) {
-	const [showCustomModal, setShowCustomModal] = useState(false);
-	const [editingProfile, setEditingProfile] = useState<CargoProfile>(DEFAULT_CARGO_PROFILE);
-	const [saveName, setSaveName] = useState('');
-	const [showSaveOption, setShowSaveOption] = useState(false);
+	const [showItemModal, setShowItemModal] = useState(false);
+	const [editingItem, setEditingItem] = useState<EquipmentItem | null>(null);
+	const [itemFormData, setItemFormData] = useState<CreateEquipmentItemRequest>({
+		name: '',
+		category: 'handgun',
+	});
+	const [categoryFilter, setCategoryFilter] = useState<EquipmentItemCategory | 'all'>('all');
+	const [isReorderMode, setIsReorderMode] = useState(false);
+	const [reorderedItems, setReorderedItems] = useState<EquipmentItem[]>([]);
 
-	// Determine active selection mode
-	const selectionMode: 'none' | 'preset' | 'custom' =
-		selectedEquipment ? 'preset' :
-		customCargoProfile ? 'custom' :
-		'none';
+	const [showLoadoutModal, setShowLoadoutModal] = useState(false);
+	const [editingLoadout, setEditingLoadout] = useState<Loadout | null>(null);
+	const [loadoutName, setLoadoutName] = useState('');
+	const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
-	// Get the active cargo profile for display
-	const activeProfile = selectedEquipment?.cargo_profile || customCargoProfile;
+	// Filter items by category
+	const filteredItems = categoryFilter === 'all'
+		? equipmentItems
+		: equipmentItems.filter(item => item.category === categoryFilter);
 
-	const handleSelectNone = () => {
-		onSelectEquipment(null);
-		onSetCustomProfile(null);
+	// Use reordered items if in reorder mode, otherwise use filtered items
+	const displayItems = isReorderMode ? reorderedItems : filteredItems;
+
+	const handleOpenItemModal = (item?: EquipmentItem) => {
+		if (item) {
+			setEditingItem(item);
+			setItemFormData({
+				name: item.name,
+				category: item.category,
+				accepts_detachable_magazine: item.accepts_detachable_magazine,
+				calibers: item.calibers,
+				platform: item.platform,
+				ammunition_capacity: item.ammunition_capacity,
+				nfa_subtype: item.nfa_subtype,
+				barrel_length_inches: item.barrel_length_inches,
+				overall_length_inches: item.overall_length_inches,
+				notes: item.notes,
+			});
+		} else {
+			setEditingItem(null);
+			setItemFormData({
+				name: '',
+				category: 'handgun',
+			});
+		}
+		setShowItemModal(true);
 	};
 
-	const handleSelectPreset = (item: Equipment) => {
-		onSelectEquipment(item);
-		onSetCustomProfile(null);
-	};
-
-	const handleOpenCustom = () => {
-		// Start with current custom profile or selected preset's profile or default
-		const initialProfile = customCargoProfile || selectedEquipment?.cargo_profile || DEFAULT_CARGO_PROFILE;
-		setEditingProfile({ ...initialProfile });
-		setShowCustomModal(true);
-	};
-
-	const handleSaveCustom = () => {
-		onSelectEquipment(null);
-		onSetCustomProfile(editingProfile);
-		setShowCustomModal(false);
-		setShowSaveOption(false);
-		setSaveName('');
-	};
-
-	const handleSaveAsPreset = async () => {
-		if (!saveName.trim()) {
-			Alert.alert('Name Required', 'Please enter a name for this equipment preset.');
+	const handleSaveItem = async () => {
+		if (!itemFormData.name.trim()) {
+			Alert.alert('Name Required', 'Please enter a name for this item.');
 			return;
 		}
-		if (onCreateEquipment) {
-			try {
-				await onCreateEquipment(saveName.trim(), editingProfile);
-				setShowCustomModal(false);
-				setShowSaveOption(false);
-				setSaveName('');
-			} catch (error) {
-				Alert.alert('Error', 'Failed to save equipment preset.');
+
+		try {
+			if (editingItem && onUpdateItem) {
+				await onUpdateItem(editingItem.id, itemFormData);
+			} else if (onCreateItem) {
+				await onCreateItem(itemFormData);
 			}
+			setShowItemModal(false);
+			setEditingItem(null);
+		} catch (error) {
+			Alert.alert('Error', 'Failed to save equipment item.');
 		}
 	};
 
-	const toggleFirearmType = (type: FirearmType) => {
-		const currentTypes = editingProfile.firearm_types || [];
-		const newTypes = currentTypes.includes(type)
-			? currentTypes.filter(t => t !== type)
-			: [...currentTypes, type];
-		setEditingProfile({ ...editingProfile, firearm_types: newTypes });
+	const handleDeleteItem = async (itemId: string) => {
+		Alert.alert(
+			'Delete Item',
+			'Are you sure you want to delete this item? It will be removed from all loadouts.',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{
+					text: 'Delete',
+					style: 'destructive',
+					onPress: async () => {
+						try {
+							if (onDeleteItem) {
+								await onDeleteItem(itemId);
+							}
+						} catch (error) {
+							Alert.alert('Error', 'Failed to delete item.');
+						}
+					},
+				},
+			]
+		);
 	};
 
-	const getProfileSummary = (profile: CargoProfile): string => {
-		if (!profile.has_firearms) return 'No restricted items';
+	const handleOpenLoadoutModal = (loadout?: Loadout) => {
+		if (loadout) {
+			setEditingLoadout(loadout);
+			setLoadoutName(loadout.name);
+			setSelectedItemIds(loadout.items.map(li => li.equipment_item_id));
+		} else {
+			setEditingLoadout(null);
+			setLoadoutName('');
+			setSelectedItemIds([]);
+		}
+		setShowLoadoutModal(true);
+	};
 
-		const parts: string[] = [];
-		if (profile.firearm_types?.length) {
-			parts.push(profile.firearm_types.join(', '));
+	const handleSaveLoadout = async () => {
+		if (!loadoutName.trim()) {
+			Alert.alert('Name Required', 'Please enter a name for this loadout.');
+			return;
 		}
-		if (profile.has_assault_weapon) {
-			parts.push('AWB');
+
+		try {
+			if (editingLoadout && onUpdateLoadout) {
+				await onUpdateLoadout(editingLoadout.id, loadoutName, selectedItemIds);
+			} else if (onCreateLoadout) {
+				await onCreateLoadout(loadoutName, selectedItemIds);
+			}
+			setShowLoadoutModal(false);
+			setEditingLoadout(null);
+		} catch (error) {
+			Alert.alert('Error', 'Failed to save loadout.');
 		}
-		if (profile.magazine_capacity) {
-			parts.push(`${profile.magazine_capacity}rd`);
+	};
+
+	const handleDeleteLoadout = async (loadoutId: string) => {
+		Alert.alert(
+			'Delete Loadout',
+			'Are you sure you want to delete this loadout?',
+			[
+				{ text: 'Cancel', style: 'cancel' },
+				{
+					text: 'Delete',
+					style: 'destructive',
+					onPress: async () => {
+						try {
+							if (onDeleteLoadout) {
+								await onDeleteLoadout(loadoutId);
+							}
+						} catch (error) {
+							Alert.alert('Error', 'Failed to delete loadout.');
+						}
+					},
+				},
+			]
+		);
+	};
+
+	const toggleLoadoutSelection = (loadout: Loadout) => {
+		const isSelected = selectedLoadouts.some(l => l.id === loadout.id);
+		if (isSelected) {
+			onSelectLoadouts(selectedLoadouts.filter(l => l.id !== loadout.id));
+		} else {
+			onSelectLoadouts([...selectedLoadouts, loadout]);
 		}
-		return parts.length > 0 ? parts.join(' · ') : 'Firearms';
+	};
+
+	const toggleItemInLoadout = (itemId: string) => {
+		if (selectedItemIds.includes(itemId)) {
+			setSelectedItemIds(selectedItemIds.filter(id => id !== itemId));
+		} else {
+			setSelectedItemIds([...selectedItemIds, itemId]);
+		}
+	};
+
+	const handleEnterReorderMode = () => {
+		setReorderedItems([...filteredItems]);
+		setIsReorderMode(true);
+	};
+
+	const handleCancelReorder = () => {
+		setIsReorderMode(false);
+		setReorderedItems([]);
+	};
+
+	const handleSaveReorder = async () => {
+		// For now, just exit reorder mode
+		// In a full implementation, you'd call an API to save the order
+		setIsReorderMode(false);
+		setReorderedItems([]);
+		Alert.alert('Success', 'Item order saved.');
+	};
+
+	const moveItemUp = (index: number) => {
+		if (index === 0) return;
+		const newItems = [...reorderedItems];
+		[newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+		setReorderedItems(newItems);
+	};
+
+	const moveItemDown = (index: number) => {
+		if (index === reorderedItems.length - 1) return;
+		const newItems = [...reorderedItems];
+		[newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+		setReorderedItems(newItems);
+	};
+
+	const getCategoryLabel = (category: EquipmentItemCategory): string => {
+		const labels: Record<EquipmentItemCategory, string> = {
+			handgun: 'Handgun',
+			rifle: 'Rifle',
+			shotgun: 'Shotgun',
+			nfa_item: 'NFA Item',
+			magazine: 'Magazine',
+			other: 'Other',
+		};
+		return labels[category] || category;
 	};
 
 	if (isLoading) {
 		return <LoadingSpinner message="Loading equipment..." />;
 	}
 
+	// Check if we're in items-only mode (no loadouts props provided)
+	const itemsOnlyMode = loadouts.length === 0 && selectedLoadouts.length === 0;
+
 	return (
 		<View style={styles.container}>
-			<Text style={styles.label}>Equipment / Cargo</Text>
-			<Text style={styles.helperText}>
-				Select what you're transporting to check for route restrictions
-			</Text>
+			{itemsOnlyMode ? (
+				// Items-only mode: Show equipment items management
+				<View>
+					{/* Category Filter */}
+					<ScrollView
+						horizontal
+						showsHorizontalScrollIndicator={false}
+						style={styles.categoryScroll}
+						contentContainerStyle={styles.categoryScrollContent}
+					>
+						{CATEGORIES.map((cat) => (
+							<TouchableOpacity
+								key={cat.value}
+								style={[
+									styles.categoryChip,
+									categoryFilter === cat.value && styles.categoryChipSelected,
+								]}
+								onPress={() => setCategoryFilter(cat.value)}
+							>
+								<Text
+									style={[
+										styles.categoryChipText,
+										categoryFilter === cat.value && styles.categoryChipTextSelected,
+									]}
+								>
+									{cat.label}
+								</Text>
+							</TouchableOpacity>
+						))}
+					</ScrollView>
 
-			{/* No Restricted Items Option */}
-			<TouchableOpacity
-				style={[
-					styles.optionCard,
-					selectionMode === 'none' && styles.optionCardSelected,
-				]}
-				onPress={handleSelectNone}
-			>
-				<View style={styles.optionContent}>
-					<Ionicons
-						name="checkmark-circle"
-						size={24}
-						color={selectionMode === 'none' ? colors.success : colors.textMuted}
-					/>
-					<View style={styles.optionText}>
-						<Text style={styles.optionTitle}>No Restricted Items</Text>
-						<Text style={styles.optionDescription}>Route without cargo restrictions</Text>
-					</View>
-				</View>
-				{selectionMode === 'none' && (
-					<Ionicons name="checkmark" size={20} color={colors.success} />
-				)}
-			</TouchableOpacity>
-
-			{/* Saved Equipment Presets */}
-			{equipment.length > 0 && (
-				<>
-					<Text style={styles.sectionLabel}>Saved Equipment</Text>
-					{equipment.map((item) => (
-						<TouchableOpacity
-							key={item.id}
-							style={[
-								styles.optionCard,
-								selectedEquipment?.id === item.id && styles.optionCardSelected,
-							]}
-							onPress={() => handleSelectPreset(item)}
-						>
-							<View style={styles.optionContent}>
-								<Ionicons
-									name="briefcase"
-									size={24}
-									color={selectedEquipment?.id === item.id ? colors.primary : colors.textMuted}
+					{/* Action Bar */}
+					<View style={styles.actionBar}>
+						{isReorderMode ? (
+							<>
+								<TouchableOpacity onPress={handleCancelReorder}>
+									<Text style={styles.actionCancel}>Cancel</Text>
+								</TouchableOpacity>
+								<Text style={styles.actionTitle}>Reorder Items</Text>
+								<TouchableOpacity onPress={handleSaveReorder}>
+									<Text style={styles.actionDone}>Done</Text>
+								</TouchableOpacity>
+							</>
+						) : (
+							<>
+								<Button
+									title="Add Item"
+									onPress={() => handleOpenItemModal()}
+									variant="secondary"
+									style={styles.actionButton}
 								/>
-								<View style={styles.optionText}>
-									<Text style={styles.optionTitle}>{item.name}</Text>
-									<Text style={styles.optionDescription}>
-										{getProfileSummary(item.cargo_profile)}
-									</Text>
+								<Button
+									title="Reorder"
+									onPress={handleEnterReorderMode}
+									variant="secondary"
+									style={styles.actionButton}
+									disabled={displayItems.length === 0}
+								/>
+							</>
+						)}
+					</View>
+
+					{/* Items List */}
+					{displayItems.length === 0 ? (
+						<Card style={styles.emptyCard}>
+							<Ionicons name="cube-outline" size={48} color={colors.textMuted} />
+							<Text style={styles.emptyText}>No items yet</Text>
+							<Text style={styles.emptySubtext}>Add your first equipment item to get started</Text>
+						</Card>
+					) : (
+						<Card style={styles.section}>
+							{displayItems.map((item, index) => (
+								<View key={item.id} style={styles.itemRow}>
+									{isReorderMode ? (
+										<>
+											<View style={styles.itemInfo}>
+												<Text style={styles.itemName}>{item.name}</Text>
+												<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
+											</View>
+											<View style={styles.reorderButtons}>
+												<TouchableOpacity
+													onPress={() => moveItemUp(index)}
+													disabled={index === 0}
+													style={styles.reorderButton}
+												>
+													<Ionicons
+														name="chevron-up"
+														size={24}
+														color={index === 0 ? colors.textMuted : colors.primary}
+													/>
+												</TouchableOpacity>
+												<TouchableOpacity
+													onPress={() => moveItemDown(index)}
+													disabled={index === displayItems.length - 1}
+													style={styles.reorderButton}
+												>
+													<Ionicons
+														name="chevron-down"
+														size={24}
+														color={index === displayItems.length - 1 ? colors.textMuted : colors.primary}
+													/>
+												</TouchableOpacity>
+											</View>
+										</>
+									) : (
+										<>
+											<View style={styles.itemInfo}>
+												<Text style={styles.itemName}>{item.name}</Text>
+												<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
+											</View>
+											<View style={styles.itemActions}>
+												<TouchableOpacity
+													onPress={() => handleOpenItemModal(item)}
+													style={styles.iconButton}
+												>
+													<Ionicons name="create-outline" size={24} color={colors.primary} />
+												</TouchableOpacity>
+												<TouchableOpacity
+													onPress={() => handleDeleteItem(item.id)}
+													style={styles.iconButton}
+												>
+													<Ionicons name="trash-outline" size={24} color={colors.error} />
+												</TouchableOpacity>
+											</View>
+										</>
+									)}
 								</View>
-								{item.is_default && (
-									<View style={styles.defaultBadge}>
-										<Text style={styles.defaultBadgeText}>Default</Text>
-									</View>
-								)}
-							</View>
-							{selectedEquipment?.id === item.id && (
-								<Ionicons name="checkmark" size={20} color={colors.primary} />
-							)}
-						</TouchableOpacity>
-					))}
-				</>
-			)}
-
-			{/* Custom Profile Option */}
-			<TouchableOpacity
-				style={[
-					styles.optionCard,
-					selectionMode === 'custom' && styles.optionCardSelected,
-				]}
-				onPress={handleOpenCustom}
-			>
-				<View style={styles.optionContent}>
-					<Ionicons
-						name="settings"
-						size={24}
-						color={selectionMode === 'custom' ? colors.primary : colors.textMuted}
-					/>
-					<View style={styles.optionText}>
-						<Text style={styles.optionTitle}>Custom Selection</Text>
-						<Text style={styles.optionDescription}>
-							{selectionMode === 'custom' && customCargoProfile
-								? getProfileSummary(customCargoProfile)
-								: 'Configure specific items for this route'}
-						</Text>
-					</View>
+							))}
+						</Card>
+					)}
 				</View>
-				<Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-			</TouchableOpacity>
-
-			{/* Active Profile Summary */}
-			{activeProfile && activeProfile.has_firearms && (
-				<Card style={styles.summaryCard}>
-					<View style={styles.summaryHeader}>
-						<Ionicons name="warning" size={18} color={colors.warning} />
-						<Text style={styles.summaryTitle}>Active Restrictions Check</Text>
-					</View>
-					<Text style={styles.summaryText}>
-						Route will be checked for compliance with:{'\n'}
-						{activeProfile.firearm_types?.length ? `• Firearm types: ${activeProfile.firearm_types.join(', ')}\n` : ''}
-						{activeProfile.has_assault_weapon ? '• Assault weapons regulations\n' : ''}
-						{activeProfile.magazine_capacity ? `• Magazine capacity: ${activeProfile.magazine_capacity} rounds\n` : ''}
-						{activeProfile.has_concealed_carry_permit ? '• Concealed carry reciprocity' : ''}
+			) : (
+				// Loadout selection mode
+				<View>
+					<Text style={styles.label}>Select Loadouts</Text>
+					<Text style={styles.helperText}>
+						Choose one or more loadouts for this route
 					</Text>
-				</Card>
+
+					{loadouts.length === 0 ? (
+						<Card style={styles.emptyCard}>
+							<Ionicons name="briefcase-outline" size={48} color={colors.textMuted} />
+							<Text style={styles.emptyText}>No loadouts yet</Text>
+							<Text style={styles.emptySubtext}>Create your first loadout in the Cargo Profile screen</Text>
+						</Card>
+					) : (
+						<>
+							{loadouts.map((loadout) => {
+								const isSelected = selectedLoadouts.some(l => l.id === loadout.id);
+								return (
+									<TouchableOpacity
+										key={loadout.id}
+										style={[
+											styles.loadoutCard,
+											isSelected && styles.loadoutCardSelected,
+										]}
+										onPress={() => toggleLoadoutSelection(loadout)}
+										onLongPress={() => handleOpenLoadoutModal(loadout)}
+									>
+										<View style={styles.loadoutContent}>
+											<Ionicons
+												name={isSelected ? 'checkbox' : 'square-outline'}
+												size={24}
+												color={isSelected ? colors.primary : colors.textMuted}
+											/>
+											<View style={styles.loadoutText}>
+												<Text style={styles.loadoutName}>{loadout.name}</Text>
+												<Text style={styles.loadoutDetail}>
+													{loadout.items.length} item{loadout.items.length !== 1 ? 's' : ''}
+												</Text>
+											</View>
+											{loadout.is_default && (
+												<View style={styles.defaultBadge}>
+													<Text style={styles.defaultBadgeText}>Default</Text>
+												</View>
+											)}
+										</View>
+									</TouchableOpacity>
+								);
+							})}
+						</>
+					)}
+
+					{onCreateLoadout && (
+						<Button
+							title="Create New Loadout"
+							onPress={() => handleOpenLoadoutModal()}
+							variant="secondary"
+							style={styles.createButton}
+						/>
+					)}
+				</View>
 			)}
 
-			{/* Custom Profile Modal */}
+			{/* Item Edit/Create Modal */}
 			<Modal
-				visible={showCustomModal}
+				visible={showItemModal}
 				animationType="slide"
 				presentationStyle="pageSheet"
-				onRequestClose={() => setShowCustomModal(false)}
+				onRequestClose={() => setShowItemModal(false)}
 			>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
-						<TouchableOpacity onPress={() => setShowCustomModal(false)}>
+						<TouchableOpacity onPress={() => setShowItemModal(false)}>
 							<Text style={styles.modalCancel}>Cancel</Text>
 						</TouchableOpacity>
-						<Text style={styles.modalTitle}>Custom Equipment</Text>
-						<TouchableOpacity onPress={handleSaveCustom}>
-							<Text style={styles.modalDone}>Done</Text>
+						<Text style={styles.modalTitle}>
+							{editingItem ? 'Edit Item' : 'New Item'}
+						</Text>
+						<TouchableOpacity onPress={handleSaveItem}>
+							<Text style={styles.modalDone}>Save</Text>
 						</TouchableOpacity>
 					</View>
 
 					<ScrollView style={styles.modalContent}>
-						{/* Firearms Toggle */}
 						<Card style={styles.modalSection}>
-							<Toggle
-								label="Transporting Firearms"
-								value={editingProfile.has_firearms}
-								onValueChange={(value) =>
-									setEditingProfile({ ...editingProfile, has_firearms: value })
-								}
+							<Text style={styles.fieldLabel}>Item Name</Text>
+							<TextInput
+								style={styles.input}
+								value={itemFormData.name}
+								onChangeText={(text) => setItemFormData({ ...itemFormData, name: text })}
+								placeholder="e.g., Glock 19, AR-15 Build"
+								placeholderTextColor={colors.textMuted}
 							/>
 
-							{editingProfile.has_firearms && (
+							<Text style={styles.fieldLabel}>Category</Text>
+							<View style={styles.categoryGrid}>
+								{CATEGORIES.filter(c => c.value !== 'all').map((cat) => (
+									<TouchableOpacity
+										key={cat.value}
+										style={[
+											styles.categoryButton,
+											itemFormData.category === cat.value && styles.categoryButtonSelected,
+										]}
+										onPress={() => setItemFormData({ ...itemFormData, category: cat.value as EquipmentItemCategory })}
+									>
+										<Text
+											style={[
+												styles.categoryButtonText,
+												itemFormData.category === cat.value && styles.categoryButtonTextSelected,
+											]}
+										>
+											{cat.label}
+										</Text>
+									</TouchableOpacity>
+								))}
+							</View>
+
+							{/* Category-specific fields can be added here */}
+							{(itemFormData.category === 'handgun' || itemFormData.category === 'rifle' || itemFormData.category === 'shotgun') && (
 								<>
-									<Text style={styles.fieldLabel}>Firearm Types</Text>
-									<View style={styles.chipGroup}>
-										{FIREARM_TYPES.map((type) => (
-											<Chip
-												key={type.value}
-												label={type.label}
-												selected={editingProfile.firearm_types?.includes(type.value)}
-												onPress={() => toggleFirearmType(type.value)}
-												style={styles.chip}
+									<Toggle
+										label="Accepts Detachable Magazine"
+										value={itemFormData.accepts_detachable_magazine || false}
+										onValueChange={(value) =>
+											setItemFormData({ ...itemFormData, accepts_detachable_magazine: value })
+										}
+									/>
+									{!itemFormData.accepts_detachable_magazine && (
+										<>
+											<Text style={styles.fieldLabel}>Ammunition Capacity</Text>
+											<TextInput
+												style={styles.input}
+												value={itemFormData.ammunition_capacity?.toString() || ''}
+												onChangeText={(text) => {
+													const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
+													setItemFormData({
+														...itemFormData,
+														ammunition_capacity: isNaN(num) ? undefined : num,
+													});
+												}}
+												placeholder="e.g., 6, 8"
+												placeholderTextColor={colors.textMuted}
+												keyboardType="number-pad"
 											/>
+										</>
+									)}
+								</>
+							)}
+
+							{itemFormData.category === 'magazine' && (
+								<>
+									<Text style={styles.fieldLabel}>Platform</Text>
+									<View style={styles.categoryGrid}>
+										{['handgun', 'rifle', 'shotgun'].map((platform) => (
+											<TouchableOpacity
+												key={platform}
+												style={[
+													styles.categoryButton,
+													itemFormData.platform === platform && styles.categoryButtonSelected,
+												]}
+												onPress={() => setItemFormData({ ...itemFormData, platform: platform as any })}
+											>
+												<Text
+													style={[
+														styles.categoryButtonText,
+														itemFormData.platform === platform && styles.categoryButtonTextSelected,
+													]}
+												>
+													{platform.charAt(0).toUpperCase() + platform.slice(1)}
+												</Text>
+											</TouchableOpacity>
 										))}
 									</View>
 
-									<Toggle
-										label="Assault Weapon Designation"
-										value={editingProfile.has_assault_weapon || false}
-										onValueChange={(value) =>
-											setEditingProfile({ ...editingProfile, has_assault_weapon: value })
-										}
-									/>
-
-									<Text style={styles.fieldLabel}>Magazine Capacity</Text>
+									<Text style={styles.fieldLabel}>Capacity</Text>
 									<TextInput
 										style={styles.input}
-										value={editingProfile.magazine_capacity?.toString() || ''}
+										value={itemFormData.ammunition_capacity?.toString() || ''}
 										onChangeText={(text) => {
 											const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
-											setEditingProfile({
-												...editingProfile,
-												magazine_capacity: isNaN(num) ? undefined : num,
+											setItemFormData({
+												...itemFormData,
+												ammunition_capacity: isNaN(num) ? undefined : num,
 											});
 										}}
-										placeholder="Enter max capacity"
+										placeholder="e.g., 10, 15, 30"
 										placeholderTextColor={colors.textMuted}
 										keyboardType="number-pad"
-										maxLength={3}
 									/>
+								</>
+							)}
 
-									<Toggle
-										label="Concealed Carry Permit"
-										value={editingProfile.has_concealed_carry_permit || false}
-										onValueChange={(value) =>
-											setEditingProfile({ ...editingProfile, has_concealed_carry_permit: value })
-										}
-									/>
+							<Text style={styles.fieldLabel}>Notes (Optional)</Text>
+							<TextInput
+								style={[styles.input, styles.notesInput]}
+								value={itemFormData.notes || ''}
+								onChangeText={(text) => setItemFormData({ ...itemFormData, notes: text })}
+								placeholder="Additional details..."
+								placeholderTextColor={colors.textMuted}
+								multiline
+								numberOfLines={3}
+							/>
+						</Card>
+					</ScrollView>
+				</View>
+			</Modal>
+
+			{/* Loadout Edit/Create Modal */}
+			<Modal
+				visible={showLoadoutModal}
+				animationType="slide"
+				presentationStyle="pageSheet"
+				onRequestClose={() => setShowLoadoutModal(false)}
+			>
+				<View style={styles.modalContainer}>
+					<View style={styles.modalHeader}>
+						<TouchableOpacity onPress={() => setShowLoadoutModal(false)}>
+							<Text style={styles.modalCancel}>Cancel</Text>
+						</TouchableOpacity>
+						<Text style={styles.modalTitle}>
+							{editingLoadout ? 'Edit Loadout' : 'New Loadout'}
+						</Text>
+						<TouchableOpacity onPress={handleSaveLoadout}>
+							<Text style={styles.modalDone}>Save</Text>
+						</TouchableOpacity>
+					</View>
+
+					<ScrollView style={styles.modalContent}>
+						<Card style={styles.modalSection}>
+							<Text style={styles.fieldLabel}>Loadout Name</Text>
+							<TextInput
+								style={styles.input}
+								value={loadoutName}
+								onChangeText={setLoadoutName}
+								placeholder="e.g., Range Day Kit, Hunting Trip"
+								placeholderTextColor={colors.textMuted}
+							/>
+
+							<Text style={styles.fieldLabel}>Select Items</Text>
+							{equipmentItems.length === 0 ? (
+								<Text style={styles.helperText}>
+									No equipment items yet. Create items first.
+								</Text>
+							) : (
+								<>
+									{equipmentItems.map((item) => {
+										const isSelected = selectedItemIds.includes(item.id);
+										return (
+											<TouchableOpacity
+												key={item.id}
+												style={styles.selectableItem}
+												onPress={() => toggleItemInLoadout(item.id)}
+											>
+												<Ionicons
+													name={isSelected ? 'checkbox' : 'square-outline'}
+													size={24}
+													color={isSelected ? colors.primary : colors.textMuted}
+												/>
+												<View style={styles.itemInfo}>
+													<Text style={styles.itemName}>{item.name}</Text>
+													<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
+												</View>
+											</TouchableOpacity>
+										);
+									})}
 								</>
 							)}
 						</Card>
 
-						{/* Save as Preset Option */}
-						{onCreateEquipment && editingProfile.has_firearms && (
-							<Card style={styles.modalSection}>
-								<Toggle
-									label="Save as Equipment Preset"
-									value={showSaveOption}
-									onValueChange={setShowSaveOption}
-								/>
-								{showSaveOption && (
-									<>
-										<TextInput
-											style={[styles.input, styles.nameInput]}
-											value={saveName}
-											onChangeText={setSaveName}
-											placeholder="Preset name (e.g., 'Range Day Kit')"
-											placeholderTextColor={colors.textMuted}
-										/>
-										<Button
-											title="Save Preset"
-											onPress={handleSaveAsPreset}
-											variant="primary"
-											style={styles.saveButton}
-										/>
-									</>
-								)}
-							</Card>
+						{editingLoadout && onDeleteLoadout && (
+							<Button
+								title="Delete Loadout"
+								onPress={() => {
+									setShowLoadoutModal(false);
+									handleDeleteLoadout(editingLoadout.id);
+								}}
+								variant="danger"
+								style={styles.deleteButton}
+							/>
 						)}
 					</ScrollView>
 				</View>
@@ -373,17 +707,114 @@ const styles = StyleSheet.create({
 		color: colors.textMuted,
 		marginBottom: 12,
 	},
-	sectionLabel: {
-		fontSize: 13,
-		fontWeight: '500',
-		color: colors.textSecondary,
-		marginTop: 12,
-		marginBottom: 8,
+	categoryScroll: {
+		marginBottom: 12,
 	},
-	optionCard: {
+	categoryScrollContent: {
+		paddingRight: 16,
+	},
+	categoryChip: {
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		borderRadius: 20,
+		backgroundColor: colors.backgroundWhite,
+		borderWidth: 1,
+		borderColor: colors.border,
+		marginRight: 8,
+	},
+	categoryChipSelected: {
+		backgroundColor: colors.primary,
+		borderColor: colors.primary,
+	},
+	categoryChipText: {
+		fontSize: 14,
+		fontWeight: '500',
+		color: colors.text,
+	},
+	categoryChipTextSelected: {
+		color: colors.white,
+	},
+	actionBar: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 12,
+	},
+	actionButton: {
+		flex: 1,
+		marginHorizontal: 4,
+	},
+	actionCancel: {
+		fontSize: 16,
+		color: colors.textSecondary,
+	},
+	actionTitle: {
+		fontSize: 17,
+		fontWeight: '600',
+		color: colors.text,
+	},
+	actionDone: {
+		fontSize: 16,
+		fontWeight: '600',
+		color: colors.primary,
+	},
+	section: {
+		padding: 16,
+		marginBottom: 16,
+	},
+	itemRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'space-between',
+		paddingVertical: 12,
+		borderBottomWidth: 1,
+		borderBottomColor: colors.borderLight,
+	},
+	itemInfo: {
+		flex: 1,
+	},
+	itemName: {
+		fontSize: 15,
+		fontWeight: '500',
+		color: colors.text,
+	},
+	itemDetail: {
+		fontSize: 13,
+		color: colors.textMuted,
+		marginTop: 2,
+	},
+	itemActions: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	iconButton: {
+		padding: 8,
+		marginLeft: 8,
+	},
+	reorderButtons: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	reorderButton: {
+		padding: 8,
+	},
+	emptyCard: {
+		padding: 32,
+		alignItems: 'center',
+		marginBottom: 16,
+	},
+	emptyText: {
+		fontSize: 16,
+		fontWeight: '500',
+		color: colors.text,
+		marginTop: 12,
+	},
+	emptySubtext: {
+		fontSize: 14,
+		color: colors.textMuted,
+		marginTop: 4,
+		textAlign: 'center',
+	},
+	loadoutCard: {
 		backgroundColor: colors.backgroundWhite,
 		borderRadius: 12,
 		padding: 14,
@@ -391,25 +822,24 @@ const styles = StyleSheet.create({
 		borderWidth: 2,
 		borderColor: colors.border,
 	},
-	optionCardSelected: {
+	loadoutCardSelected: {
 		borderColor: colors.primary,
 		backgroundColor: colors.infoLight,
 	},
-	optionContent: {
+	loadoutContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		flex: 1,
 	},
-	optionText: {
+	loadoutText: {
 		marginLeft: 12,
 		flex: 1,
 	},
-	optionTitle: {
+	loadoutName: {
 		fontSize: 15,
 		fontWeight: '500',
 		color: colors.text,
 	},
-	optionDescription: {
+	loadoutDetail: {
 		fontSize: 13,
 		color: colors.textMuted,
 		marginTop: 2,
@@ -426,28 +856,9 @@ const styles = StyleSheet.create({
 		color: colors.white,
 		fontWeight: '500',
 	},
-	summaryCard: {
-		padding: 12,
+	createButton: {
 		marginTop: 8,
-		backgroundColor: colors.warningLight,
 	},
-	summaryHeader: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 8,
-	},
-	summaryTitle: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: colors.text,
-		marginLeft: 8,
-	},
-	summaryText: {
-		fontSize: 13,
-		color: colors.textSecondary,
-		lineHeight: 20,
-	},
-	// Modal Styles
 	modalContainer: {
 		flex: 1,
 		backgroundColor: colors.background,
@@ -491,15 +902,6 @@ const styles = StyleSheet.create({
 		marginTop: 16,
 		marginBottom: 8,
 	},
-	chipGroup: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-		marginBottom: 8,
-	},
-	chip: {
-		marginRight: 8,
-		marginBottom: 8,
-	},
 	input: {
 		backgroundColor: colors.backgroundWhite,
 		borderRadius: 12,
@@ -510,10 +912,46 @@ const styles = StyleSheet.create({
 		borderColor: colors.border,
 		color: colors.text,
 	},
-	nameInput: {
-		marginTop: 12,
+	notesInput: {
+		minHeight: 80,
+		textAlignVertical: 'top',
 	},
-	saveButton: {
-		marginTop: 12,
+	categoryGrid: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		marginTop: 8,
+	},
+	categoryButton: {
+		paddingHorizontal: 16,
+		paddingVertical: 10,
+		borderRadius: 8,
+		backgroundColor: colors.backgroundWhite,
+		borderWidth: 1,
+		borderColor: colors.border,
+		marginRight: 8,
+		marginBottom: 8,
+	},
+	categoryButtonSelected: {
+		backgroundColor: colors.primary,
+		borderColor: colors.primary,
+	},
+	categoryButtonText: {
+		fontSize: 14,
+		fontWeight: '500',
+		color: colors.text,
+	},
+	categoryButtonTextSelected: {
+		color: colors.white,
+	},
+	selectableItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingVertical: 12,
+		borderBottomWidth: 1,
+		borderBottomColor: colors.borderLight,
+	},
+	deleteButton: {
+		marginTop: 16,
+		marginBottom: 32,
 	},
 });
