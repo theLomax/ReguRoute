@@ -1,12 +1,5 @@
-import {
-	TouchableOpacity,
-	Text,
-	ActivityIndicator,
-	StyleSheet,
-	ViewStyle,
-	TextStyle,
-} from 'react-native';
-import { colors } from '../theme';
+import { ViewStyle } from 'react-native';
+import { Button as PaperButton } from 'react-native-paper';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline';
 type ButtonSize = 'small' | 'medium' | 'large';
@@ -30,48 +23,10 @@ interface ButtonProps {
 	style?: ViewStyle;
 }
 
-const variantStyles: Record<ButtonVariant, { container: ViewStyle; text: TextStyle; spinnerColor: string }> = {
-	primary: {
-		container: { backgroundColor: colors.primary },
-		text: { color: colors.white },
-		spinnerColor: colors.white,
-	},
-	secondary: {
-		container: { backgroundColor: colors.background },
-		text: { color: colors.text },
-		spinnerColor: colors.text,
-	},
-	danger: {
-		container: { backgroundColor: colors.error },
-		text: { color: colors.white },
-		spinnerColor: colors.white,
-	},
-	outline: {
-		container: {
-			backgroundColor: colors.transparent,
-			borderWidth: 1,
-			borderColor: colors.primary,
-		},
-		text: { color: colors.primary },
-		spinnerColor: colors.primary,
-	},
-};
-
-const sizeStyles: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
-	small: {
-		container: { paddingVertical: 8, paddingHorizontal: 12 },
-		text: { fontSize: 14 },
-	},
-	medium: {
-		container: { paddingVertical: 12, paddingHorizontal: 16 },
-		text: { fontSize: 16 },
-	},
-	large: {
-		container: { paddingVertical: 16, paddingHorizontal: 20 },
-		text: { fontSize: 18 },
-	},
-};
-
+/**
+ * Button component using React Native Paper
+ * Supports multiple variants, sizes, loading states, and theming
+ */
 export default function Button({
 	title,
 	onPress,
@@ -82,47 +37,36 @@ export default function Button({
 	fullWidth = false,
 	style,
 }: ButtonProps) {
-	const variantStyle = variantStyles[variant];
-	const sizeStyle = sizeStyles[size];
+	// Map our variants to Paper's modes
+	const getPaperMode = (): 'contained' | 'outlined' | 'text' | 'elevated' | 'contained-tonal' => {
+		switch (variant) {
+			case 'primary':
+			case 'danger':
+				return 'contained';
+			case 'outline':
+				return 'outlined';
+			case 'secondary':
+				return 'contained-tonal';
+		}
+	};
+
+	// Map size to Paper's compact prop and custom sizing
+	const isCompact = size === 'small';
+	const contentStyle = size === 'large' ? { paddingVertical: 4 } : undefined;
 
 	return (
-		<TouchableOpacity
-			style={[
-				styles.container,
-				variantStyle.container,
-				sizeStyle.container,
-				fullWidth && styles.fullWidth,
-				(disabled || loading) && styles.disabled,
-				style,
-			]}
+		<PaperButton
+			mode={getPaperMode()}
 			onPress={onPress}
-			disabled={disabled || loading}
-			activeOpacity={0.7}
+			disabled={disabled}
+			loading={loading}
+			compact={isCompact}
+			style={[fullWidth && { width: '100%' }, style]}
+			contentStyle={contentStyle}
+			buttonColor={variant === 'danger' ? '#DC2626' : undefined}
+			textColor={variant === 'danger' ? '#FFFFFF' : undefined}
 		>
-			{loading ? (
-				<ActivityIndicator color={variantStyle.spinnerColor} />
-			) : (
-				<Text style={[styles.text, variantStyle.text, sizeStyle.text]}>
-					{title}
-				</Text>
-			)}
-		</TouchableOpacity>
+			{title}
+		</PaperButton>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		borderRadius: 12,
-		alignItems: 'center',
-		justifyContent: 'center',
-	},
-	fullWidth: {
-		width: '100%',
-	},
-	disabled: {
-		opacity: 0.6,
-	},
-	text: {
-		fontWeight: '600',
-	},
-});

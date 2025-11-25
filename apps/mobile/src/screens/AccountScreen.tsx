@@ -34,7 +34,13 @@ export default function AccountScreen() {
 			</View>
 
 			<View style={styles.section}>
-				<TouchableOpacity 
+				<TouchableOpacity
+					style={styles.menuItem}
+					onPress={() => navigation.navigate('Preferences')}
+				>
+					<Text style={styles.menuText}>Preferences</Text>
+				</TouchableOpacity>
+				<TouchableOpacity
 					style={styles.menuItem}
 					onPress={() => navigation.navigate('LegalDisclaimer')}
 				>

@@ -1,15 +1,8 @@
-import { useState } from 'react';
-import {
-	View,
-	Text,
-	TextInput,
-	StyleSheet,
-	TextInputProps,
-	ViewStyle,
-} from 'react-native';
-import { colors } from '../theme';
+import { ViewStyle } from 'react-native';
+import { TextInput, HelperText, TextInputProps as PaperTextInputProps } from 'react-native-paper';
+import { View } from 'react-native';
 
-interface InputProps extends Omit<TextInputProps, 'style'> {
+interface InputProps extends Omit<PaperTextInputProps, 'theme' | 'mode' | 'error'> {
 	/** Label text above the input */
 	label?: string;
 	/** Error message to display */
@@ -20,6 +13,10 @@ interface InputProps extends Omit<TextInputProps, 'style'> {
 	containerStyle?: ViewStyle;
 }
 
+/**
+ * Input component using React Native Paper
+ * Supports labels, error states, helper text, and theming
+ */
 export default function Input({
 	label,
 	error,
@@ -27,70 +24,24 @@ export default function Input({
 	containerStyle,
 	...textInputProps
 }: InputProps) {
-	const [isFocused, setIsFocused] = useState(false);
-
-	const inputBorderColor = error
-		? colors.error
-		: isFocused
-			? colors.primary
-			: colors.border;
-
 	return (
-		<View style={[styles.container, containerStyle]}>
-			{label && <Text style={styles.label}>{label}</Text>}
+		<View style={[{ marginBottom: 16 }, containerStyle]}>
 			<TextInput
-				style={[
-					styles.input,
-					{ borderColor: inputBorderColor },
-					error && styles.inputError,
-				]}
-				placeholderTextColor={colors.textMuted}
-				onFocus={(e) => {
-					setIsFocused(true);
-					textInputProps.onFocus?.(e);
-				}}
-				onBlur={(e) => {
-					setIsFocused(false);
-					textInputProps.onBlur?.(e);
-				}}
+				mode="outlined"
+				label={label}
+				error={!!error}
 				{...textInputProps}
 			/>
-			{error && <Text style={styles.errorText}>{error}</Text>}
-			{!error && helperText && <Text style={styles.helperText}>{helperText}</Text>}
+			{error && (
+				<HelperText type="error" visible={!!error}>
+					{error}
+				</HelperText>
+			)}
+			{!error && helperText && (
+				<HelperText type="info" visible={true}>
+					{helperText}
+				</HelperText>
+			)}
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		marginBottom: 16,
-	},
-	label: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: colors.text,
-		marginBottom: 6,
-	},
-	input: {
-		backgroundColor: colors.backgroundWhite,
-		borderRadius: 12,
-		paddingHorizontal: 16,
-		paddingVertical: 14,
-		fontSize: 16,
-		borderWidth: 1,
-		color: colors.text,
-	},
-	inputError: {
-		borderColor: colors.error,
-	},
-	errorText: {
-		fontSize: 12,
-		color: colors.error,
-		marginTop: 4,
-	},
-	helperText: {
-		fontSize: 12,
-		color: colors.textMuted,
-		marginTop: 4,
-	},
-});
