@@ -153,7 +153,9 @@ export default function EquipmentSelector({
 		if (loadout) {
 			setEditingLoadout(loadout);
 			setLoadoutName(loadout.name);
-			setSelectedItemIds(loadout.items.map(li => li.equipment_item_id));
+			// Start with empty selection when editing to prevent accidental deletions
+			// Users must explicitly check items they want to keep
+			setSelectedItemIds([]);
 		} else {
 			setEditingLoadout(null);
 			setLoadoutName('');
@@ -644,6 +646,11 @@ export default function EquipmentSelector({
 							/>
 
 							<Text style={styles.fieldLabel}>Select Items</Text>
+							{editingLoadout && (
+								<Text style={styles.helperText}>
+									Currently in loadout: {editingLoadout.items.length} item{editingLoadout.items.length !== 1 ? 's' : ''}. Check items to keep.
+								</Text>
+							)}
 							{equipmentItems.length === 0 ? (
 								<Text style={styles.helperText}>
 									No equipment items yet. Create items first.
@@ -652,6 +659,7 @@ export default function EquipmentSelector({
 								<>
 									{equipmentItems.map((item) => {
 										const isSelected = selectedItemIds.includes(item.id);
+										const isCurrentlyInLoadout = editingLoadout?.items.some(li => li.equipment_item_id === item.id);
 										return (
 											<TouchableOpacity
 												key={item.id}
@@ -664,7 +672,12 @@ export default function EquipmentSelector({
 													color={isSelected ? colors.primary : colors.textMuted}
 												/>
 												<View style={styles.itemInfo}>
-													<Text style={styles.itemName}>{item.name}</Text>
+													<Text style={styles.itemName}>
+														{item.name}
+														{isCurrentlyInLoadout && !isSelected && (
+															<Text style={styles.currentlyInLoadout}> (currently in loadout)</Text>
+														)}
+													</Text>
 													<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
 												</View>
 											</TouchableOpacity>
@@ -949,6 +962,11 @@ const styles = StyleSheet.create({
 		paddingVertical: 12,
 		borderBottomWidth: 1,
 		borderBottomColor: colors.borderLight,
+	},
+	currentlyInLoadout: {
+		fontSize: 13,
+		color: colors.textMuted,
+		fontStyle: 'italic',
 	},
 	deleteButton: {
 		marginTop: 16,
