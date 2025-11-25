@@ -1,9 +1,15 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useAuth } from '../contexts';
 import { colors } from '../theme';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import type { MainStackParamList } from '../navigation/MainStack';
+
+
+type AccountScreenNavigationProp = NavigationProp<MainStackParamList>;
 
 export default function AccountScreen() {
 	const { user, logout } = useAuth();
+	const navigation = useNavigation<AccountScreenNavigationProp>();
 
 	const handleLogout = () => {
 		Alert.alert('Logout', 'Are you sure you want to sign out?', [
@@ -28,7 +34,10 @@ export default function AccountScreen() {
 			</View>
 
 			<View style={styles.section}>
-				<TouchableOpacity style={styles.menuItem}>
+				<TouchableOpacity 
+					style={styles.menuItem}
+					onPress={() => navigation.navigate('LegalDisclaimer')}
+				>
 					<Text style={styles.menuText}>Legal Disclaimer</Text>
 				</TouchableOpacity>
 				<TouchableOpacity style={styles.menuItem}>

@@ -15,12 +15,14 @@ import type {
 	Loadout,
 	CreateEquipmentItemRequest,
 	EquipmentItemCategory,
+	Caliber,
 } from '@reguroute/types';
 import { colors } from '../theme';
 import Card from './Card';
 import Button from './Button';
 import Toggle from './Toggle';
 import LoadingSpinner from './LoadingSpinner';
+import { getCalibersByCategory } from '../data/calibers';
 
 interface EquipmentSelectorProps {
 	loadouts: Loadout[];
@@ -73,6 +75,12 @@ export default function EquipmentSelector({
 	const [editingLoadout, setEditingLoadout] = useState<Loadout | null>(null);
 	const [loadoutName, setLoadoutName] = useState('');
 	const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+	const [loadoutCategoryFilter, setLoadoutCategoryFilter] = useState<EquipmentItemCategory | 'all'>('all');
+
+	// Caliber picker state
+	const [showCaliberPicker, setShowCaliberPicker] = useState(false);
+	const [customCaliber, setCustomCaliber] = useState('');
+	const [caliberCategoryFilter, setCaliberCategoryFilter] = useState<'handgun' | 'rifle' | 'shotgun'>('handgun');
 
 	// Filter items by category
 	const filteredItems = categoryFilter === 'all'
@@ -153,13 +161,13 @@ export default function EquipmentSelector({
 		if (loadout) {
 			setEditingLoadout(loadout);
 			setLoadoutName(loadout.name);
-			// Pre-select items that are currently in the loadout
 			setSelectedItemIds(loadout.items.map(li => li.equipment_item_id));
 		} else {
 			setEditingLoadout(null);
 			setLoadoutName('');
 			setSelectedItemIds([]);
 		}
+		setLoadoutCategoryFilter('all'); // ADD THIS LINE
 		setShowLoadoutModal(true);
 	};
 
@@ -220,6 +228,44 @@ export default function EquipmentSelector({
 		} else {
 			setSelectedItemIds([...selectedItemIds, itemId]);
 		}
+	};
+
+	const handleAddCaliber = (caliber: Caliber) => {
+		const currentCalibers = itemFormData.calibers || [];
+		if (!currentCalibers.includes(caliber)) {
+			setItemFormData({
+				...itemFormData,
+				calibers: [...currentCalibers, caliber],
+			});
+		}
+		setShowCaliberPicker(false);
+		setCustomCaliber('');
+	};
+
+	const handleRemoveCaliber = (caliber: Caliber) => {
+		const currentCalibers = itemFormData.calibers || [];
+		setItemFormData({
+			...itemFormData,
+			calibers: currentCalibers.filter(c => c !== caliber),
+		});
+	};
+
+	const handleAddCustomCaliber = () => {
+		if (customCaliber.trim()) {
+			handleAddCaliber(customCaliber.trim() as Caliber);
+		}
+	};
+
+	const handleOpenCaliberPicker = () => {
+		// Set initial category filter based on item category
+		if (itemFormData.category === 'handgun' || itemFormData.category === 'rifle' || itemFormData.category === 'shotgun') {
+			setCaliberCategoryFilter(itemFormData.category);
+		} else if (itemFormData.category === 'magazine' && itemFormData.platform) {
+			setCaliberCategoryFilter(itemFormData.platform as 'handgun' | 'rifle' | 'shotgun');
+		} else {
+			setCaliberCategoryFilter('handgun'); // Default
+		}
+		setShowCaliberPicker(true);
 	};
 
 	const handleEnterReorderMode = () => {
@@ -478,13 +524,13 @@ export default function EquipmentSelector({
 			>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
+						<View style={styles.modalHeaderSpacer} />
+						<Text style={styles.modalTitle}>
+							{editingItem ? 'Edit Equipment' : 'New Item'}
+						</Text>
 						<TouchableOpacity onPress={() => setShowItemModal(false)}>
 							<Text style={styles.modalCancel}>Cancel</Text>
 						</TouchableOpacity>
-						<Text style={styles.modalTitle}>
-							{editingItem ? 'Edit Item' : 'New Item'}
-						</Text>
-						<View style={styles.modalHeaderSpacer} />
 					</View>
 
 					<ScrollView style={styles.modalContent}>
@@ -521,7 +567,35 @@ export default function EquipmentSelector({
 								))}
 							</View>
 
-							{/* Category-specific fields can be added here */}
+							{/* Caliber selection for firearms and magazines */}
+							{(itemFormData.category === 'handgun' || itemFormData.category === 'rifle' || itemFormData.category === 'shotgun' || itemFormData.category === 'magazine') && (
+								<>
+									<Text style={styles.fieldLabel}>Caliber(s)</Text>
+									<View style={styles.caliberContainer}>
+										{itemFormData.calibers && itemFormData.calibers.length > 0 ? (
+											<View style={styles.selectedCalibersContainer}>
+												{itemFormData.calibers.map((caliber) => (
+													<View key={caliber} style={styles.caliberChip}>
+														<Text style={styles.caliberChipText}>{caliber}</Text>
+														<TouchableOpacity onPress={() => handleRemoveCaliber(caliber)}>
+															<Ionicons name="close-circle" size={18} color={colors.textMuted} />
+														</TouchableOpacity>
+													</View>
+												))}
+											</View>
+										) : (
+											<Text style={styles.helperText}>No calibers selected</Text>
+										)}
+										<Button
+											title="Add Caliber"
+											onPress={handleOpenCaliberPicker}
+											style={styles.addCaliberButton}
+										/>
+									</View>
+								</>
+							)}
+
+							{/* Category-specific fields */}
 							{(itemFormData.category === 'handgun' || itemFormData.category === 'rifle' || itemFormData.category === 'shotgun') && (
 								<>
 									<Toggle
@@ -640,13 +714,13 @@ export default function EquipmentSelector({
 			>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
-						<TouchableOpacity onPress={() => setShowLoadoutModal(false)}>
-							<Text style={styles.modalCancel}>Cancel</Text>
-						</TouchableOpacity>
+						<View style={styles.modalHeaderSpacer} />
 						<Text style={styles.modalTitle}>
 							{editingLoadout ? 'Edit Loadout' : 'New Loadout'}
 						</Text>
-						<View style={styles.modalHeaderSpacer} />
+						<TouchableOpacity onPress={() => setShowLoadoutModal(false)}>
+							<Text style={styles.modalCancel}>Cancel</Text>
+						</TouchableOpacity>
 					</View>
 
 					<ScrollView style={styles.modalContent}>
@@ -660,7 +734,34 @@ export default function EquipmentSelector({
 								placeholderTextColor={colors.textMuted}
 							/>
 
-							<Text style={styles.fieldLabel}>Select Items</Text>
+							<Text style={styles.fieldLabel}>Select Equipment</Text>
+
+							<ScrollView
+								horizontal
+								showsHorizontalScrollIndicator={false}
+								style={styles.categoryFilterContainer}
+							>
+								{CATEGORIES.map((cat) => (
+									<TouchableOpacity
+										key={cat.value}
+										style={[
+											styles.categoryChip,
+											loadoutCategoryFilter === cat.value && styles.categoryChipActive,
+										]}
+										onPress={() => setLoadoutCategoryFilter(cat.value)}
+									>
+										<Text
+											style={[
+												styles.categoryChipText,
+												loadoutCategoryFilter === cat.value && styles.categoryChipTextActive,
+											]}
+										>
+											{cat.label}
+										</Text>
+									</TouchableOpacity>
+								))}
+							</ScrollView>
+
 							{editingLoadout && (
 								<Text style={styles.helperText}>
 									Select which items to include in this loadout.
@@ -668,18 +769,20 @@ export default function EquipmentSelector({
 							)}
 							{equipmentItems.length === 0 ? (
 								<Text style={styles.helperText}>
-									No equipment items yet. Create items first.
+									No equipment yet. Create items first.
 								</Text>
 							) : (
 								<>
-									{equipmentItems.map((item) => {
-										const isSelected = selectedItemIds.includes(item.id);
-										return (
-											<TouchableOpacity
-												key={item.id}
-												style={styles.selectableItem}
-												onPress={() => toggleItemInLoadout(item.id)}
-											>
+									{equipmentItems
+										.filter((item) => loadoutCategoryFilter === 'all' || item.category === loadoutCategoryFilter)
+										.map((item) => {
+											const isSelected = selectedItemIds.includes(item.id);
+											return (
+												<TouchableOpacity
+													key={item.id}
+													style={styles.selectableItem}
+													onPress={() => toggleItemInLoadout(item.id)}
+												>
 												<Ionicons
 													name={isSelected ? 'checkbox' : 'square-outline'}
 													size={24}
@@ -714,6 +817,87 @@ export default function EquipmentSelector({
 								style={styles.deleteButton}
 							/>
 						)}
+					</ScrollView>
+				</View>
+			</Modal>
+
+			{/* Caliber Picker Modal */}
+			<Modal
+				visible={showCaliberPicker}
+				animationType="slide"
+				presentationStyle="pageSheet"
+				onRequestClose={() => setShowCaliberPicker(false)}
+			>
+				<View style={styles.modalContainer}>
+					<View style={styles.modalHeader}>
+						<TouchableOpacity onPress={() => setShowCaliberPicker(false)}>
+							<Text style={styles.modalCancel}>Cancel</Text>
+						</TouchableOpacity>
+						<Text style={styles.modalTitle}>Select Caliber</Text>
+						<View style={styles.modalHeaderSpacer} />
+					</View>
+
+					{/* Category tabs */}
+					<View style={styles.caliberCategoryTabs}>
+						{(['handgun', 'rifle', 'shotgun'] as const).map((cat) => (
+							<TouchableOpacity
+								key={cat}
+								style={[
+									styles.caliberCategoryTab,
+									caliberCategoryFilter === cat && styles.caliberCategoryTabActive,
+								]}
+								onPress={() => setCaliberCategoryFilter(cat)}
+							>
+								<Text
+									style={[
+										styles.caliberCategoryTabText,
+										caliberCategoryFilter === cat && styles.caliberCategoryTabTextActive,
+									]}
+								>
+									{cat.charAt(0).toUpperCase() + cat.slice(1)}
+								</Text>
+							</TouchableOpacity>
+						))}
+					</View>
+
+					<ScrollView style={styles.modalContent}>
+						<Card style={styles.modalSection}>
+							<Text style={styles.sectionTitle}>Standard Calibers</Text>
+							{getCalibersByCategory(caliberCategoryFilter).filter(c => c.name !== 'Other').map((caliberData) => (
+								<TouchableOpacity
+									key={caliberData.name}
+									style={styles.caliberOption}
+									onPress={() => handleAddCaliber(caliberData.name)}
+								>
+									<View style={styles.caliberOptionContent}>
+										<Text style={styles.caliberOptionName}>{caliberData.name}</Text>
+									</View>
+									<Ionicons name="add-circle-outline" size={24} color={colors.primary} />
+								</TouchableOpacity>
+							))}
+						</Card>
+
+						<Card style={styles.modalSection}>
+							<Text style={styles.sectionTitle}>Custom Caliber</Text>
+							<Text style={styles.helperText}>
+								Enter a custom caliber not listed above
+							</Text>
+							<TextInput
+								style={styles.input}
+								value={customCaliber}
+								onChangeText={setCustomCaliber}
+								placeholder="e.g., 6.8 SPC, .357 Maximum"
+								placeholderTextColor={colors.textMuted}
+								onSubmitEditing={handleAddCustomCaliber}
+								returnKeyType="done"
+							/>
+							<Button
+								title="Add Custom Caliber"
+								onPress={handleAddCustomCaliber}
+								disabled={!customCaliber.trim()}
+								style={styles.addButton}
+							/>
+						</Card>
 					</ScrollView>
 				</View>
 			</Modal>
@@ -761,6 +945,13 @@ const styles = StyleSheet.create({
 		color: colors.text,
 	},
 	categoryChipTextSelected: {
+		color: colors.white,
+	},
+	categoryChipActive: {
+		backgroundColor: colors.primary,
+		borderColor: colors.primary,
+	},
+	categoryChipTextActive: {
 		color: colors.white,
 	},
 	actionBar: {
@@ -997,5 +1188,91 @@ const styles = StyleSheet.create({
 	deleteButton: {
 		marginTop: 8,
 		marginBottom: 32,
+	},
+	categoryFilterContainer: {
+		marginBottom: 12,
+	},
+	caliberContainer: {
+		marginBottom: 16,
+	},
+	selectedCalibersContainer: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		marginBottom: 8,
+		gap: 8,
+	},
+	caliberChip: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: colors.primaryLight,
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 16,
+		gap: 6,
+	},
+	caliberChipText: {
+		fontSize: 14,
+		color: colors.white,
+		fontWeight: '500',
+	},
+	addCaliberButton: {
+		marginTop: 8,
+	},
+	sectionTitle: {
+		fontSize: 16,
+		fontWeight: '600',
+		color: colors.text,
+		marginBottom: 12,
+	},
+	caliberOption: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: colors.borderLight,
+		backgroundColor: colors.backgroundWhite,
+	},
+	caliberOptionContent: {
+		flex: 1,
+	},
+	caliberOptionName: {
+		fontSize: 15,
+		fontWeight: '500',
+		color: colors.text,
+		marginBottom: 2,
+	},
+	caliberOptionDetails: {
+		fontSize: 13,
+		color: colors.textMuted,
+	},
+	addButton: {
+		marginTop: 8,
+	},
+	caliberCategoryTabs: {
+		flexDirection: 'row',
+		backgroundColor: colors.backgroundWhite,
+		borderBottomWidth: 1,
+		borderBottomColor: colors.border,
+	},
+	caliberCategoryTab: {
+		flex: 1,
+		paddingVertical: 12,
+		alignItems: 'center',
+		borderBottomWidth: 2,
+		borderBottomColor: 'transparent',
+	},
+	caliberCategoryTabActive: {
+		borderBottomColor: colors.primary,
+	},
+	caliberCategoryTabText: {
+		fontSize: 15,
+		fontWeight: '500',
+		color: colors.textSecondary,
+	},
+	caliberCategoryTabTextActive: {
+		color: colors.primary,
+		fontWeight: '600',
 	},
 });

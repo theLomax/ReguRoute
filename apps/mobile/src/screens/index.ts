@@ -5,3 +5,4 @@ export { default as RoutePlanScreen } from './RoutePlanScreen';
 export { default as RouteDetailScreen } from './RouteDetailScreen';
 export { default as CargoProfileScreen } from './CargoProfileScreen';
 export { default as AccountScreen } from './AccountScreen';
+export { default as LegalDisclaimerScreen } from './LegalDisclaimerScreen';
