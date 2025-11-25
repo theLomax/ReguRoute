@@ -192,14 +192,14 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 
 			const itemsResult = await client.query(
 				`SELECT li.equipment_item_id, li.quantity,
-				        ei.id, ei.name, ei.item_type, ei.ammunition_capacity,
+				        ei.id, ei.name, ei.category, ei.ammunition_capacity,
 				        ei.calibers, ei.barrel_length_inches, ei.overall_length_inches,
 				        ei.is_nfa_item, ei.nfa_type, ei.notes,
 				        ei.created_at, ei.updated_at
 				 FROM loadout_items li
 				 JOIN equipment_items ei ON li.equipment_item_id = ei.id
 				 WHERE li.loadout_id = $1
-				 ORDER BY ei.item_type, ei.name`,
+				 ORDER BY ei.category, ei.name`,
 				[loadoutResult.rows[0].id]
 			);
 
@@ -209,7 +209,7 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 				equipment_item: {
 					id: row.id,
 					name: row.name,
-					item_type: row.item_type,
+					item_type: row.category,
 					ammunition_capacity: row.ammunition_capacity,
 					calibers: row.calibers,
 					barrel_length_inches: row.barrel_length_inches,
@@ -306,7 +306,7 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 				// Fetch the complete loadout with items
 				const itemsResult = await client.query(
 					`SELECT li.equipment_item_id, li.quantity,
-					        ei.id, ei.name, ei.item_type, ei.ammunition_capacity,
+					        ei.id, ei.name, ei.category, ei.ammunition_capacity,
 					        ei.calibers, ei.barrel_length_inches, ei.overall_length_inches,
 					        ei.is_nfa_item, ei.nfa_type, ei.notes,
 					        ei.created_at, ei.updated_at
@@ -322,7 +322,7 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 					equipment_item: {
 						id: row.id,
 						name: row.name,
-						item_type: row.item_type,
+						item_type: row.category,
 						ammunition_capacity: row.ammunition_capacity,
 						calibers: row.calibers,
 						barrel_length_inches: row.barrel_length_inches,
@@ -426,7 +426,7 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 				// Fetch items
 				const itemsResult = await client.query(
 					`SELECT li.equipment_item_id, li.quantity,
-					        ei.id, ei.name, ei.item_type, ei.ammunition_capacity,
+					        ei.id, ei.name, ei.category, ei.ammunition_capacity,
 					        ei.calibers, ei.barrel_length_inches, ei.overall_length_inches,
 					        ei.is_nfa_item, ei.nfa_type, ei.notes,
 					        ei.created_at, ei.updated_at
@@ -442,7 +442,7 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 					equipment_item: {
 						id: row.id,
 						name: row.name,
-						item_type: row.item_type,
+						item_type: row.category,
 						ammunition_capacity: row.ammunition_capacity,
 						calibers: row.calibers,
 						barrel_length_inches: row.barrel_length_inches,
