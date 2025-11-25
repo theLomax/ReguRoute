@@ -386,20 +386,12 @@ export default function EquipmentSelector({
 												<Text style={styles.itemName}>{item.name}</Text>
 												<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
 											</View>
-											<View style={styles.itemActions}>
-												<TouchableOpacity
-													onPress={() => handleOpenItemModal(item)}
-													style={styles.iconButton}
-												>
-													<Ionicons name="create-outline" size={24} color={colors.primary} />
-												</TouchableOpacity>
-												<TouchableOpacity
-													onPress={() => handleDeleteItem(item.id)}
-													style={styles.iconButton}
-												>
-													<Ionicons name="trash-outline" size={24} color={colors.error} />
-												</TouchableOpacity>
-											</View>
+											<TouchableOpacity
+												onPress={() => handleOpenItemModal(item)}
+												style={styles.iconButton}
+											>
+												<Ionicons name="create-outline" size={24} color={colors.primary} />
+											</TouchableOpacity>
 										</>
 									)}
 								</View>
@@ -426,16 +418,17 @@ export default function EquipmentSelector({
 							{loadouts.map((loadout) => {
 								const isSelected = selectedLoadouts.some(l => l.id === loadout.id);
 								return (
-									<TouchableOpacity
+									<View
 										key={loadout.id}
 										style={[
 											styles.loadoutCard,
 											isSelected && styles.loadoutCardSelected,
 										]}
-										onPress={() => toggleLoadoutSelection(loadout)}
-										onLongPress={() => handleOpenLoadoutModal(loadout)}
 									>
-										<View style={styles.loadoutContent}>
+										<TouchableOpacity
+											style={styles.loadoutContent}
+											onPress={() => toggleLoadoutSelection(loadout)}
+										>
 											<Ionicons
 												name={isSelected ? 'checkbox' : 'square-outline'}
 												size={24}
@@ -452,8 +445,14 @@ export default function EquipmentSelector({
 													<Text style={styles.defaultBadgeText}>Default</Text>
 												</View>
 											)}
-										</View>
-									</TouchableOpacity>
+										</TouchableOpacity>
+										<TouchableOpacity
+											onPress={() => handleOpenLoadoutModal(loadout)}
+											style={styles.iconButton}
+										>
+											<Ionicons name="create-outline" size={24} color={colors.primary} />
+										</TouchableOpacity>
+									</View>
 								);
 							})}
 						</>
@@ -485,9 +484,7 @@ export default function EquipmentSelector({
 						<Text style={styles.modalTitle}>
 							{editingItem ? 'Edit Item' : 'New Item'}
 						</Text>
-						<TouchableOpacity onPress={handleSaveItem}>
-							<Text style={styles.modalDone}>Save</Text>
-						</TouchableOpacity>
+						<View style={styles.modalHeaderSpacer} />
 					</View>
 
 					<ScrollView style={styles.modalContent}>
@@ -610,6 +607,24 @@ export default function EquipmentSelector({
 								numberOfLines={3}
 							/>
 						</Card>
+
+						<Button
+							title="Save Item"
+							onPress={handleSaveItem}
+							style={styles.saveButton}
+						/>
+
+						{editingItem && onDeleteItem && (
+							<Button
+								title="Delete Item"
+								onPress={() => {
+									setShowItemModal(false);
+									handleDeleteItem(editingItem.id);
+								}}
+								variant="danger"
+								style={styles.deleteButton}
+							/>
+						)}
 					</ScrollView>
 				</View>
 			</Modal>
@@ -838,6 +853,9 @@ const styles = StyleSheet.create({
 		marginBottom: 8,
 		borderWidth: 2,
 		borderColor: colors.border,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
 	},
 	loadoutCardSelected: {
 		borderColor: colors.primary,
@@ -846,6 +864,7 @@ const styles = StyleSheet.create({
 	loadoutContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
+		flex: 1,
 	},
 	loadoutText: {
 		marginLeft: 12,
