@@ -153,9 +153,8 @@ export default function EquipmentSelector({
 		if (loadout) {
 			setEditingLoadout(loadout);
 			setLoadoutName(loadout.name);
-			// Start with empty selection when editing to prevent accidental deletions
-			// Users must explicitly check items they want to keep
-			setSelectedItemIds([]);
+			// Pre-select items that are currently in the loadout
+			setSelectedItemIds(loadout.items.map(li => li.equipment_item_id));
 		} else {
 			setEditingLoadout(null);
 			setLoadoutName('');
@@ -271,8 +270,9 @@ export default function EquipmentSelector({
 		return <LoadingSpinner message="Loading equipment..." />;
 	}
 
-	// Check if we're in items-only mode (no loadouts props provided)
-	const itemsOnlyMode = loadouts.length === 0 && selectedLoadouts.length === 0;
+	// Check if we're in items-only mode (no loadout handlers provided)
+	// If loadout handlers are provided, we're in loadout selection mode
+	const itemsOnlyMode = !onCreateLoadout && !onUpdateLoadout && !onDeleteLoadout;
 
 	return (
 		<View style={styles.container}>
@@ -322,7 +322,7 @@ export default function EquipmentSelector({
 						) : (
 							<>
 								<Button
-									title="Add Item"
+									title="+ Add Item"
 									onPress={() => handleOpenItemModal()}
 									variant="secondary"
 									style={styles.actionButton}
@@ -460,7 +460,7 @@ export default function EquipmentSelector({
 
 					{onCreateLoadout && (
 						<Button
-							title="Create New Loadout"
+							title="+ Create New Loadout"
 							onPress={() => handleOpenLoadoutModal()}
 							variant="secondary"
 							style={styles.createButton}
@@ -531,25 +531,27 @@ export default function EquipmentSelector({
 											setItemFormData({ ...itemFormData, accepts_detachable_magazine: value })
 										}
 									/>
-									{!itemFormData.accepts_detachable_magazine && (
-										<>
-											<Text style={styles.fieldLabel}>Ammunition Capacity</Text>
-											<TextInput
-												style={styles.input}
-												value={itemFormData.ammunition_capacity?.toString() || ''}
-												onChangeText={(text) => {
-													const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
-													setItemFormData({
-														...itemFormData,
-														ammunition_capacity: isNaN(num) ? undefined : num,
-													});
-												}}
-												placeholder="e.g., 6, 8"
-												placeholderTextColor={colors.textMuted}
-												keyboardType="number-pad"
-											/>
-										</>
-									)}
+									<Text style={styles.fieldLabel}>
+										{itemFormData.accepts_detachable_magazine
+											? 'Magazine Capacity (Optional)'
+											: 'Ammunition Capacity'}
+									</Text>
+									<TextInput
+										style={styles.input}
+										value={itemFormData.ammunition_capacity?.toString() || ''}
+										onChangeText={(text) => {
+											const num = parseInt(text.replace(/[^0-9]/g, ''), 10);
+											setItemFormData({
+												...itemFormData,
+												ammunition_capacity: isNaN(num) ? undefined : num,
+											});
+										}}
+										placeholder={itemFormData.accepts_detachable_magazine
+											? "e.g., 15, 17, 30 (if including magazine)"
+											: "e.g., 6, 8"}
+										placeholderTextColor={colors.textMuted}
+										keyboardType="number-pad"
+									/>
 								</>
 							)}
 
@@ -661,7 +663,7 @@ export default function EquipmentSelector({
 							<Text style={styles.fieldLabel}>Select Items</Text>
 							{editingLoadout && (
 								<Text style={styles.helperText}>
-									Currently in loadout: {editingLoadout.items.length} item{editingLoadout.items.length !== 1 ? 's' : ''}. Check items to keep.
+									Select which items to include in this loadout.
 								</Text>
 							)}
 							{equipmentItems.length === 0 ? (
@@ -672,7 +674,6 @@ export default function EquipmentSelector({
 								<>
 									{equipmentItems.map((item) => {
 										const isSelected = selectedItemIds.includes(item.id);
-										const isCurrentlyInLoadout = editingLoadout?.items.some(li => li.equipment_item_id === item.id);
 										return (
 											<TouchableOpacity
 												key={item.id}
@@ -683,14 +684,10 @@ export default function EquipmentSelector({
 													name={isSelected ? 'checkbox' : 'square-outline'}
 													size={24}
 													color={isSelected ? colors.primary : colors.textMuted}
+													paddingRight={10}
 												/>
 												<View style={styles.itemInfo}>
-													<Text style={styles.itemName}>
-														{item.name}
-														{isCurrentlyInLoadout && !isSelected && (
-															<Text style={styles.currentlyInLoadout}> (currently in loadout)</Text>
-														)}
-													</Text>
+													<Text style={styles.itemName}>{item.name}</Text>
 													<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
 												</View>
 											</TouchableOpacity>

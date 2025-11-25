@@ -42,6 +42,65 @@ ReguRoute/
     pnpm set-map delaware
     ```
 
+### Changing Map Data Coverage
+
+To enable routing across different regions, you can download and configure different map files:
+
+#### Download Map Files
+
+**Option 1: Complete US Map** (Recommended for production, ~9-12GB)
+```bash
+curl -L -o ors/data/us-latest.osm.pbf https://download.geofabrik.de/north-america/us-latest.osm.pbf
+```
+
+**Option 2: US Regions** (Smaller, faster to process)
+```bash
+# Northeast (already included)
+curl -L -o ors/data/us-northeast-latest.osm.pbf https://download.geofabrik.de/north-america/us-northeast-latest.osm.pbf
+
+# South
+curl -L -o ors/data/us-south-latest.osm.pbf https://download.geofabrik.de/north-america/us-south-latest.osm.pbf
+
+# Midwest
+curl -L -o ors/data/us-midwest-latest.osm.pbf https://download.geofabrik.de/north-america/us-midwest-latest.osm.pbf
+
+# West
+curl -L -o ors/data/us-west-latest.osm.pbf https://download.geofabrik.de/north-america/us-west-latest.osm.pbf
+```
+
+**Option 3: Individual States**
+```bash
+# Example: Texas
+curl -L -o ors/data/texas-latest.osm.pbf https://download.geofabrik.de/north-america/us/texas-latest.osm.pbf
+```
+
+*Browse all available regions at [Geofabrik Downloads](https://download.geofabrik.de/)*
+
+#### Update ORS Configuration
+
+After downloading a new map file, update `ors/config/ors-config.yml`:
+
+```yaml
+engine:
+  profile_default:
+    build:
+      source_file: /home/ors/files/us-latest.osm.pbf  # Change to your map file name
+```
+
+#### Rebuild Routing Graph
+
+Restart the ORS service to process the new map data:
+```bash
+docker compose restart ors-app
+```
+
+**Note:** The first startup with a new map file takes 10-45 minutes depending on the map size. Monitor progress with:
+```bash
+docker compose logs -f ors-app
+```
+
+Wait for the "ORS is READY" message before using the routing functionality.
+
 ## Running the Application
 
 This is the recommended way to run the entire application stack, including the backend, database, and routing engine.

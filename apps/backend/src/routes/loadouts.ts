@@ -192,10 +192,10 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 
 			const itemsResult = await client.query(
 				`SELECT li.equipment_item_id, li.quantity,
-				        ei.id, ei.name, ei.category, ei.ammunition_capacity,
-				        ei.calibers, ei.barrel_length_inches, ei.overall_length_inches,
-				        ei.is_nfa_item, ei.nfa_type, ei.notes,
-				        ei.created_at, ei.updated_at
+				        ei.id, ei.name, ei.category, ei.accepts_detachable_magazine,
+				        ei.platform, ei.ammunition_capacity, ei.calibers,
+				        ei.barrel_length_inches, ei.overall_length_inches,
+				        ei.nfa_subtype, ei.notes, ei.created_at, ei.updated_at
 				 FROM loadout_items li
 				 JOIN equipment_items ei ON li.equipment_item_id = ei.id
 				 WHERE li.loadout_id = $1
@@ -210,12 +210,13 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 					id: row.id,
 					name: row.name,
 					item_type: row.category,
+					accepts_detachable_magazine: row.accepts_detachable_magazine,
+					platform: row.platform,
 					ammunition_capacity: row.ammunition_capacity,
 					calibers: row.calibers,
 					barrel_length_inches: row.barrel_length_inches,
 					overall_length_inches: row.overall_length_inches,
-					is_nfa_item: row.is_nfa_item,
-					nfa_type: row.nfa_type,
+					nfa_subtype: row.nfa_subtype,
 					notes: row.notes,
 					created_at: row.created_at,
 					updated_at: row.updated_at,
@@ -306,9 +307,10 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 				// Fetch the complete loadout with items
 				const itemsResult = await client.query(
 					`SELECT li.equipment_item_id, li.quantity,
-					        ei.id, ei.name, ei.category, ei.ammunition_capacity,
-					        ei.calibers, ei.barrel_length_inches, ei.overall_length_inches,
-					        ei.is_nfa_item, ei.nfa_type, ei.notes,
+					        ei.id, ei.name, ei.category, ei.accepts_detachable_magazine,
+					        ei.platform, ei.ammunition_capacity, ei.calibers,
+					        ei.barrel_length_inches, ei.overall_length_inches,
+					        ei.nfa_subtype, ei.notes,
 					        ei.created_at, ei.updated_at
 					 FROM loadout_items li
 					 JOIN equipment_items ei ON li.equipment_item_id = ei.id
@@ -323,12 +325,13 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 						id: row.id,
 						name: row.name,
 						item_type: row.category,
+						accepts_detachable_magazine: row.accepts_detachable_magazine,
+						platform: row.platform,
 						ammunition_capacity: row.ammunition_capacity,
 						calibers: row.calibers,
 						barrel_length_inches: row.barrel_length_inches,
 						overall_length_inches: row.overall_length_inches,
-						is_nfa_item: row.is_nfa_item,
-						nfa_type: row.nfa_type,
+						nfa_subtype: row.nfa_subtype,
 						notes: row.notes,
 						created_at: row.created_at,
 						updated_at: row.updated_at,
@@ -426,9 +429,10 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 				// Fetch items
 				const itemsResult = await client.query(
 					`SELECT li.equipment_item_id, li.quantity,
-					        ei.id, ei.name, ei.category, ei.ammunition_capacity,
-					        ei.calibers, ei.barrel_length_inches, ei.overall_length_inches,
-					        ei.is_nfa_item, ei.nfa_type, ei.notes,
+					        ei.id, ei.name, ei.category, ei.accepts_detachable_magazine,
+					        ei.platform, ei.ammunition_capacity, ei.calibers,
+					        ei.barrel_length_inches, ei.overall_length_inches,
+					        ei.nfa_subtype, ei.notes,
 					        ei.created_at, ei.updated_at
 					 FROM loadout_items li
 					 JOIN equipment_items ei ON li.equipment_item_id = ei.id
@@ -443,12 +447,13 @@ export async function loadoutsRoutes(fastify: FastifyInstance) {
 						id: row.id,
 						name: row.name,
 						item_type: row.category,
+						accepts_detachable_magazine: row.accepts_detachable_magazine,
+						platform: row.platform,
 						ammunition_capacity: row.ammunition_capacity,
 						calibers: row.calibers,
 						barrel_length_inches: row.barrel_length_inches,
 						overall_length_inches: row.overall_length_inches,
-						is_nfa_item: row.is_nfa_item,
-						nfa_type: row.nfa_type,
+						nfa_subtype: row.nfa_subtype,
 						notes: row.notes,
 						created_at: row.created_at,
 						updated_at: row.updated_at,

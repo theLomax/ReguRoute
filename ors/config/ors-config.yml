@@ -17,14 +17,14 @@ ors:
   engine:
     profile_default:
       build:
-        source_file: /home/ors/files/us-northeast-latest.osm.pbf
+        source_file: /home/ors/files/us-latest.osm.pbf
       service:
-        maximum_distance: 1000000
-        maximum_distance_dynamic_weights: 1000000
-        maximum_distance_avoid_areas: 1000000
+        maximum_distance: 5000000
+        maximum_distance_dynamic_weights: 5000000
+        maximum_distance_avoid_areas: 5000000
         maximum_waypoints: 50
-        maximum_distance_alternative_routes: 1000000
-        maximum_distance_round_trip_routes: 500000
+        maximum_distance_alternative_routes: 5000000
+        maximum_distance_round_trip_routes: 2500000
     profiles:
       driving-car:
         enabled: true
