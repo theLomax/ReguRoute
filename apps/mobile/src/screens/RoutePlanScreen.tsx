@@ -1,7 +1,6 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
 	View,
-	Text,
 	StyleSheet,
 	ScrollView,
 	TextInput,
@@ -10,6 +9,7 @@ import {
 	Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from 'react-native-paper';
 import type {
 	Coordinates,
 	CalculateRouteResponse,
@@ -22,8 +22,8 @@ import type {
 import { buildCargoProfile } from '@reguroute/types';
 import { useRoutes, useAuth } from '../contexts';
 import { routesApi, equipmentItemsApi, loadoutsApi, permitsApi, analyzeApi } from '../api';
-import { colors } from '../theme';
-import { Card, Button, LoadingSpinner, LocationAutocomplete, EquipmentSelector } from '../components';
+import { statusColors } from '../theme/paperTheme';
+import { Card, Button, LoadingSpinner, LocationAutocomplete, EquipmentSelector, Text } from '../components';
 
 interface LocationInput {
 	name: string;
@@ -33,6 +33,7 @@ interface LocationInput {
 type WizardStep = 'equipment' | 'locations' | 'preview';
 
 export default function RoutePlanScreen() {
+	const theme = useTheme();
 	const { createRoute, fetchRoutes } = useRoutes();
 	const { token } = useAuth();
 
@@ -255,6 +256,210 @@ export default function RoutePlanScreen() {
 		return `${minutes} min`;
 	};
 
+	// Dynamic styles that respond to theme changes
+	const styles = React.useMemo(() => StyleSheet.create({
+		container: {
+			flex: 1,
+			backgroundColor: theme.colors.background,
+		},
+		content: {
+			padding: 16,
+			paddingBottom: 32,
+		},
+		stepTitle: {
+			fontSize: 24,
+			fontWeight: 'bold',
+			color: theme.colors.onSurface,
+			marginBottom: 8,
+		},
+		description: {
+			fontSize: 14,
+			color: theme.colors.onSurfaceVariant,
+			marginBottom: 24,
+			lineHeight: 20,
+		},
+		inputCard: {
+			padding: 0,
+			overflow: 'hidden',
+		},
+		divider: {
+			height: 1,
+			backgroundColor: theme.colors.outlineVariant,
+			marginLeft: 56,
+		},
+		hint: {
+			fontSize: 12,
+			color: theme.colors.onSurfaceVariant,
+			marginTop: 12,
+			marginBottom: 16,
+			textAlign: 'center',
+		},
+		previewCard: {
+			padding: 16,
+			marginBottom: 16,
+		},
+		routeSummary: {
+			marginBottom: 20,
+		},
+		locationRow: {
+			flexDirection: 'row',
+			alignItems: 'center',
+		},
+		locationText: {
+			fontSize: 16,
+			color: theme.colors.onSurface,
+			marginLeft: 12,
+			fontWeight: '500',
+		},
+		routeLine: {
+			width: 2,
+			height: 24,
+			backgroundColor: theme.colors.outline,
+			marginLeft: 9,
+			marginVertical: 4,
+		},
+		statsRow: {
+			flexDirection: 'row',
+			justifyContent: 'space-around',
+			paddingTop: 16,
+			borderTopWidth: 1,
+			borderTopColor: theme.colors.outlineVariant,
+		},
+		stat: {
+			alignItems: 'center',
+		},
+		statValue: {
+			fontSize: 18,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+			marginTop: 4,
+		},
+		statLabel: {
+			fontSize: 12,
+			color: theme.colors.onSurfaceVariant,
+			marginTop: 2,
+		},
+		cargoCard: {
+			padding: 16,
+			marginBottom: 16,
+			backgroundColor: theme.colors.secondaryContainer,
+		},
+		cargoHeader: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			marginBottom: 8,
+		},
+		cargoTitle: {
+			fontSize: 14,
+			fontWeight: '600',
+			marginLeft: 8,
+		},
+		cargoText: {
+			fontSize: 13,
+			color: theme.colors.onSurface,
+			lineHeight: 18,
+		},
+		nameInput: {
+			backgroundColor: theme.colors.surface,
+			borderRadius: 12,
+			paddingHorizontal: 16,
+			paddingVertical: 14,
+			fontSize: 16,
+			borderWidth: 1,
+			borderColor: theme.colors.outline,
+			color: theme.colors.onSurface,
+			marginBottom: 24,
+		},
+		buttonRow: {
+			flexDirection: 'row',
+			gap: 12,
+		},
+		backButton: {
+			flex: 1,
+		},
+		saveButton: {
+			flex: 2,
+		},
+		continueButton: {
+			marginTop: 16,
+		},
+		equipmentSummary: {
+			padding: 12,
+			marginBottom: 16,
+		},
+		equipmentSummaryRow: {
+			flexDirection: 'row',
+			alignItems: 'center',
+		},
+		equipmentSummaryText: {
+			flex: 1,
+			fontSize: 14,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+			marginLeft: 10,
+		},
+		changeButton: {
+			paddingHorizontal: 12,
+			paddingVertical: 6,
+		},
+		locationButtons: {
+			flexDirection: 'row',
+			gap: 12,
+			marginTop: 8,
+		},
+		locationBackButton: {
+			flex: 1,
+		},
+		calculateButton: {
+			flex: 2,
+		},
+		restrictionsCard: {
+			padding: 16,
+			marginBottom: 16,
+			backgroundColor: theme.colors.tertiaryContainer,
+		},
+		restrictionsHeader: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			marginBottom: 8,
+		},
+		restrictionsTitle: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: theme.colors.tertiary,
+			marginLeft: 8,
+		},
+		restrictionsSubtitle: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			marginBottom: 12,
+		},
+		jurisdictionItem: {
+			marginBottom: 12,
+			paddingBottom: 12,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outlineVariant,
+		},
+		jurisdictionName: {
+			fontSize: 14,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+			marginBottom: 4,
+		},
+		jurisdictionReason: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			marginLeft: 8,
+			marginTop: 2,
+		},
+		jurisdictionCitation: {
+			fontSize: 11,
+			color: theme.colors.onSurfaceVariant,
+			marginTop: 6,
+			fontStyle: 'italic',
+		},
+	}), [theme]);
+
 	// Equipment selection step
 	if (step === 'equipment') {
 		return (
@@ -302,26 +507,26 @@ export default function RoutePlanScreen() {
 				<Card style={styles.previewCard}>
 					<View style={styles.routeSummary}>
 						<View style={styles.locationRow}>
-							<Ionicons name="location" size={20} color={colors.success} />
+							<Ionicons name="location" size={20} color={statusColors.go} />
 							<Text style={styles.locationText}>{origin.name}</Text>
 						</View>
 						<View style={styles.routeLine} />
 						<View style={styles.locationRow}>
-							<Ionicons name="flag" size={20} color={colors.error} />
+							<Ionicons name="flag" size={20} color={statusColors.noGo} />
 							<Text style={styles.locationText}>{destination.name}</Text>
 						</View>
 					</View>
 
 					<View style={styles.statsRow}>
 						<View style={styles.stat}>
-							<Ionicons name="speedometer-outline" size={24} color={colors.primary} />
+							<Ionicons name="speedometer-outline" size={24} color={theme.colors.primary} />
 							<Text style={styles.statValue}>
 								{formatDistance(routePreview.route.summary.distance_meters)}
 							</Text>
 							<Text style={styles.statLabel}>Distance</Text>
 						</View>
 						<View style={styles.stat}>
-							<Ionicons name="time-outline" size={24} color={colors.primary} />
+							<Ionicons name="time-outline" size={24} color={theme.colors.primary} />
 							<Text style={styles.statValue}>
 								{formatDuration(routePreview.route.summary.duration_seconds)}
 							</Text>
@@ -334,7 +539,7 @@ export default function RoutePlanScreen() {
 				{restrictedJurisdictions.length > 0 && (
 					<Card style={styles.restrictionsCard}>
 						<View style={styles.restrictionsHeader}>
-							<Ionicons name="shield-checkmark" size={20} color={colors.success} />
+							<Ionicons name="shield-checkmark" size={20} color={statusColors.go} />
 							<Text style={styles.restrictionsTitle}>Areas Avoided</Text>
 						</View>
 						<Text style={styles.restrictionsSubtitle}>
@@ -364,8 +569,8 @@ export default function RoutePlanScreen() {
 				{activeCargoProfile?.has_firearms && restrictedJurisdictions.length === 0 && (
 					<Card style={styles.cargoCard}>
 						<View style={styles.cargoHeader}>
-							<Ionicons name="checkmark-circle" size={20} color={colors.success} />
-							<Text style={[styles.cargoTitle, { color: colors.success }]}>No Restrictions</Text>
+							<Ionicons name="checkmark-circle" size={20} color={statusColors.go} />
+							<Text style={[styles.cargoTitle, { color: statusColors.go }]}>No Restrictions</Text>
 						</View>
 						<Text style={styles.cargoText}>
 							Your route does not pass through any restricted areas for your cargo.
@@ -378,7 +583,7 @@ export default function RoutePlanScreen() {
 					value={routeName}
 					onChangeText={setRouteName}
 					placeholder="Route name (optional)"
-					placeholderTextColor={colors.textMuted}
+					placeholderTextColor={theme.colors.onSurfaceVariant}
 				/>
 
 				<View style={styles.buttonRow}>
@@ -420,7 +625,7 @@ export default function RoutePlanScreen() {
 						onSelectLocation={handleOriginSelect}
 						placeholder="Origin (e.g., Boston)"
 						icon="location"
-						iconColor={colors.success}
+						iconColor={statusColors.go}
 						isSelected={!!origin.coordinates}
 					/>
 
@@ -432,7 +637,7 @@ export default function RoutePlanScreen() {
 						onSelectLocation={handleDestinationSelect}
 						placeholder="Destination (e.g., New York)"
 						icon="flag"
-						iconColor={colors.error}
+						iconColor={statusColors.noGo}
 						isSelected={!!destination.coordinates}
 					/>
 				</Card>
@@ -445,7 +650,7 @@ export default function RoutePlanScreen() {
 				{selectedLoadouts.length > 0 && (
 					<Card style={styles.equipmentSummary}>
 						<View style={styles.equipmentSummaryRow}>
-							<Ionicons name="briefcase" size={18} color={colors.primary} />
+							<Ionicons name="briefcase" size={18} color={theme.colors.primary} />
 							<Text style={styles.equipmentSummaryText}>
 								{selectedLoadouts.length === 1
 									? selectedLoadouts[0].name
@@ -490,210 +695,3 @@ export default function RoutePlanScreen() {
 		</KeyboardAvoidingView>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: colors.background,
-	},
-	content: {
-		padding: 16,
-		paddingBottom: 32,
-	},
-	stepTitle: {
-		fontSize: 24,
-		fontWeight: 'bold',
-		color: colors.text,
-		marginBottom: 8,
-	},
-	description: {
-		fontSize: 14,
-		color: colors.textSecondary,
-		marginBottom: 24,
-		lineHeight: 20,
-	},
-	inputCard: {
-		padding: 0,
-		overflow: 'hidden',
-	},
-	divider: {
-		height: 1,
-		backgroundColor: colors.borderLight,
-		marginLeft: 56,
-	},
-	hint: {
-		fontSize: 12,
-		color: colors.textMuted,
-		marginTop: 12,
-		marginBottom: 16,
-		textAlign: 'center',
-	},
-	previewCard: {
-		padding: 16,
-		marginBottom: 16,
-	},
-	routeSummary: {
-		marginBottom: 20,
-	},
-	locationRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	locationText: {
-		fontSize: 16,
-		color: colors.text,
-		marginLeft: 12,
-		fontWeight: '500',
-	},
-	routeLine: {
-		width: 2,
-		height: 24,
-		backgroundColor: colors.border,
-		marginLeft: 9,
-		marginVertical: 4,
-	},
-	statsRow: {
-		flexDirection: 'row',
-		justifyContent: 'space-around',
-		paddingTop: 16,
-		borderTopWidth: 1,
-		borderTopColor: colors.borderLight,
-	},
-	stat: {
-		alignItems: 'center',
-	},
-	statValue: {
-		fontSize: 18,
-		fontWeight: '600',
-		color: colors.text,
-		marginTop: 4,
-	},
-	statLabel: {
-		fontSize: 12,
-		color: colors.textMuted,
-		marginTop: 2,
-	},
-	cargoCard: {
-		padding: 16,
-		marginBottom: 16,
-		backgroundColor: colors.warningLight,
-	},
-	cargoHeader: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 8,
-	},
-	cargoTitle: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: colors.warning,
-		marginLeft: 8,
-	},
-	cargoText: {
-		fontSize: 13,
-		color: colors.text,
-		lineHeight: 18,
-	},
-	nameInput: {
-		backgroundColor: colors.backgroundWhite,
-		borderRadius: 12,
-		paddingHorizontal: 16,
-		paddingVertical: 14,
-		fontSize: 16,
-		borderWidth: 1,
-		borderColor: colors.border,
-		color: colors.text,
-		marginBottom: 24,
-	},
-	buttonRow: {
-		flexDirection: 'row',
-		gap: 12,
-	},
-	backButton: {
-		flex: 1,
-	},
-	saveButton: {
-		flex: 2,
-	},
-	// Equipment step styles
-	continueButton: {
-		marginTop: 16,
-	},
-	// Location step styles
-	equipmentSummary: {
-		padding: 12,
-		marginBottom: 16,
-	},
-	equipmentSummaryRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	equipmentSummaryText: {
-		flex: 1,
-		fontSize: 14,
-		fontWeight: '500',
-		color: colors.text,
-		marginLeft: 10,
-	},
-	changeButton: {
-		paddingHorizontal: 12,
-		paddingVertical: 6,
-	},
-	locationButtons: {
-		flexDirection: 'row',
-		gap: 12,
-		marginTop: 8,
-	},
-	locationBackButton: {
-		flex: 1,
-	},
-	calculateButton: {
-		flex: 2,
-	},
-	// Restrictions feedback styles
-	restrictionsCard: {
-		padding: 16,
-		marginBottom: 16,
-		backgroundColor: colors.infoLight,
-	},
-	restrictionsHeader: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 8,
-	},
-	restrictionsTitle: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: colors.success,
-		marginLeft: 8,
-	},
-	restrictionsSubtitle: {
-		fontSize: 13,
-		color: colors.textSecondary,
-		marginBottom: 12,
-	},
-	jurisdictionItem: {
-		marginBottom: 12,
-		paddingBottom: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.borderLight,
-	},
-	jurisdictionName: {
-		fontSize: 14,
-		fontWeight: '600',
-		color: colors.text,
-		marginBottom: 4,
-	},
-	jurisdictionReason: {
-		fontSize: 13,
-		color: colors.textSecondary,
-		marginLeft: 8,
-		marginTop: 2,
-	},
-	jurisdictionCitation: {
-		fontSize: 11,
-		color: colors.textMuted,
-		marginTop: 6,
-		fontStyle: 'italic',
-	},
-});

@@ -1,12 +1,13 @@
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from 'react-native-paper';
 import {
 	HomeScreen,
 	RoutePlanScreen,
 	CargoProfileScreen,
 	AccountScreen,
 } from '../screens';
-import { colors } from '../theme';
 
 export type MainTabsParamList = {
 	Home: undefined;
@@ -35,6 +36,8 @@ const getTabIcon = (routeName: string, focused: boolean): TabIconName => {
 };
 
 export default function MainTabs() {
+	const theme = useTheme();
+
 	return (
 		<Tab.Navigator
 			screenOptions={({ route }) => ({
@@ -42,25 +45,27 @@ export default function MainTabs() {
 					const iconName = getTabIcon(route.name, focused);
 					return <Ionicons name={iconName} size={size} color={color} />;
 				},
-				tabBarActiveTintColor: colors.primary,
-				tabBarInactiveTintColor: colors.textMuted,
+				tabBarActiveTintColor: theme.colors.primary,
+				tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
 				tabBarStyle: {
 					paddingBottom: 18,
 					paddingTop: 6,
 					height: 70,
+					backgroundColor: theme.colors.surface,
 				},
 				tabBarLabelStyle: {
 					fontSize: 12,
 					fontWeight: '500',
 				},
 				headerStyle: {
-					backgroundColor: colors.backgroundWhite,
+					backgroundColor: theme.colors.surface,
 					elevation: 1,
 					shadowOpacity: 0.1,
 				},
 				headerTitleStyle: {
 					fontWeight: '600',
 					fontSize: 18,
+					color: theme.colors.onSurface,
 				},
 			})}
 		>

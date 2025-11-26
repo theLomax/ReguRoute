@@ -1,5 +1,7 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
-import { colors } from '../theme';
+import React from 'react';
+import { View, Image, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-paper';
+import Text from './Text';
 
 type AvatarSize = 'small' | 'medium' | 'large';
 
@@ -38,15 +40,17 @@ export default function Avatar({
 	name,
 	imageUri,
 	size = 'medium',
-	backgroundColor = colors.primary,
+	backgroundColor,
 }: AvatarProps) {
+	const theme = useTheme();
 	const dimensions = sizeMap[size];
+	const bgColor = backgroundColor || theme.colors.primary;
 
 	const containerStyle = {
 		width: dimensions.container,
 		height: dimensions.container,
 		borderRadius: dimensions.container / 2,
-		backgroundColor,
+		backgroundColor: bgColor,
 	};
 
 	if (imageUri) {
@@ -60,7 +64,7 @@ export default function Avatar({
 
 	return (
 		<View style={[styles.container, containerStyle]}>
-			<Text style={[styles.text, { fontSize: dimensions.text }]}>
+			<Text style={[styles.text, { fontSize: dimensions.text, color: theme.colors.surface }]}>
 				{getInitials(name || '')}
 			</Text>
 		</View>
@@ -76,7 +80,6 @@ const styles = StyleSheet.create({
 		resizeMode: 'cover',
 	},
 	text: {
-		color: colors.white,
 		fontWeight: 'bold',
 	},
 });

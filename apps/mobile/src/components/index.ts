@@ -9,4 +9,5 @@ export { default as EquipmentSelector } from './EquipmentSelector';
 export { default as Input } from './Input';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as LocationAutocomplete } from './LocationAutocomplete';
+export { default as Text } from './Text';
 export { default as Toggle } from './Toggle';

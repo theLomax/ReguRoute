@@ -1,5 +1,7 @@
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors } from '../theme';
+import React from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+import { useTheme } from 'react-native-paper';
+import Text from './Text';
 
 type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error';
 type BadgeSize = 'small' | 'medium';
@@ -17,14 +19,6 @@ interface BadgeProps {
 	style?: ViewStyle;
 }
 
-const variantColors: Record<BadgeVariant, { bg: string; text: string }> = {
-	default: { bg: colors.textMuted, text: colors.white },
-	primary: { bg: colors.primary, text: colors.white },
-	success: { bg: colors.success, text: colors.white },
-	warning: { bg: colors.warning, text: colors.white },
-	error: { bg: colors.error, text: colors.white },
-};
-
 const sizeStyles: Record<BadgeSize, { minWidth: number; height: number; fontSize: number; padding: number }> = {
 	small: { minWidth: 18, height: 18, fontSize: 10, padding: 4 },
 	medium: { minWidth: 22, height: 22, fontSize: 12, padding: 6 },
@@ -37,8 +31,18 @@ export default function Badge({
 	max = 99,
 	style,
 }: BadgeProps) {
-	const colorStyle = variantColors[variant];
+	const theme = useTheme();
 	const sizeStyle = sizeStyles[size];
+
+	const variantColors: Record<BadgeVariant, { bg: string; text: string }> = {
+		default: { bg: theme.colors.onSurfaceVariant, text: theme.colors.surface },
+		primary: { bg: theme.colors.primary, text: theme.colors.surface },
+		success: { bg: theme.colors.tertiary, text: theme.colors.surface },
+		warning: { bg: '#FB923C', text: theme.colors.surface },
+		error: { bg: theme.colors.error, text: theme.colors.surface },
+	};
+
+	const colorStyle = variantColors[variant];
 
 	let displayValue: string;
 	if (typeof value === 'number') {

@@ -8,7 +8,6 @@ import { useColorScheme } from 'react-native';
  */
 
 export type ThemeMode = 'light' | 'dark' | 'system' | 'high-contrast-light' | 'high-contrast-dark';
-export type ButtonPlacement = 'leading' | 'trailing'; // Cancel button on left or right
 export type ColorBlindMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
 
 export interface UserPreferences {
@@ -16,9 +15,8 @@ export interface UserPreferences {
 	themeMode: ThemeMode;
 
 	// UI preferences
-	buttonPlacement: ButtonPlacement; // Where cancel/back buttons appear
 	reducedMotion: boolean; // Disable animations
-	largeText: boolean; // Increase font sizes
+	textScale: number; // Font size scale: 1-5, where 3 is default (1=smallest, 5=largest)
 
 	// Accessibility
 	colorBlindMode: ColorBlindMode;
@@ -37,13 +35,13 @@ interface PreferencesContextValue {
 	) => Promise<void>;
 	resetPreferences: () => Promise<void>;
 	effectiveTheme: 'light' | 'dark' | 'high-contrast-light' | 'high-contrast-dark';
+	fontScale: number; // Font scale multiplier (0.85 to 1.3)
 }
 
 const defaultPreferences: UserPreferences = {
 	themeMode: 'system',
-	buttonPlacement: 'leading',
 	reducedMotion: false,
-	largeText: false,
+	textScale: 3, // Default text scale (middle of 1-5 range)
 	colorBlindMode: 'none',
 	highContrast: false,
 	showMetric: true,
@@ -123,6 +121,20 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 		return baseTheme;
 	}, [preferences.themeMode, preferences.highContrast, systemColorScheme]);
 
+	// Calculate font scale multiplier from textScale (1-5 → 0.85-1.3)
+	const fontScale = React.useMemo(() => {
+		// Map 1-5 scale to 0.85-1.3 multiplier
+		// 1 = 0.85, 2 = 0.95, 3 = 1.0 (default), 4 = 1.15, 5 = 1.3
+		const scaleMap: Record<number, number> = {
+			1: 0.85,
+			2: 0.95,
+			3: 1.0,
+			4: 1.15,
+			5: 1.3,
+		};
+		return scaleMap[preferences.textScale] || 1.0;
+	}, [preferences.textScale]);
+
 	// Don't render children until preferences are loaded
 	// Show a simple loading state instead of null to prevent hanging
 	if (!isLoaded) {
@@ -136,6 +148,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 				updatePreference,
 				resetPreferences,
 				effectiveTheme,
+				fontScale,
 			}}
 		>
 			{children}

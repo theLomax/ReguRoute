@@ -1,7 +1,6 @@
-import { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
 	View,
-	Text,
 	StyleSheet,
 	FlatList,
 	RefreshControl,
@@ -10,15 +9,16 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from 'react-native-paper';
 import type { Route } from '@reguroute/types';
 import type { MainTabsParamList } from '../navigation';
 import { useRoutes } from '../contexts';
-import { colors } from '../theme';
-import { Card, Badge, EmptyState, LoadingSpinner } from '../components';
+import { Card, Badge, EmptyState, LoadingSpinner, Text } from '../components';
 
 type HomeNavigationProp = BottomTabNavigationProp<MainTabsParamList, 'Home'>;
 
 function RouteCard({ route, onPress }: { route: Route; onPress: () => void }) {
+	const theme = useTheme();
 	const criticalCount = route.regulation_alerts?.filter(
 		(a) => a.severity === 'critical'
 	).length ?? 0;
@@ -34,6 +34,46 @@ function RouteCard({ route, onPress }: { route: Route; onPress: () => void }) {
 			year: 'numeric',
 		});
 	};
+
+	const styles = React.useMemo(() => StyleSheet.create({
+		routeCard: {
+			padding: 16,
+		},
+		routeHeader: {
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'center',
+			marginBottom: 8,
+		},
+		routeName: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+			flex: 1,
+			marginRight: 8,
+		},
+		badges: {
+			flexDirection: 'row',
+		},
+		badgeSpacing: {
+			marginLeft: 4,
+		},
+		routeDetails: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 4,
+			marginBottom: 8,
+		},
+		routeText: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			flex: 1,
+		},
+		routeDate: {
+			fontSize: 12,
+			color: theme.colors.onSurfaceVariant,
+		},
+	}), [theme]);
 
 	return (
 		<Card onPress={onPress} style={styles.routeCard}>
@@ -56,11 +96,11 @@ function RouteCard({ route, onPress }: { route: Route; onPress: () => void }) {
 				</View>
 			</View>
 			<View style={styles.routeDetails}>
-				<Ionicons name="location" size={14} color={colors.textMuted} />
+				<Ionicons name="location" size={14} color={theme.colors.onSurfaceVariant} />
 				<Text style={styles.routeText} numberOfLines={1}>
 					{route.origin_name}
 				</Text>
-				<Ionicons name="arrow-forward" size={12} color={colors.textMuted} />
+				<Ionicons name="arrow-forward" size={12} color={theme.colors.onSurfaceVariant} />
 				<Text style={styles.routeText} numberOfLines={1}>
 					{route.destination_name}
 				</Text>
@@ -73,6 +113,7 @@ function RouteCard({ route, onPress }: { route: Route; onPress: () => void }) {
 }
 
 export default function HomeScreen() {
+	const theme = useTheme();
 	const navigation = useNavigation<HomeNavigationProp>();
 	const { routes, isLoading, fetchRoutes } = useRoutes();
 
@@ -92,6 +133,36 @@ export default function HomeScreen() {
 		// TODO: Navigate to route detail screen
 		console.log('Route pressed:', route.id);
 	}, []);
+
+	const styles = React.useMemo(() => StyleSheet.create({
+		container: {
+			flex: 1,
+			backgroundColor: theme.colors.background,
+		},
+		listContent: {
+			padding: 16,
+			paddingBottom: 80,
+		},
+		separator: {
+			height: 12,
+		},
+		fab: {
+			position: 'absolute',
+			right: 20,
+			bottom: 20,
+			width: 56,
+			height: 56,
+			borderRadius: 28,
+			backgroundColor: theme.colors.primary,
+			alignItems: 'center',
+			justifyContent: 'center',
+			shadowColor: '#000000',
+			shadowOffset: { width: 0, height: 2 },
+			shadowOpacity: 0.25,
+			shadowRadius: 4,
+			elevation: 5,
+		},
+	}), [theme]);
 
 	if (isLoading && routes.length === 0) {
 		return <LoadingSpinner fullScreen message="Loading routes..." />;
@@ -124,82 +195,15 @@ export default function HomeScreen() {
 					<RefreshControl
 						refreshing={isLoading}
 						onRefresh={handleRefresh}
-						colors={[colors.primary]}
-						tintColor={colors.primary}
+						colors={[theme.colors.primary]}
+						tintColor={theme.colors.primary}
 					/>
 				}
 				ItemSeparatorComponent={() => <View style={styles.separator} />}
 			/>
 			<TouchableOpacity style={styles.fab} onPress={handlePlanRoute}>
-				<Ionicons name="add" size={28} color={colors.white} />
+				<Ionicons name="add" size={28} color={theme.colors.surface} />
 			</TouchableOpacity>
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: colors.background,
-	},
-	listContent: {
-		padding: 16,
-		paddingBottom: 80,
-	},
-	separator: {
-		height: 12,
-	},
-	routeCard: {
-		padding: 16,
-	},
-	routeHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		marginBottom: 8,
-	},
-	routeName: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: colors.text,
-		flex: 1,
-		marginRight: 8,
-	},
-	badges: {
-		flexDirection: 'row',
-	},
-	badgeSpacing: {
-		marginLeft: 4,
-	},
-	routeDetails: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 4,
-		marginBottom: 8,
-	},
-	routeText: {
-		fontSize: 13,
-		color: colors.textSecondary,
-		flex: 1,
-	},
-	routeDate: {
-		fontSize: 12,
-		color: colors.textMuted,
-	},
-	fab: {
-		position: 'absolute',
-		right: 20,
-		bottom: 20,
-		width: 56,
-		height: 56,
-		borderRadius: 28,
-		backgroundColor: colors.primary,
-		alignItems: 'center',
-		justifyContent: 'center',
-		shadowColor: colors.black,
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.25,
-		shadowRadius: 4,
-		elevation: 5,
-	},
-});

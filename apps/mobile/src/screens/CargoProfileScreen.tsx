@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
 	View,
-	Text,
 	StyleSheet,
 	ScrollView,
 	TouchableOpacity,
@@ -9,6 +8,7 @@ import {
 	RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from 'react-native-paper';
 import type {
 	EquipmentItem,
 	Loadout,
@@ -17,8 +17,7 @@ import type {
 } from '@reguroute/types';
 import { useAuth } from '../contexts';
 import { equipmentItemsApi, loadoutsApi, permitsApi } from '../api';
-import { colors } from '../theme';
-import { Card, LoadingSpinner, EquipmentSelector } from '../components';
+import { Card, LoadingSpinner, EquipmentSelector, Text } from '../components';
 
 // US States for permit selection
 const US_STATES = [
@@ -32,6 +31,7 @@ const US_STATES = [
 type TabType = 'loadouts' | 'items' | 'permits';
 
 export default function CargoProfileScreen() {
+	const theme = useTheme();
 	const { token } = useAuth();
 
 	// Data state
@@ -190,6 +190,152 @@ export default function CargoProfileScreen() {
 		}
 	};
 
+	// Dynamic styles that respond to theme changes
+	const styles = React.useMemo(() => StyleSheet.create({
+		container: {
+			flex: 1,
+			backgroundColor: theme.colors.background,
+		},
+		content: {
+			padding: 16,
+			paddingBottom: 32,
+		},
+		tabBar: {
+			flexDirection: 'row',
+			backgroundColor: theme.colors.surface,
+			borderRadius: 12,
+			padding: 4,
+			marginBottom: 16,
+		},
+		tab: {
+			flex: 1,
+			paddingVertical: 10,
+			alignItems: 'center',
+			borderRadius: 8,
+		},
+		tabActive: {
+			backgroundColor: theme.colors.primary,
+		},
+		tabText: {
+			fontSize: 14,
+			fontWeight: '500',
+			color: theme.colors.onSurfaceVariant,
+		},
+		tabTextActive: {
+			color: theme.colors.onPrimary,
+		},
+		tabContent: {
+			flex: 1,
+		},
+		description: {
+			fontSize: 14,
+			color: theme.colors.onSurfaceVariant,
+			marginBottom: 16,
+			lineHeight: 20,
+		},
+		section: {
+			padding: 16,
+			marginBottom: 16,
+		},
+		sectionTitle: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+			marginBottom: 12,
+		},
+		emptyCard: {
+			padding: 32,
+			alignItems: 'center',
+			marginBottom: 16,
+		},
+		emptyText: {
+			fontSize: 16,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+			marginTop: 12,
+		},
+		emptySubtext: {
+			fontSize: 14,
+			color: theme.colors.onSurfaceVariant,
+			marginTop: 4,
+		},
+		manageItem: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			paddingVertical: 12,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outlineVariant,
+		},
+		manageItemInfo: {
+			flex: 1,
+		},
+		manageItemName: {
+			fontSize: 15,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+		},
+		manageItemDetail: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			marginTop: 2,
+		},
+		deleteButton: {
+			padding: 8,
+		},
+		permitItem: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			paddingVertical: 12,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outlineVariant,
+		},
+		permitInfo: {
+			flex: 1,
+		},
+		permitState: {
+			fontSize: 18,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+		},
+		permitType: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+		},
+		helperText: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			marginBottom: 12,
+		},
+		stateGrid: {
+			flexDirection: 'row',
+			flexWrap: 'wrap',
+		},
+		stateChip: {
+			paddingHorizontal: 12,
+			paddingVertical: 8,
+			borderRadius: 8,
+			backgroundColor: theme.colors.surface,
+			borderWidth: 1,
+			borderColor: theme.colors.outline,
+			marginRight: 8,
+			marginBottom: 8,
+			minWidth: 48,
+			alignItems: 'center',
+		},
+		stateChipSelected: {
+			backgroundColor: theme.colors.primary,
+			borderColor: theme.colors.primary,
+		},
+		stateChipText: {
+			fontSize: 14,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+		},
+		stateChipTextSelected: {
+			color: theme.colors.onPrimary,
+		},
+	}), [theme]);
+
 	if (isLoading) {
 		return <LoadingSpinner fullScreen message="Loading equipment..." />;
 	}
@@ -297,7 +443,7 @@ export default function CargoProfileScreen() {
 										onPress={() => handleRemovePermit(permit.id)}
 										style={styles.deleteButton}
 									>
-										<Ionicons name="close-circle" size={24} color={colors.error} />
+										<Ionicons name="close-circle" size={24} color={theme.colors.error} />
 									</TouchableOpacity>
 								</View>
 							))}
@@ -347,148 +493,3 @@ export default function CargoProfileScreen() {
 		</ScrollView>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: colors.background,
-	},
-	content: {
-		padding: 16,
-		paddingBottom: 32,
-	},
-	tabBar: {
-		flexDirection: 'row',
-		backgroundColor: colors.backgroundWhite,
-		borderRadius: 12,
-		padding: 4,
-		marginBottom: 16,
-	},
-	tab: {
-		flex: 1,
-		paddingVertical: 10,
-		alignItems: 'center',
-		borderRadius: 8,
-	},
-	tabActive: {
-		backgroundColor: colors.primary,
-	},
-	tabText: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: colors.textSecondary,
-	},
-	tabTextActive: {
-		color: colors.white,
-	},
-	tabContent: {
-		flex: 1,
-	},
-	description: {
-		fontSize: 14,
-		color: colors.textSecondary,
-		marginBottom: 16,
-		lineHeight: 20,
-	},
-	section: {
-		padding: 16,
-		marginBottom: 16,
-	},
-	sectionTitle: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: colors.text,
-		marginBottom: 12,
-	},
-	emptyCard: {
-		padding: 32,
-		alignItems: 'center',
-		marginBottom: 16,
-	},
-	emptyText: {
-		fontSize: 16,
-		fontWeight: '500',
-		color: colors.text,
-		marginTop: 12,
-	},
-	emptySubtext: {
-		fontSize: 14,
-		color: colors.textMuted,
-		marginTop: 4,
-	},
-	manageItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		paddingVertical: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.borderLight,
-	},
-	manageItemInfo: {
-		flex: 1,
-	},
-	manageItemName: {
-		fontSize: 15,
-		fontWeight: '500',
-		color: colors.text,
-	},
-	manageItemDetail: {
-		fontSize: 13,
-		color: colors.textMuted,
-		marginTop: 2,
-	},
-	deleteButton: {
-		padding: 8,
-	},
-	permitItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		paddingVertical: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.borderLight,
-	},
-	permitInfo: {
-		flex: 1,
-	},
-	permitState: {
-		fontSize: 18,
-		fontWeight: '600',
-		color: colors.text,
-	},
-	permitType: {
-		fontSize: 13,
-		color: colors.textMuted,
-	},
-	helperText: {
-		fontSize: 13,
-		color: colors.textMuted,
-		marginBottom: 12,
-	},
-	stateGrid: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-	},
-	stateChip: {
-		paddingHorizontal: 12,
-		paddingVertical: 8,
-		borderRadius: 8,
-		backgroundColor: colors.backgroundWhite,
-		borderWidth: 1,
-		borderColor: colors.border,
-		marginRight: 8,
-		marginBottom: 8,
-		minWidth: 48,
-		alignItems: 'center',
-	},
-	stateChipSelected: {
-		backgroundColor: colors.primary,
-		borderColor: colors.primary,
-	},
-	stateChipText: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: colors.text,
-	},
-	stateChipTextSelected: {
-		color: colors.white,
-	},
-});

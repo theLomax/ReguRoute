@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme';
+import { useTheme } from 'react-native-paper';
+import Text from './Text';
 
 type AlertSeverity = 'info' | 'warning' | 'error' | 'success';
 
@@ -19,38 +21,6 @@ interface AlertProps {
 	style?: ViewStyle;
 }
 
-const severityConfig: Record<AlertSeverity, {
-	backgroundColor: string;
-	borderColor: string;
-	textColor: string;
-	iconName: keyof typeof Ionicons.glyphMap;
-}> = {
-	info: {
-		backgroundColor: colors.infoLight,
-		borderColor: colors.info,
-		textColor: colors.info,
-		iconName: 'information-circle',
-	},
-	warning: {
-		backgroundColor: colors.warningLight,
-		borderColor: colors.warning,
-		textColor: colors.warning,
-		iconName: 'warning',
-	},
-	error: {
-		backgroundColor: colors.criticalLight,
-		borderColor: colors.error,
-		textColor: colors.error,
-		iconName: 'alert-circle',
-	},
-	success: {
-		backgroundColor: '#f0fdf4',
-		borderColor: colors.success,
-		textColor: colors.success,
-		iconName: 'checkmark-circle',
-	},
-};
-
 export default function Alert({
 	message,
 	title,
@@ -59,6 +29,40 @@ export default function Alert({
 	onDismiss,
 	style,
 }: AlertProps) {
+	const theme = useTheme();
+
+	const severityConfig: Record<AlertSeverity, {
+		backgroundColor: string;
+		borderColor: string;
+		textColor: string;
+		iconName: keyof typeof Ionicons.glyphMap;
+	}> = {
+		info: {
+			backgroundColor: `${theme.colors.secondary}20`,
+			borderColor: theme.colors.secondary,
+			textColor: theme.colors.secondary,
+			iconName: 'information-circle',
+		},
+		warning: {
+			backgroundColor: '#FED7AA',
+			borderColor: '#FB923C',
+			textColor: '#FB923C',
+			iconName: 'warning',
+		},
+		error: {
+			backgroundColor: theme.colors.errorContainer,
+			borderColor: theme.colors.error,
+			textColor: theme.colors.error,
+			iconName: 'alert-circle',
+		},
+		success: {
+			backgroundColor: '#f0fdf4',
+			borderColor: theme.colors.tertiary,
+			textColor: theme.colors.tertiary,
+			iconName: 'checkmark-circle',
+		},
+	};
+
 	const config = severityConfig[severity];
 
 	return (

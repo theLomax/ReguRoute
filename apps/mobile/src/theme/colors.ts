@@ -4,10 +4,14 @@
  */
 
 export const colors = {
+
+
+
+
 	// Primary brand colors
-	primary: '#2563eb',
-	primaryLight: '#3b82f6',
-	primaryDark: '#1d4ed8',
+	primary: '#0466C8',
+	primaryLight: '#297FD6',
+	primaryDark: '#3B5475',
 
 	// Neutral/text colors
 	text: '#1a1a1a',

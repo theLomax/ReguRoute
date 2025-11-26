@@ -1,10 +1,12 @@
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { List, Switch, RadioButton, Divider, Text, useTheme, Card } from 'react-native-paper';
-import { usePreferences, type ThemeMode, type ButtonPlacement, type ColorBlindMode } from '../contexts';
+import { usePreferences, type ThemeMode, type ColorBlindMode } from '../contexts';
 
 export default function PreferencesScreen() {
 	const { preferences, updatePreference } = usePreferences();
 	const theme = useTheme();
+
+	const textScaleLabels = ['Smallest', 'Small', 'Default', 'Large', 'Largest'];
 
 	return (
 		<ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -56,17 +58,50 @@ export default function PreferencesScreen() {
 
 					<Divider style={styles.divider} />
 
-					<List.Item
-						title="Large Text"
-						description="Increase font size throughout the app"
-						left={props => <List.Icon {...props} icon="format-size" />}
-						right={() => (
-							<Switch
-								value={preferences.largeText}
-								onValueChange={(value) => updatePreference('largeText', value)}
-							/>
-						)}
-					/>
+					<View style={styles.textSizeContainer}>
+						<View style={styles.textSizeHeader}>
+							<List.Icon icon="format-size" />
+							<View style={styles.textSizeTextContainer}>
+								<Text variant="bodyLarge">Text Size</Text>
+								<Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+									{textScaleLabels[preferences.textScale - 1]}
+								</Text>
+							</View>
+						</View>
+						<View style={styles.textSizeButtons}>
+							{[1, 2, 3, 4, 5].map((scale) => (
+								<TouchableOpacity
+									key={scale}
+									style={[
+										styles.textSizeButton,
+										{
+											backgroundColor: preferences.textScale === scale
+												? theme.colors.primaryContainer
+												: theme.colors.surfaceVariant,
+											borderColor: preferences.textScale === scale
+												? theme.colors.primary
+												: theme.colors.outline,
+										},
+									]}
+									onPress={() => updatePreference('textScale', scale)}
+								>
+									<Text
+										variant="labelLarge"
+										style={{
+											color: preferences.textScale === scale
+												? theme.colors.onPrimaryContainer
+												: theme.colors.onSurfaceVariant,
+											fontSize: 10 + (scale * 2),
+										}}
+									>
+										A
+									</Text>
+								</TouchableOpacity>
+							))}
+						</View>
+					</View>
+
+					<Divider style={styles.divider} />
 
 					<List.Item
 						title="Reduced Motion"
@@ -79,30 +114,6 @@ export default function PreferencesScreen() {
 							/>
 						)}
 					/>
-				</Card.Content>
-			</Card>
-
-			{/* UI Preferences Section */}
-			<Card style={styles.section}>
-				<Card.Content>
-					<Text variant="titleMedium" style={styles.sectionTitle}>User Interface</Text>
-
-					<Text variant="labelLarge" style={styles.subsectionTitle}>Button Placement</Text>
-					<RadioButton.Group
-						onValueChange={(value) => updatePreference('buttonPlacement', value as ButtonPlacement)}
-						value={preferences.buttonPlacement}
-					>
-						<RadioButton.Item
-							label="Cancel on Left (Leading)"
-							value="leading"
-							labelVariant="bodyMedium"
-						/>
-						<RadioButton.Item
-							label="Cancel on Right (Trailing)"
-							value="trailing"
-							labelVariant="bodyMedium"
-						/>
-					</RadioButton.Group>
 				</Card.Content>
 			</Card>
 
@@ -164,5 +175,31 @@ const styles = StyleSheet.create({
 	},
 	bottomSpacer: {
 		height: 32,
+	},
+	textSizeContainer: {
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+	},
+	textSizeHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 12,
+	},
+	textSizeTextContainer: {
+		marginLeft: 16,
+		flex: 1,
+	},
+	textSizeButtons: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		gap: 8,
+	},
+	textSizeButton: {
+		flex: 1,
+		aspectRatio: 1,
+		borderRadius: 12,
+		borderWidth: 2,
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
 });

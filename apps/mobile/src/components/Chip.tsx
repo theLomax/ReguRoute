@@ -1,5 +1,7 @@
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors } from '../theme';
+import React from 'react';
+import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
+import { useTheme } from 'react-native-paper';
+import Text from './Text';
 
 interface ChipProps {
 	/** Chip label text */
@@ -21,6 +23,34 @@ export default function Chip({
 	disabled = false,
 	style,
 }: ChipProps) {
+	const theme = useTheme();
+
+	const styles = React.useMemo(() => StyleSheet.create({
+		container: {
+			paddingHorizontal: 16,
+			paddingVertical: 8,
+			borderRadius: 20,
+			backgroundColor: theme.colors.background,
+			borderWidth: 1,
+			borderColor: theme.colors.outline,
+		},
+		selected: {
+			backgroundColor: theme.colors.primary,
+			borderColor: theme.colors.primary,
+		},
+		disabled: {
+			opacity: 0.5,
+		},
+		label: {
+			fontSize: 14,
+			color: theme.colors.onSurface,
+			fontWeight: '500',
+		},
+		labelSelected: {
+			color: theme.colors.surface,
+		},
+	}), [theme]);
+
 	return (
 		<TouchableOpacity
 			style={[
@@ -39,29 +69,3 @@ export default function Chip({
 		</TouchableOpacity>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-		borderRadius: 20,
-		backgroundColor: colors.background,
-		borderWidth: 1,
-		borderColor: colors.border,
-	},
-	selected: {
-		backgroundColor: colors.primary,
-		borderColor: colors.primary,
-	},
-	disabled: {
-		opacity: 0.5,
-	},
-	label: {
-		fontSize: 14,
-		color: colors.text,
-		fontWeight: '500',
-	},
-	labelSelected: {
-		color: colors.white,
-	},
-});

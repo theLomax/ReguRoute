@@ -1,7 +1,6 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
 	View,
-	Text,
 	TextInput,
 	TouchableOpacity,
 	StyleSheet,
@@ -9,8 +8,9 @@ import {
 	ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from 'react-native-paper';
 import type { Coordinates } from '@reguroute/types';
-import { colors } from '../theme';
+import Text from './Text';
 
 // Photon API response types
 interface PhotonFeature {
@@ -131,6 +131,7 @@ export default function LocationAutocomplete({
 	iconColor,
 	isSelected,
 }: LocationAutocompleteProps) {
+	const theme = useTheme();
 	const [isFocused, setIsFocused] = useState(false);
 	const [apiSuggestions, setApiSuggestions] = useState<LocationSuggestion[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -222,6 +223,68 @@ export default function LocationAutocomplete({
 		setIsFocused(false);
 	};
 
+	const styles = React.useMemo(() => StyleSheet.create({
+		container: {
+			position: 'relative',
+		},
+		inputRow: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			padding: 16,
+		},
+		iconContainer: {
+			width: 32,
+			alignItems: 'center',
+		},
+		input: {
+			flex: 1,
+			fontSize: 16,
+			color: theme.colors.onSurface,
+			marginLeft: 8,
+		},
+		suggestionsContainer: {
+			backgroundColor: theme.colors.surface,
+			borderTopWidth: 1,
+			borderTopColor: theme.colors.outlineVariant,
+			marginLeft: 56,
+			marginRight: 16,
+		},
+		suggestionItem: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			paddingVertical: 12,
+			paddingHorizontal: 8,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outlineVariant,
+		},
+		lastSuggestionItem: {
+			borderBottomWidth: 0,
+		},
+		suggestionName: {
+			flex: 1,
+			fontSize: 15,
+			color: theme.colors.onSurface,
+			marginLeft: 8,
+		},
+		suggestionState: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			marginLeft: 8,
+		},
+		loadingContainer: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'center',
+			paddingVertical: 16,
+			paddingHorizontal: 8,
+		},
+		loadingText: {
+			fontSize: 14,
+			color: theme.colors.onSurfaceVariant,
+			marginLeft: 8,
+		},
+	}), [theme]);
+
 	return (
 		<View style={styles.container}>
 			<View style={styles.inputRow}>
@@ -233,7 +296,7 @@ export default function LocationAutocomplete({
 					value={value}
 					onChangeText={onChangeText}
 					placeholder={placeholder}
-					placeholderTextColor={colors.textMuted}
+					placeholderTextColor={theme.colors.onSurfaceVariant}
 					autoCapitalize="words"
 					onFocus={() => setIsFocused(true)}
 					onBlur={() => {
@@ -241,14 +304,14 @@ export default function LocationAutocomplete({
 						setTimeout(() => setIsFocused(false), 150);
 					}}
 				/>
-				{isSelected && <Ionicons name="checkmark-circle" size={20} color={colors.success} />}
+				{isSelected && <Ionicons name="checkmark-circle" size={20} color={theme.colors.tertiary} />}
 			</View>
 
 			{showSuggestions && (
 				<View style={styles.suggestionsContainer}>
 					{isLoading && suggestions.length === 0 ? (
 						<View style={styles.loadingContainer}>
-							<ActivityIndicator size="small" color={colors.primary} />
+							<ActivityIndicator size="small" color={theme.colors.primary} />
 							<Text style={styles.loadingText}>Searching...</Text>
 						</View>
 					) : (
@@ -265,7 +328,7 @@ export default function LocationAutocomplete({
 									]}
 									onPress={() => handleSelect(item)}
 								>
-									<Ionicons name="location-outline" size={16} color={colors.textMuted} />
+									<Ionicons name="location-outline" size={16} color={theme.colors.onSurfaceVariant} />
 									<Text style={styles.suggestionName}>{item.name}</Text>
 									<Text style={styles.suggestionState}>{item.state}</Text>
 								</TouchableOpacity>
@@ -277,65 +340,3 @@ export default function LocationAutocomplete({
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		position: 'relative',
-	},
-	inputRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		padding: 16,
-	},
-	iconContainer: {
-		width: 32,
-		alignItems: 'center',
-	},
-	input: {
-		flex: 1,
-		fontSize: 16,
-		color: colors.text,
-		marginLeft: 8,
-	},
-	suggestionsContainer: {
-		backgroundColor: colors.backgroundWhite,
-		borderTopWidth: 1,
-		borderTopColor: colors.borderLight,
-		marginLeft: 56,
-		marginRight: 16,
-	},
-	suggestionItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		paddingVertical: 12,
-		paddingHorizontal: 8,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.borderLight,
-	},
-	lastSuggestionItem: {
-		borderBottomWidth: 0,
-	},
-	suggestionName: {
-		flex: 1,
-		fontSize: 15,
-		color: colors.text,
-		marginLeft: 8,
-	},
-	suggestionState: {
-		fontSize: 13,
-		color: colors.textMuted,
-		marginLeft: 8,
-	},
-	loadingContainer: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'center',
-		paddingVertical: 16,
-		paddingHorizontal: 8,
-	},
-	loadingText: {
-		fontSize: 14,
-		color: colors.textMuted,
-		marginLeft: 8,
-	},
-});

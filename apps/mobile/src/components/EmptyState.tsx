@@ -1,7 +1,9 @@
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme';
+import { useTheme } from 'react-native-paper';
 import Button from './Button';
+import Text from './Text';
 
 interface EmptyStateProps {
 	/** Icon name from Ionicons */
@@ -26,10 +28,42 @@ export default function EmptyState({
 	onAction,
 	style,
 }: EmptyStateProps) {
+	const theme = useTheme();
+
+	const styles = React.useMemo(() => StyleSheet.create({
+		container: {
+			flex: 1,
+			alignItems: 'center',
+			justifyContent: 'center',
+			padding: 32,
+		},
+		iconContainer: {
+			marginBottom: 16,
+			opacity: 0.6,
+		},
+		title: {
+			fontSize: 20,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+			textAlign: 'center',
+			marginBottom: 8,
+		},
+		description: {
+			fontSize: 14,
+			color: theme.colors.onSurfaceVariant,
+			textAlign: 'center',
+			lineHeight: 20,
+			marginBottom: 24,
+		},
+		button: {
+			minWidth: 160,
+		},
+	}), [theme]);
+
 	return (
 		<View style={[styles.container, style]}>
 			<View style={styles.iconContainer}>
-				<Ionicons name={icon} size={64} color={colors.textMuted} />
+				<Ionicons name={icon} size={64} color={theme.colors.onSurfaceVariant} />
 			</View>
 			<Text style={styles.title}>{title}</Text>
 			{description && <Text style={styles.description}>{description}</Text>}
@@ -44,33 +78,3 @@ export default function EmptyState({
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		alignItems: 'center',
-		justifyContent: 'center',
-		padding: 32,
-	},
-	iconContainer: {
-		marginBottom: 16,
-		opacity: 0.6,
-	},
-	title: {
-		fontSize: 20,
-		fontWeight: '600',
-		color: colors.text,
-		textAlign: 'center',
-		marginBottom: 8,
-	},
-	description: {
-		fontSize: 14,
-		color: colors.textSecondary,
-		textAlign: 'center',
-		lineHeight: 20,
-		marginBottom: 24,
-	},
-	button: {
-		minWidth: 160,
-	},
-});

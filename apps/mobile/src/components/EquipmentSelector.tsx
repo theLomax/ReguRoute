@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
 	View,
-	Text,
 	StyleSheet,
 	TouchableOpacity,
 	ScrollView,
@@ -9,6 +8,7 @@ import {
 	TextInput,
 	Alert,
 } from 'react-native';
+import { useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import type {
 	EquipmentItem,
@@ -17,7 +17,7 @@ import type {
 	EquipmentItemCategory,
 	Caliber,
 } from '@reguroute/types';
-import { colors } from '../theme';
+import Text from './Text';
 import Card from './Card';
 import Button from './Button';
 import Toggle from './Toggle';
@@ -61,6 +61,7 @@ export default function EquipmentSelector({
 	onUpdateLoadout,
 	onDeleteLoadout,
 }: EquipmentSelectorProps) {
+	const theme = useTheme();
 	const [showItemModal, setShowItemModal] = useState(false);
 	const [editingItem, setEditingItem] = useState<EquipmentItem | null>(null);
 	const [itemFormData, setItemFormData] = useState<CreateEquipmentItemRequest>({
@@ -81,6 +82,385 @@ export default function EquipmentSelector({
 	const [showCaliberPicker, setShowCaliberPicker] = useState(false);
 	const [customCaliber, setCustomCaliber] = useState('');
 	const [caliberCategoryFilter, setCaliberCategoryFilter] = useState<'handgun' | 'rifle' | 'shotgun'>('handgun');
+
+	// Dynamic styles that respond to theme changes - MUST be before any conditional returns
+	const styles = React.useMemo(() => StyleSheet.create({
+		container: {
+			marginBottom: 16,
+		},
+		label: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+			marginBottom: 4,
+		},
+		helperText: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			marginBottom: 12,
+		},
+		categoryScroll: {
+			marginBottom: 12,
+		},
+		categoryScrollContent: {
+			paddingRight: 16,
+		},
+		categoryChip: {
+			paddingHorizontal: 16,
+			paddingVertical: 8,
+			borderRadius: 20,
+			backgroundColor: theme.colors.surface,
+			borderWidth: 1,
+			borderColor: theme.colors.outline,
+			marginRight: 8,
+		},
+		categoryChipSelected: {
+			backgroundColor: theme.colors.primary,
+			borderColor: theme.colors.primary,
+		},
+		categoryChipText: {
+			fontSize: 14,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+		},
+		categoryChipTextSelected: {
+			color: theme.colors.surface,
+		},
+		categoryChipActive: {
+			backgroundColor: theme.colors.primary,
+			borderColor: theme.colors.primary,
+		},
+		categoryChipTextActive: {
+			color: theme.colors.surface,
+		},
+		actionBar: {
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'center',
+			marginBottom: 12,
+		},
+		actionButton: {
+			flex: 1,
+			marginHorizontal: 4,
+		},
+		actionCancel: {
+			fontSize: 16,
+			color: theme.colors.onSurfaceVariant,
+		},
+		actionTitle: {
+			fontSize: 17,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+		},
+		actionDone: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: theme.colors.primary,
+		},
+		section: {
+			padding: 16,
+			marginBottom: 16,
+		},
+		itemRow: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			paddingVertical: 12,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outlineVariant,
+		},
+		itemInfo: {
+			flex: 1,
+		},
+		itemName: {
+			fontSize: 15,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+		},
+		itemDetail: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			marginTop: 2,
+		},
+		itemActions: {
+			flexDirection: 'row',
+			alignItems: 'center',
+		},
+		iconButton: {
+			padding: 8,
+			marginLeft: 8,
+		},
+		reorderButtons: {
+			flexDirection: 'row',
+			alignItems: 'center',
+		},
+		reorderButton: {
+			padding: 8,
+		},
+		emptyCard: {
+			padding: 32,
+			alignItems: 'center',
+			marginBottom: 16,
+		},
+		emptyText: {
+			fontSize: 16,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+			marginTop: 12,
+		},
+		emptySubtext: {
+			fontSize: 14,
+			color: theme.colors.onSurfaceVariant,
+			marginTop: 4,
+			textAlign: 'center',
+		},
+		loadoutCard: {
+			backgroundColor: theme.colors.surface,
+			borderRadius: 12,
+			padding: 14,
+			marginBottom: 8,
+			borderWidth: 2,
+			borderColor: theme.colors.outline,
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+		},
+		loadoutCardSelected: {
+			borderColor: theme.colors.primary,
+			backgroundColor: theme.colors.secondaryContainer,
+		},
+		loadoutContent: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			flex: 1,
+		},
+		loadoutText: {
+			marginLeft: 12,
+			flex: 1,
+		},
+		loadoutName: {
+			fontSize: 15,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+		},
+		loadoutDetail: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			marginTop: 2,
+		},
+		defaultBadge: {
+			backgroundColor: theme.colors.primaryContainer,
+			paddingHorizontal: 8,
+			paddingVertical: 2,
+			borderRadius: 4,
+			marginLeft: 8,
+		},
+		defaultBadgeText: {
+			fontSize: 11,
+			color: theme.colors.surface,
+			fontWeight: '500',
+		},
+		createButton: {
+			marginTop: 8,
+		},
+		modalContainer: {
+			flex: 1,
+			backgroundColor: theme.colors.background,
+		},
+		modalHeader: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			paddingHorizontal: 16,
+			paddingVertical: 14,
+			backgroundColor: theme.colors.surface,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outline,
+		},
+		modalTitle: {
+			fontSize: 17,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+			flex: 1,
+			textAlign: 'center',
+		},
+		modalCancel: {
+			fontSize: 16,
+			color: theme.colors.onSurfaceVariant,
+		},
+		modalDone: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: theme.colors.primary,
+		},
+		modalHeaderSpacer: {
+			width: 40,
+		},
+		backButton: {
+			padding: 4,
+			marginLeft: 8,
+		},
+		modalContent: {
+			flex: 1,
+			padding: 16,
+		},
+		modalSection: {
+			padding: 16,
+			marginBottom: 16,
+		},
+		fieldLabel: {
+			fontSize: 14,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+			marginTop: 16,
+			marginBottom: 8,
+		},
+		input: {
+			backgroundColor: theme.colors.surface,
+			borderRadius: 12,
+			paddingHorizontal: 16,
+			paddingVertical: 12,
+			fontSize: 16,
+			borderWidth: 1,
+			borderColor: theme.colors.outline,
+			color: theme.colors.onSurface,
+		},
+		notesInput: {
+			minHeight: 80,
+			textAlignVertical: 'top',
+		},
+		categoryGrid: {
+			flexDirection: 'row',
+			flexWrap: 'wrap',
+			marginTop: 8,
+		},
+		categoryButton: {
+			paddingHorizontal: 16,
+			paddingVertical: 10,
+			borderRadius: 8,
+			backgroundColor: theme.colors.surface,
+			borderWidth: 1,
+			borderColor: theme.colors.outline,
+			marginRight: 8,
+			marginBottom: 8,
+		},
+		categoryButtonSelected: {
+			backgroundColor: theme.colors.primary,
+			borderColor: theme.colors.primary,
+		},
+		categoryButtonText: {
+			fontSize: 14,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+		},
+		categoryButtonTextSelected: {
+			color: theme.colors.surface,
+		},
+		selectableItem: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			paddingVertical: 12,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outlineVariant,
+		},
+		currentlyInLoadout: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			fontStyle: 'italic',
+		},
+		saveButton: {
+			marginTop: 8,
+		},
+		deleteButton: {
+			marginTop: 8,
+			marginBottom: 32,
+		},
+		categoryFilterContainer: {
+			marginBottom: 12,
+		},
+		caliberContainer: {
+			marginBottom: 16,
+		},
+		selectedCalibersContainer: {
+			flexDirection: 'row',
+			flexWrap: 'wrap',
+			marginBottom: 8,
+			gap: 8,
+		},
+		caliberChip: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			backgroundColor: theme.colors.primaryContainer,
+			paddingHorizontal: 12,
+			paddingVertical: 6,
+			borderRadius: 16,
+			gap: 6,
+		},
+		caliberChipText: {
+			fontSize: 14,
+			color: theme.colors.surface,
+			fontWeight: '500',
+		},
+		addCaliberButton: {
+			marginTop: 8,
+		},
+		sectionTitle: {
+			fontSize: 16,
+			fontWeight: '600',
+			color: theme.colors.onSurface,
+			marginBottom: 12,
+		},
+		caliberOption: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			paddingVertical: 12,
+			paddingHorizontal: 16,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outlineVariant,
+			backgroundColor: theme.colors.surface,
+		},
+		caliberOptionContent: {
+			flex: 1,
+		},
+		caliberOptionName: {
+			fontSize: 15,
+			fontWeight: '500',
+			color: theme.colors.onSurface,
+			marginBottom: 2,
+		},
+		caliberOptionDetails: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+		},
+		addButton: {
+			marginTop: 8,
+		},
+		caliberCategoryTabs: {
+			flexDirection: 'row',
+			backgroundColor: theme.colors.surface,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outline,
+		},
+		caliberCategoryTab: {
+			flex: 1,
+			paddingVertical: 12,
+			alignItems: 'center',
+			borderBottomWidth: 2,
+			borderBottomColor: 'transparent',
+		},
+		caliberCategoryTabActive: {
+			borderBottomColor: theme.colors.primary,
+		},
+		caliberCategoryTabText: {
+			fontSize: 15,
+			fontWeight: '500',
+			color: theme.colors.onSurfaceVariant,
+		},
+		caliberCategoryTabTextActive: {
+			color: theme.colors.primary,
+			fontWeight: '600',
+		},
+	}), [theme]);
 
 	// Filter items by category
 	const filteredItems = categoryFilter === 'all'
@@ -387,7 +767,7 @@ export default function EquipmentSelector({
 					{/* Items List */}
 					{displayItems.length === 0 ? (
 						<Card style={styles.emptyCard}>
-							<Ionicons name="cube-outline" size={48} color={colors.textMuted} />
+							<Ionicons name="cube-outline" size={48} color={theme.colors.onSurfaceVariant} />
 							<Text style={styles.emptyText}>No items yet</Text>
 							<Text style={styles.emptySubtext}>Add your first equipment item to get started</Text>
 						</Card>
@@ -410,7 +790,7 @@ export default function EquipmentSelector({
 													<Ionicons
 														name="chevron-up"
 														size={24}
-														color={index === 0 ? colors.textMuted : colors.primary}
+														color={index === 0 ? theme.colors.onSurfaceVariant : theme.colors.primary}
 													/>
 												</TouchableOpacity>
 												<TouchableOpacity
@@ -421,7 +801,7 @@ export default function EquipmentSelector({
 													<Ionicons
 														name="chevron-down"
 														size={24}
-														color={index === displayItems.length - 1 ? colors.textMuted : colors.primary}
+														color={index === displayItems.length - 1 ? theme.colors.onSurfaceVariant : theme.colors.primary}
 													/>
 												</TouchableOpacity>
 											</View>
@@ -436,7 +816,7 @@ export default function EquipmentSelector({
 												onPress={() => handleOpenItemModal(item)}
 												style={styles.iconButton}
 											>
-												<Ionicons name="create-outline" size={24} color={colors.primary} />
+												<Ionicons name="create-outline" size={24} color={theme.colors.primary} />
 											</TouchableOpacity>
 										</>
 									)}
@@ -455,7 +835,7 @@ export default function EquipmentSelector({
 
 					{loadouts.length === 0 ? (
 						<Card style={styles.emptyCard}>
-							<Ionicons name="briefcase-outline" size={48} color={colors.textMuted} />
+							<Ionicons name="briefcase-outline" size={48} color={theme.colors.onSurfaceVariant} />
 							<Text style={styles.emptyText}>No loadouts yet</Text>
 							<Text style={styles.emptySubtext}>Create your first loadout in the Cargo Profile screen</Text>
 						</Card>
@@ -478,7 +858,7 @@ export default function EquipmentSelector({
 											<Ionicons
 												name={isSelected ? 'checkbox' : 'square-outline'}
 												size={24}
-												color={isSelected ? colors.primary : colors.textMuted}
+												color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
 											/>
 											<View style={styles.loadoutText}>
 												<Text style={styles.loadoutName}>{loadout.name}</Text>
@@ -496,7 +876,7 @@ export default function EquipmentSelector({
 											onPress={() => handleOpenLoadoutModal(loadout)}
 											style={styles.iconButton}
 										>
-											<Ionicons name="create-outline" size={24} color={colors.primary} />
+											<Ionicons name="create-outline" size={24} color={theme.colors.primary} />
 										</TouchableOpacity>
 									</View>
 								);
@@ -524,13 +904,16 @@ export default function EquipmentSelector({
 			>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
-						<View style={styles.modalHeaderSpacer} />
+						<TouchableOpacity
+							onPress={() => setShowItemModal(false)}
+							style={styles.backButton}
+						>
+							<Ionicons name="chevron-back" size={28} color={theme.colors.primary} />
+						</TouchableOpacity>
 						<Text style={styles.modalTitle}>
 							{editingItem ? 'Edit Equipment' : 'New Item'}
 						</Text>
-						<TouchableOpacity onPress={() => setShowItemModal(false)}>
-							<Text style={styles.modalCancel}>Cancel</Text>
-						</TouchableOpacity>
+						<View style={styles.modalHeaderSpacer} />
 					</View>
 
 					<ScrollView style={styles.modalContent}>
@@ -541,7 +924,7 @@ export default function EquipmentSelector({
 								value={itemFormData.name}
 								onChangeText={(text) => setItemFormData({ ...itemFormData, name: text })}
 								placeholder="e.g., Glock 19, AR-15 Build"
-								placeholderTextColor={colors.textMuted}
+								placeholderTextColor={theme.colors.onSurfaceVariant}
 							/>
 
 							<Text style={styles.fieldLabel}>Category</Text>
@@ -578,7 +961,7 @@ export default function EquipmentSelector({
 													<View key={caliber} style={styles.caliberChip}>
 														<Text style={styles.caliberChipText}>{caliber}</Text>
 														<TouchableOpacity onPress={() => handleRemoveCaliber(caliber)}>
-															<Ionicons name="close-circle" size={18} color={colors.textMuted} />
+															<Ionicons name="close-circle" size={18} color={theme.colors.onSurfaceVariant} />
 														</TouchableOpacity>
 													</View>
 												))}
@@ -623,7 +1006,7 @@ export default function EquipmentSelector({
 										placeholder={itemFormData.accepts_detachable_magazine
 											? "e.g., 15, 17, 30 (if including magazine)"
 											: "e.g., 6, 8"}
-										placeholderTextColor={colors.textMuted}
+										placeholderTextColor={theme.colors.onSurfaceVariant}
 										keyboardType="number-pad"
 									/>
 								</>
@@ -666,7 +1049,7 @@ export default function EquipmentSelector({
 											});
 										}}
 										placeholder="e.g., 10, 15, 30"
-										placeholderTextColor={colors.textMuted}
+										placeholderTextColor={theme.colors.onSurfaceVariant}
 										keyboardType="number-pad"
 									/>
 								</>
@@ -678,7 +1061,7 @@ export default function EquipmentSelector({
 								value={itemFormData.notes || ''}
 								onChangeText={(text) => setItemFormData({ ...itemFormData, notes: text })}
 								placeholder="Additional details..."
-								placeholderTextColor={colors.textMuted}
+								placeholderTextColor={theme.colors.onSurfaceVariant}
 								multiline
 								numberOfLines={3}
 							/>
@@ -714,13 +1097,16 @@ export default function EquipmentSelector({
 			>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
-						<View style={styles.modalHeaderSpacer} />
+						<TouchableOpacity
+							onPress={() => setShowLoadoutModal(false)}
+							style={styles.backButton}
+						>
+							<Ionicons name="chevron-back" size={28} color={theme.colors.primary} />
+						</TouchableOpacity>
 						<Text style={styles.modalTitle}>
 							{editingLoadout ? 'Edit Loadout' : 'New Loadout'}
 						</Text>
-						<TouchableOpacity onPress={() => setShowLoadoutModal(false)}>
-							<Text style={styles.modalCancel}>Cancel</Text>
-						</TouchableOpacity>
+						<View style={styles.modalHeaderSpacer} />
 					</View>
 
 					<ScrollView style={styles.modalContent}>
@@ -731,7 +1117,7 @@ export default function EquipmentSelector({
 								value={loadoutName}
 								onChangeText={setLoadoutName}
 								placeholder="e.g., Range Day Kit, Hunting Trip"
-								placeholderTextColor={colors.textMuted}
+								placeholderTextColor={theme.colors.onSurfaceVariant}
 							/>
 
 							<Text style={styles.fieldLabel}>Select Equipment</Text>
@@ -786,7 +1172,7 @@ export default function EquipmentSelector({
 												<Ionicons
 													name={isSelected ? 'checkbox' : 'square-outline'}
 													size={24}
-													color={isSelected ? colors.primary : colors.textMuted}
+													color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
 													paddingRight={10}
 												/>
 												<View style={styles.itemInfo}>
@@ -830,8 +1216,11 @@ export default function EquipmentSelector({
 			>
 				<View style={styles.modalContainer}>
 					<View style={styles.modalHeader}>
-						<TouchableOpacity onPress={() => setShowCaliberPicker(false)}>
-							<Text style={styles.modalCancel}>Cancel</Text>
+						<TouchableOpacity
+							onPress={() => setShowCaliberPicker(false)}
+							style={styles.backButton}
+						>
+							<Ionicons name="chevron-back" size={28} color={theme.colors.primary} />
 						</TouchableOpacity>
 						<Text style={styles.modalTitle}>Select Caliber</Text>
 						<View style={styles.modalHeaderSpacer} />
@@ -872,7 +1261,7 @@ export default function EquipmentSelector({
 									<View style={styles.caliberOptionContent}>
 										<Text style={styles.caliberOptionName}>{caliberData.name}</Text>
 									</View>
-									<Ionicons name="add-circle-outline" size={24} color={colors.primary} />
+									<Ionicons name="add-circle-outline" size={24} color={theme.colors.primary} />
 								</TouchableOpacity>
 							))}
 						</Card>
@@ -887,7 +1276,7 @@ export default function EquipmentSelector({
 								value={customCaliber}
 								onChangeText={setCustomCaliber}
 								placeholder="e.g., 6.8 SPC, .357 Maximum"
-								placeholderTextColor={colors.textMuted}
+								placeholderTextColor={theme.colors.onSurfaceVariant}
 								onSubmitEditing={handleAddCustomCaliber}
 								returnKeyType="done"
 							/>
@@ -904,375 +1293,3 @@ export default function EquipmentSelector({
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		marginBottom: 16,
-	},
-	label: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: colors.text,
-		marginBottom: 4,
-	},
-	helperText: {
-		fontSize: 13,
-		color: colors.textMuted,
-		marginBottom: 12,
-	},
-	categoryScroll: {
-		marginBottom: 12,
-	},
-	categoryScrollContent: {
-		paddingRight: 16,
-	},
-	categoryChip: {
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-		borderRadius: 20,
-		backgroundColor: colors.backgroundWhite,
-		borderWidth: 1,
-		borderColor: colors.border,
-		marginRight: 8,
-	},
-	categoryChipSelected: {
-		backgroundColor: colors.primary,
-		borderColor: colors.primary,
-	},
-	categoryChipText: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: colors.text,
-	},
-	categoryChipTextSelected: {
-		color: colors.white,
-	},
-	categoryChipActive: {
-		backgroundColor: colors.primary,
-		borderColor: colors.primary,
-	},
-	categoryChipTextActive: {
-		color: colors.white,
-	},
-	actionBar: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		marginBottom: 12,
-	},
-	actionButton: {
-		flex: 1,
-		marginHorizontal: 4,
-	},
-	actionCancel: {
-		fontSize: 16,
-		color: colors.textSecondary,
-	},
-	actionTitle: {
-		fontSize: 17,
-		fontWeight: '600',
-		color: colors.text,
-	},
-	actionDone: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: colors.primary,
-	},
-	section: {
-		padding: 16,
-		marginBottom: 16,
-	},
-	itemRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		paddingVertical: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.borderLight,
-	},
-	itemInfo: {
-		flex: 1,
-	},
-	itemName: {
-		fontSize: 15,
-		fontWeight: '500',
-		color: colors.text,
-	},
-	itemDetail: {
-		fontSize: 13,
-		color: colors.textMuted,
-		marginTop: 2,
-	},
-	itemActions: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	iconButton: {
-		padding: 8,
-		marginLeft: 8,
-	},
-	reorderButtons: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	reorderButton: {
-		padding: 8,
-	},
-	emptyCard: {
-		padding: 32,
-		alignItems: 'center',
-		marginBottom: 16,
-	},
-	emptyText: {
-		fontSize: 16,
-		fontWeight: '500',
-		color: colors.text,
-		marginTop: 12,
-	},
-	emptySubtext: {
-		fontSize: 14,
-		color: colors.textMuted,
-		marginTop: 4,
-		textAlign: 'center',
-	},
-	loadoutCard: {
-		backgroundColor: colors.backgroundWhite,
-		borderRadius: 12,
-		padding: 14,
-		marginBottom: 8,
-		borderWidth: 2,
-		borderColor: colors.border,
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-	},
-	loadoutCardSelected: {
-		borderColor: colors.primary,
-		backgroundColor: colors.infoLight,
-	},
-	loadoutContent: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		flex: 1,
-	},
-	loadoutText: {
-		marginLeft: 12,
-		flex: 1,
-	},
-	loadoutName: {
-		fontSize: 15,
-		fontWeight: '500',
-		color: colors.text,
-	},
-	loadoutDetail: {
-		fontSize: 13,
-		color: colors.textMuted,
-		marginTop: 2,
-	},
-	defaultBadge: {
-		backgroundColor: colors.primaryLight,
-		paddingHorizontal: 8,
-		paddingVertical: 2,
-		borderRadius: 4,
-		marginLeft: 8,
-	},
-	defaultBadgeText: {
-		fontSize: 11,
-		color: colors.white,
-		fontWeight: '500',
-	},
-	createButton: {
-		marginTop: 8,
-	},
-	modalContainer: {
-		flex: 1,
-		backgroundColor: colors.background,
-	},
-	modalHeader: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		paddingHorizontal: 16,
-		paddingVertical: 14,
-		backgroundColor: colors.backgroundWhite,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.border,
-	},
-	modalTitle: {
-		fontSize: 17,
-		fontWeight: '600',
-		color: colors.text,
-	},
-	modalCancel: {
-		fontSize: 16,
-		color: colors.textSecondary,
-	},
-	modalDone: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: colors.primary,
-	},
-	modalHeaderSpacer: {
-		width: 60,
-	},
-	modalContent: {
-		flex: 1,
-		padding: 16,
-	},
-	modalSection: {
-		padding: 16,
-		marginBottom: 16,
-	},
-	fieldLabel: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: colors.text,
-		marginTop: 16,
-		marginBottom: 8,
-	},
-	input: {
-		backgroundColor: colors.backgroundWhite,
-		borderRadius: 12,
-		paddingHorizontal: 16,
-		paddingVertical: 12,
-		fontSize: 16,
-		borderWidth: 1,
-		borderColor: colors.border,
-		color: colors.text,
-	},
-	notesInput: {
-		minHeight: 80,
-		textAlignVertical: 'top',
-	},
-	categoryGrid: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-		marginTop: 8,
-	},
-	categoryButton: {
-		paddingHorizontal: 16,
-		paddingVertical: 10,
-		borderRadius: 8,
-		backgroundColor: colors.backgroundWhite,
-		borderWidth: 1,
-		borderColor: colors.border,
-		marginRight: 8,
-		marginBottom: 8,
-	},
-	categoryButtonSelected: {
-		backgroundColor: colors.primary,
-		borderColor: colors.primary,
-	},
-	categoryButtonText: {
-		fontSize: 14,
-		fontWeight: '500',
-		color: colors.text,
-	},
-	categoryButtonTextSelected: {
-		color: colors.white,
-	},
-	selectableItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		paddingVertical: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.borderLight,
-	},
-	currentlyInLoadout: {
-		fontSize: 13,
-		color: colors.textMuted,
-		fontStyle: 'italic',
-	},
-	saveButton: {
-		marginTop: 8,
-	},
-	deleteButton: {
-		marginTop: 8,
-		marginBottom: 32,
-	},
-	categoryFilterContainer: {
-		marginBottom: 12,
-	},
-	caliberContainer: {
-		marginBottom: 16,
-	},
-	selectedCalibersContainer: {
-		flexDirection: 'row',
-		flexWrap: 'wrap',
-		marginBottom: 8,
-		gap: 8,
-	},
-	caliberChip: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		backgroundColor: colors.primaryLight,
-		paddingHorizontal: 12,
-		paddingVertical: 6,
-		borderRadius: 16,
-		gap: 6,
-	},
-	caliberChipText: {
-		fontSize: 14,
-		color: colors.white,
-		fontWeight: '500',
-	},
-	addCaliberButton: {
-		marginTop: 8,
-	},
-	sectionTitle: {
-		fontSize: 16,
-		fontWeight: '600',
-		color: colors.text,
-		marginBottom: 12,
-	},
-	caliberOption: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		paddingVertical: 12,
-		paddingHorizontal: 16,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.borderLight,
-		backgroundColor: colors.backgroundWhite,
-	},
-	caliberOptionContent: {
-		flex: 1,
-	},
-	caliberOptionName: {
-		fontSize: 15,
-		fontWeight: '500',
-		color: colors.text,
-		marginBottom: 2,
-	},
-	caliberOptionDetails: {
-		fontSize: 13,
-		color: colors.textMuted,
-	},
-	addButton: {
-		marginTop: 8,
-	},
-	caliberCategoryTabs: {
-		flexDirection: 'row',
-		backgroundColor: colors.backgroundWhite,
-		borderBottomWidth: 1,
-		borderBottomColor: colors.border,
-	},
-	caliberCategoryTab: {
-		flex: 1,
-		paddingVertical: 12,
-		alignItems: 'center',
-		borderBottomWidth: 2,
-		borderBottomColor: 'transparent',
-	},
-	caliberCategoryTabActive: {
-		borderBottomColor: colors.primary,
-	},
-	caliberCategoryTabText: {
-		fontSize: 15,
-		fontWeight: '500',
-		color: colors.textSecondary,
-	},
-	caliberCategoryTabTextActive: {
-		color: colors.primary,
-		fontWeight: '600',
-	},
-});
