@@ -6,6 +6,7 @@ export { default as Card } from './Card';
 export { default as Chip } from './Chip';
 export { default as EmptyState } from './EmptyState';
 export { default as EquipmentSelector } from './EquipmentSelector';
+export { Icon } from './Icon';
 export { default as Input } from './Input';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as LocationAutocomplete } from './LocationAutocomplete';
