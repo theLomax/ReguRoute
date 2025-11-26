@@ -7,7 +7,6 @@ import {
 	Alert,
 	RefreshControl,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
 import type {
 	EquipmentItem,
@@ -17,7 +16,7 @@ import type {
 } from '@reguroute/types';
 import { useAuth } from '../contexts';
 import { equipmentItemsApi, loadoutsApi, permitsApi } from '../api';
-import { Card, LoadingSpinner, EquipmentSelector, Text } from '../components';
+import { Card, LoadingSpinner, EquipmentSelector, Text, Icon } from '../components';
 
 // US States for permit selection
 const US_STATES = [
@@ -443,7 +442,7 @@ export default function CargoProfileScreen() {
 										onPress={() => handleRemovePermit(permit.id)}
 										style={styles.deleteButton}
 									>
-										<Ionicons name="close-circle" size={24} color={theme.colors.error} />
+										<Icon name="close-circle" size={24} color={theme.colors.error} />
 									</TouchableOpacity>
 								</View>
 							))}

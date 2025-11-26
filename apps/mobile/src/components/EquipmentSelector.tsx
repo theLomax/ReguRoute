@@ -9,7 +9,6 @@ import {
 	Alert,
 } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
 import type {
 	EquipmentItem,
 	Loadout,
@@ -22,6 +21,7 @@ import Card from './Card';
 import Button from './Button';
 import Toggle from './Toggle';
 import LoadingSpinner from './LoadingSpinner';
+import { Icon } from './Icon';
 import { getCalibersByCategory } from '../data/calibers';
 
 interface EquipmentSelectorProps {
@@ -767,7 +767,7 @@ export default function EquipmentSelector({
 					{/* Items List */}
 					{displayItems.length === 0 ? (
 						<Card style={styles.emptyCard}>
-							<Ionicons name="cube-outline" size={48} color={theme.colors.onSurfaceVariant} />
+							<Icon name="cube-outline" size={48} color={theme.colors.onSurfaceVariant} />
 							<Text style={styles.emptyText}>No items yet</Text>
 							<Text style={styles.emptySubtext}>Add your first equipment item to get started</Text>
 						</Card>
@@ -787,7 +787,7 @@ export default function EquipmentSelector({
 													disabled={index === 0}
 													style={styles.reorderButton}
 												>
-													<Ionicons
+													<Icon
 														name="chevron-up"
 														size={24}
 														color={index === 0 ? theme.colors.onSurfaceVariant : theme.colors.primary}
@@ -798,7 +798,7 @@ export default function EquipmentSelector({
 													disabled={index === displayItems.length - 1}
 													style={styles.reorderButton}
 												>
-													<Ionicons
+													<Icon
 														name="chevron-down"
 														size={24}
 														color={index === displayItems.length - 1 ? theme.colors.onSurfaceVariant : theme.colors.primary}
@@ -816,7 +816,7 @@ export default function EquipmentSelector({
 												onPress={() => handleOpenItemModal(item)}
 												style={styles.iconButton}
 											>
-												<Ionicons name="create-outline" size={24} color={theme.colors.primary} />
+												<Icon name="create-outline" size={24} color={theme.colors.primary} />
 											</TouchableOpacity>
 										</>
 									)}
@@ -835,7 +835,7 @@ export default function EquipmentSelector({
 
 					{loadouts.length === 0 ? (
 						<Card style={styles.emptyCard}>
-							<Ionicons name="briefcase-outline" size={48} color={theme.colors.onSurfaceVariant} />
+							<Icon name="briefcase-outline" size={48} color={theme.colors.onSurfaceVariant} />
 							<Text style={styles.emptyText}>No loadouts yet</Text>
 							<Text style={styles.emptySubtext}>Create your first loadout in the Cargo Profile screen</Text>
 						</Card>
@@ -855,7 +855,7 @@ export default function EquipmentSelector({
 											style={styles.loadoutContent}
 											onPress={() => toggleLoadoutSelection(loadout)}
 										>
-											<Ionicons
+											<Icon
 												name={isSelected ? 'checkbox' : 'square-outline'}
 												size={24}
 												color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
@@ -876,7 +876,7 @@ export default function EquipmentSelector({
 											onPress={() => handleOpenLoadoutModal(loadout)}
 											style={styles.iconButton}
 										>
-											<Ionicons name="create-outline" size={24} color={theme.colors.primary} />
+											<Icon name="create-outline" size={24} color={theme.colors.primary} />
 										</TouchableOpacity>
 									</View>
 								);
@@ -908,7 +908,7 @@ export default function EquipmentSelector({
 							onPress={() => setShowItemModal(false)}
 							style={styles.backButton}
 						>
-							<Ionicons name="chevron-back" size={28} color={theme.colors.primary} />
+							<Icon name="chevron-back" size={28} color={theme.colors.primary} />
 						</TouchableOpacity>
 						<Text style={styles.modalTitle}>
 							{editingItem ? 'Edit Equipment' : 'New Item'}
@@ -961,7 +961,7 @@ export default function EquipmentSelector({
 													<View key={caliber} style={styles.caliberChip}>
 														<Text style={styles.caliberChipText}>{caliber}</Text>
 														<TouchableOpacity onPress={() => handleRemoveCaliber(caliber)}>
-															<Ionicons name="close-circle" size={18} color={theme.colors.onSurfaceVariant} />
+															<Icon name="close-circle" size={18} color={theme.colors.onSurfaceVariant} />
 														</TouchableOpacity>
 													</View>
 												))}
@@ -1101,7 +1101,7 @@ export default function EquipmentSelector({
 							onPress={() => setShowLoadoutModal(false)}
 							style={styles.backButton}
 						>
-							<Ionicons name="chevron-back" size={28} color={theme.colors.primary} />
+							<Icon name="chevron-back" size={28} color={theme.colors.primary} />
 						</TouchableOpacity>
 						<Text style={styles.modalTitle}>
 							{editingLoadout ? 'Edit Loadout' : 'New Loadout'}
@@ -1169,11 +1169,11 @@ export default function EquipmentSelector({
 													style={styles.selectableItem}
 													onPress={() => toggleItemInLoadout(item.id)}
 												>
-												<Ionicons
+												<Icon
 													name={isSelected ? 'checkbox' : 'square-outline'}
 													size={24}
 													color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
-													paddingRight={10}
+													style={{ marginRight: 10 }}
 												/>
 												<View style={styles.itemInfo}>
 													<Text style={styles.itemName}>{item.name}</Text>
@@ -1220,7 +1220,7 @@ export default function EquipmentSelector({
 							onPress={() => setShowCaliberPicker(false)}
 							style={styles.backButton}
 						>
-							<Ionicons name="chevron-back" size={28} color={theme.colors.primary} />
+							<Icon name="chevron-back" size={28} color={theme.colors.primary} />
 						</TouchableOpacity>
 						<Text style={styles.modalTitle}>Select Caliber</Text>
 						<View style={styles.modalHeaderSpacer} />
@@ -1261,7 +1261,7 @@ export default function EquipmentSelector({
 									<View style={styles.caliberOptionContent}>
 										<Text style={styles.caliberOptionName}>{caliberData.name}</Text>
 									</View>
-									<Ionicons name="add-circle-outline" size={24} color={theme.colors.primary} />
+									<Icon name="add-circle-outline" size={24} color={theme.colors.primary} />
 								</TouchableOpacity>
 							))}
 						</Card>

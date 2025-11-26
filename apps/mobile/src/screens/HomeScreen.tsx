@@ -8,12 +8,11 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
 import type { Route } from '@reguroute/types';
 import type { MainTabsParamList } from '../navigation';
 import { useRoutes } from '../contexts';
-import { Card, Badge, EmptyState, LoadingSpinner, Text } from '../components';
+import { Card, Badge, EmptyState, LoadingSpinner, Text, Icon } from '../components';
 
 type HomeNavigationProp = BottomTabNavigationProp<MainTabsParamList, 'Home'>;
 
@@ -96,11 +95,11 @@ function RouteCard({ route, onPress }: { route: Route; onPress: () => void }) {
 				</View>
 			</View>
 			<View style={styles.routeDetails}>
-				<Ionicons name="location" size={14} color={theme.colors.onSurfaceVariant} />
+				<Icon name="location" size={14} color={theme.colors.onSurfaceVariant} />
 				<Text style={styles.routeText} numberOfLines={1}>
 					{route.origin_name}
 				</Text>
-				<Ionicons name="arrow-forward" size={12} color={theme.colors.onSurfaceVariant} />
+				<Icon name="arrow-forward" size={12} color={theme.colors.onSurfaceVariant} />
 				<Text style={styles.routeText} numberOfLines={1}>
 					{route.destination_name}
 				</Text>
@@ -202,7 +201,7 @@ export default function HomeScreen() {
 				ItemSeparatorComponent={() => <View style={styles.separator} />}
 			/>
 			<TouchableOpacity style={styles.fab} onPress={handlePlanRoute}>
-				<Ionicons name="add" size={28} color={theme.colors.surface} />
+				<Icon name="add" size={28} color={theme.colors.surface} />
 			</TouchableOpacity>
 		</View>
 	);

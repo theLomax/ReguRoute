@@ -7,9 +7,9 @@ import {
 	FlatList,
 	ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from 'react-native-paper';
 import type { Coordinates } from '@reguroute/types';
+import { Icon } from './Icon';
 import Text from './Text';
 
 // Photon API response types
@@ -100,8 +100,7 @@ interface LocationAutocompleteProps {
 	onChangeText: (text: string) => void;
 	onSelectLocation: (name: string, coordinates: Coordinates) => void;
 	placeholder?: string;
-	icon: 'location' | 'flag';
-	iconColor: string;
+	icon: React.ReactElement;
 	isSelected: boolean;
 }
 
@@ -127,8 +126,6 @@ export default function LocationAutocomplete({
 	onChangeText,
 	onSelectLocation,
 	placeholder = 'Enter city name',
-	icon,
-	iconColor,
 	isSelected,
 }: LocationAutocompleteProps) {
 	const theme = useTheme();
@@ -289,7 +286,7 @@ export default function LocationAutocomplete({
 		<View style={styles.container}>
 			<View style={styles.inputRow}>
 				<View style={styles.iconContainer}>
-					<Ionicons name={icon} size={20} color={iconColor} />
+					{icon}
 				</View>
 				<TextInput
 					style={styles.input}
@@ -304,7 +301,7 @@ export default function LocationAutocomplete({
 						setTimeout(() => setIsFocused(false), 150);
 					}}
 				/>
-				{isSelected && <Ionicons name="checkmark-circle" size={20} color={theme.colors.tertiary} />}
+				{isSelected && <Icon name="checkmark-circle" size={20} color={theme.colors.tertiary} />}
 			</View>
 
 			{showSuggestions && (
@@ -328,7 +325,7 @@ export default function LocationAutocomplete({
 									]}
 									onPress={() => handleSelect(item)}
 								>
-									<Ionicons name="location-outline" size={16} color={theme.colors.onSurfaceVariant} />
+									<Icon name="location-outline" size={16} color={theme.colors.onSurfaceVariant} />
 									<Text style={styles.suggestionName}>{item.name}</Text>
 									<Text style={styles.suggestionState}>{item.state}</Text>
 								</TouchableOpacity>
