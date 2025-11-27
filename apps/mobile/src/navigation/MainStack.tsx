@@ -1,4 +1,5 @@
 import { createStackNavigator } from '@react-navigation/stack';
+import { useTheme } from 'react-native-paper';
 import { RouteDetailScreen, LegalDisclaimerScreen, PreferencesScreen } from '../screens';
 import MainTabs from './MainTabs';
 
@@ -12,8 +13,25 @@ export type MainStackParamList = {
 const Stack = createStackNavigator<MainStackParamList>();
 
 export default function MainStack() {
+	const theme = useTheme();
+
 	return (
-		<Stack.Navigator>
+		<Stack.Navigator
+			screenOptions={{
+				headerStyle: {
+					backgroundColor: theme.colors.surface,
+					elevation: 1,
+					shadowOpacity: 0.1,
+				},
+				headerTitleStyle: {
+					fontWeight: '600',
+					fontSize: 18,
+					color: theme.colors.onSurface,
+				},
+				headerTintColor: theme.colors.primary,
+				headerBackTitleVisible: false,
+			}}
+		>
 			<Stack.Screen
 				name="MainTabs"
 				component={MainTabs}
