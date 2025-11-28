@@ -530,3 +530,208 @@ export interface AvoidancePolygonsResponse {
 	restricted_jurisdictions: RestrictedJurisdiction[];
 	has_restrictions: boolean;
 }
+
+// ============================================
+// FOPA (Firearm Owners Protection Act) Types
+// ============================================
+
+/**
+ * FOPA provides federal protection for lawful interstate transport
+ * Applies to ALL US jurisdictions (federal law)
+ */
+export interface FOPAProtection {
+	/** FOPA applies if firearm is legal at both origin AND destination */
+	legal_at_origin: boolean;
+	legal_at_destination: boolean;
+
+	/** Required FOPA compliance measures */
+	requirements: {
+		/** Firearm must be unloaded */
+		unloaded: true;
+		/** Must be in locked container */
+		locked_container: true;
+		/** Not readily accessible from passenger compartment */
+		not_readily_accessible: true;
+		/** Travel must be continuous (no extended stops for sleeping/lodging) */
+		continuous_travel: true;
+	};
+
+	/** Whether route qualifies for FOPA protection */
+	qualifies_for_fopa: boolean;
+
+	/** Jurisdictions where FOPA protection would apply */
+	protected_jurisdictions: string[];
+}
+
+/**
+ * Travel mode for route analysis
+ * - standard: Normal possession/carry laws apply
+ * - fopa_transit: Interstate transport under FOPA protection
+ */
+export type TravelMode = 'standard' | 'fopa_transit';
+
+// ============================================
+// Ammunition Types
+// ============================================
+
+/**
+ * Ammunition types that may be restricted in certain jurisdictions
+ * Sparse model: Only store if restricted, absence means allowed
+ */
+export type AmmunitionType =
+	| 'armor_piercing'    // AP rounds
+	| 'hollow_point'      // HP/JHP rounds
+	| 'incendiary'        // Incendiary/tracer
+	| 'explosive'         // Explosive projectiles
+	| 'frangible'         // Frangible rounds
+	| 'dragon_breath'     // Exotic shotgun rounds
+	| 'other';
+
+// ============================================
+// Firearm Features (for feature-based restrictions)
+// ============================================
+
+/**
+ * Platform features that may be restricted in certain jurisdictions
+ * Some states (CA, NY, etc.) regulate firearms based on specific features
+ * Modeled as individual flags, not comprehensive
+ */
+export type FirearmFeature =
+	| 'pistol_grip'
+	| 'folding_stock'
+	| 'collapsible_stock'
+	| 'telescoping_stock'
+	| 'thumbhole_stock'
+	| 'flash_suppressor'
+	| 'muzzle_brake'
+	| 'barrel_shroud'
+	| 'bayonet_lug'
+	| 'grenade_launcher'
+	| 'threaded_barrel';
+
+// ============================================
+// Jurisdiction Restriction Types
+// ============================================
+
+/**
+ * Restriction rule types
+ * Each represents a specific type of prohibition/limit
+ * Sparse model: Only store restrictions that exist
+ */
+export type RestrictionRuleType =
+	// Categorical prohibitions
+	| 'prohibited_category'      // Entire category banned (e.g., "no handguns")
+	| 'prohibited_nfa'            // Specific NFA types banned
+	| 'prohibited_caliber'        // Specific calibers banned
+	| 'prohibited_ammunition'     // Ammunition types banned
+
+	// Capacity restrictions
+	| 'max_capacity_by_platform'  // Magazine limit per platform (e.g., "10 rounds max for rifles")
+	| 'max_capacity_universal'    // Universal capacity limit regardless of platform
+	| 'detachable_magazine_ban'   // Detachable magazines prohibited
+	| 'detachable_magazine_capable_ban' // Platforms that CAN accept detachable mags banned
+
+	// Feature-based restrictions (e.g., CA-compliant, NY-compliant)
+	| 'prohibited_features'       // Specific features banned
+	| 'feature_count_limit'       // Max number of restricted features (e.g., "no more than 1")
+
+	// Physical requirements
+	| 'min_barrel_length'         // Minimum barrel length by platform
+	| 'min_overall_length'        // Minimum overall length
+
+	// Administrative
+	| 'registration_required'     // Must be registered
+	| 'permit_required'           // Permit/license required for possession
+	| 'transport_requirements'    // Specific storage/transport rules
+
+	// Custom/other
+	| 'custom';                   // For unique jurisdiction-specific rules
+
+/**
+ * Jurisdiction restriction definition
+ * Sparse model: Only store what IS restricted
+ * Absence of restriction = allowed
+ */
+export interface JurisdictionRestriction {
+	id: string;
+	jurisdiction_code: string;  // e.g., 'NY', 'NJ', 'CA'
+	jurisdiction_name: string;  // e.g., 'New York', 'New Jersey'
+
+	/** Type of restriction */
+	restriction_type: RestrictionRuleType;
+
+	/** What this restriction applies to */
+	applies_to: {
+		categories?: EquipmentItemCategory[];
+		platforms?: FirearmPlatform[];
+		nfa_types?: NFASubtype[];
+		calibers?: Caliber[];
+		features?: FirearmFeature[];
+		ammunition_types?: AmmunitionType[];
+	};
+
+	/** The actual rule - flexible JSON for jurisdiction-specific logic */
+	rule: {
+		/** Max value for capacity limits */
+		max_value?: number;
+		/** Min value for length requirements */
+		min_value?: number;
+		/** List of prohibited items/features */
+		prohibited?: string[];
+		/** Feature count limit (for AWB-style restrictions) */
+		max_features?: number;
+		/** Additional custom conditions */
+		conditions?: Record<string, any>;
+	};
+
+	/** Severity of violation */
+	severity: 'prohibited' | 'restricted' | 'regulated';
+
+	/** Legal citation/reference */
+	citation?: string;
+
+	/** Description for user display */
+	description?: string;
+
+	/** Effective date (for future restrictions) */
+	effective_date?: string;
+
+	created_at: string;
+	updated_at: string;
+}
+
+/**
+ * Compliance check result for a single piece of equipment
+ */
+export interface EquipmentComplianceResult {
+	equipment_item_id: string;
+	compliant: boolean;
+	violations: JurisdictionRestriction[];
+	warnings: JurisdictionRestriction[];
+}
+
+/**
+ * Route compliance result including FOPA analysis
+ */
+export interface RouteComplianceResult {
+	jurisdiction_code: string;
+	jurisdiction_name: string;
+
+	/** Compliance under standard possession laws */
+	standard_compliance: {
+		compliant: boolean;
+		violations: JurisdictionRestriction[];
+		warnings: JurisdictionRestriction[];
+	};
+
+	/** FOPA protection analysis */
+	fopa_analysis?: {
+		applicable: boolean;
+		qualifies: boolean;
+		requirements: FOPAProtection['requirements'];
+		protected: boolean; // If true, can transit despite violations
+	};
+
+	/** Overall assessment */
+	overall_status: 'compliant' | 'fopa_protected' | 'non_compliant';
+}
