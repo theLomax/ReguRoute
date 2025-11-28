@@ -31,6 +31,9 @@ export default function Alert({
 }: AlertProps) {
 	const theme = useTheme();
 
+	// Get custom semantic colors from theme
+	const customColors = (theme as any).customColors?.semantic || {};
+
 	const severityConfig: Record<AlertSeverity, {
 		backgroundColor: string;
 		borderColor: string;
@@ -44,9 +47,9 @@ export default function Alert({
 			iconName: 'information-circle',
 		},
 		warning: {
-			backgroundColor: '#FED7AA',
-			borderColor: '#FB923C',
-			textColor: '#FB923C',
+			backgroundColor: customColors.warningBg || '#FED7AA',
+			borderColor: customColors.warning || '#FB923C',
+			textColor: customColors.warning || '#FB923C',
 			iconName: 'warning',
 		},
 		error: {
@@ -56,9 +59,9 @@ export default function Alert({
 			iconName: 'alert-circle',
 		},
 		success: {
-			backgroundColor: '#f0fdf4',
-			borderColor: theme.colors.tertiary,
-			textColor: theme.colors.tertiary,
+			backgroundColor: customColors.successBg || '#f0fdf4',
+			borderColor: customColors.success || theme.colors.tertiary,
+			textColor: customColors.success || theme.colors.tertiary,
 			iconName: 'checkmark-circle',
 		},
 	};

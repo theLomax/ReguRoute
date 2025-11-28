@@ -1,5 +1,5 @@
 import { ViewStyle } from 'react-native';
-import { Button as PaperButton } from 'react-native-paper';
+import { Button as PaperButton, useTheme } from 'react-native-paper';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline';
 type ButtonSize = 'small' | 'medium' | 'large';
@@ -37,6 +37,8 @@ export default function Button({
 	fullWidth = false,
 	style,
 }: ButtonProps) {
+	const theme = useTheme();
+
 	// Map our variants to Paper's modes
 	const getPaperMode = (): 'contained' | 'outlined' | 'text' | 'elevated' | 'contained-tonal' => {
 		switch (variant) {
@@ -54,6 +56,9 @@ export default function Button({
 	const isCompact = size === 'small';
 	const contentStyle = size === 'large' ? { paddingVertical: 4 } : undefined;
 
+	// Get danger color from theme
+	const dangerColor = (theme as any).customColors?.semantic?.danger || '#B33024';
+
 	return (
 		<PaperButton
 			mode={getPaperMode()}
@@ -63,7 +68,7 @@ export default function Button({
 			compact={isCompact}
 			style={[fullWidth && { width: '100%' }, style]}
 			contentStyle={contentStyle}
-			buttonColor={variant === 'danger' ? '#B33024' : undefined}
+			buttonColor={variant === 'danger' ? dangerColor : undefined}
 			textColor={variant === 'danger' ? '#FFFFFF' : undefined}
 		>
 			{title}

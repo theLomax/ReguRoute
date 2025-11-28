@@ -6,6 +6,27 @@ import type { MD3Theme } from 'react-native-paper';
  * Colors from Material Theme Builder for optimal consistency
  */
 
+/**
+ * Extended theme type that includes custom semantic colors
+ */
+export type ExtendedTheme = MD3Theme & {
+	customColors: {
+		status: {
+			go: string;
+			warn: string;
+			noGo: string;
+		};
+		semantic: {
+			success: string;
+			successBg: string;
+			warning: string;
+			warningBg: string;
+			danger: string;
+			info: string;
+		};
+	};
+};
+
 // Font configuration for consistency across the app
 const fontConfig = {
 	displayLarge: {
@@ -32,21 +53,38 @@ const fontConfig = {
 };
 
 /**
- * Status colors for go/warn/noGo indicators
- * Used across both light and dark themes
+ * Semantic color definitions
+ * Consistent colors for status indicators, alerts, and semantic meanings
  */
-export const statusColors = {
-	go: '#2E7D32',    // Green for compliant/safe
-	warn: '#C46D00',  // Orange for caution
-	noGo: '#B33024',  // Red for restricted/prohibited
+const customColors = {
+	status: {
+		go: '#2E7D32',    // Green for compliant/safe
+		warn: '#C46D00',  // Orange for caution
+		noGo: '#B33024',  // Red for restricted/prohibited
+	},
+	semantic: {
+		success: '#16a34a',      // Success green
+		successBg: '#f0fdf4',    // Light green background
+		warning: '#FB923C',      // Warning orange
+		warningBg: '#FED7AA',    // Light amber background
+		danger: '#B33024',       // Danger red (same as noGo)
+		info: '#0ea5e9',         // Info blue
+	},
 };
+
+/**
+ * Legacy export for backwards compatibility
+ * @deprecated Use theme.customColors.status instead
+ */
+export const statusColors = customColors.status;
 
 /**
  * Light Theme
  * Generated with Material Theme Builder
  */
-export const lightTheme: MD3Theme = {
+export const lightTheme: ExtendedTheme = {
 	...MD3LightTheme,
+	customColors,
 	colors: {
 		...MD3LightTheme.colors,
 		primary: 'rgb(0, 93, 184)',
@@ -97,8 +135,9 @@ export const lightTheme: MD3Theme = {
  * Dark Theme
  * Generated with Material Theme Builder
  */
-export const darkTheme: MD3Theme = {
+export const darkTheme: ExtendedTheme = {
 	...MD3DarkTheme,
+	customColors,
 	colors: {
 		...MD3DarkTheme.colors,
 		primary: 'rgb(170, 199, 255)',
@@ -149,8 +188,9 @@ export const darkTheme: MD3Theme = {
  * High Contrast Light Theme
  * For users with visual impairments or in bright sunlight
  */
-export const highContrastLightTheme: MD3Theme = {
+export const highContrastLightTheme: ExtendedTheme = {
 	...lightTheme,
+	customColors,
 	colors: {
 		...lightTheme.colors,
 		primary: 'rgb(0, 60, 120)', // Darker blue for higher contrast
@@ -163,8 +203,9 @@ export const highContrastLightTheme: MD3Theme = {
  * High Contrast Dark Theme
  * For users with visual impairments in low-light conditions
  */
-export const highContrastDarkTheme: MD3Theme = {
+export const highContrastDarkTheme: ExtendedTheme = {
 	...darkTheme,
+	customColors,
 	colors: {
 		...darkTheme.colors,
 		primary: 'rgb(200, 220, 255)', // Lighter blue for higher contrast

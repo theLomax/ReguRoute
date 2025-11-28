@@ -260,7 +260,7 @@ export default function RoutePlanScreen() {
 		noGo: theme.colors.error,
 		neutral: theme.colors.onSurfaceVariant,
 	}), [theme]);
-
+	
 	// Dynamic styles that respond to theme changes
 	const styles = React.useMemo(() => StyleSheet.create({
 		container: {
@@ -384,7 +384,6 @@ export default function RoutePlanScreen() {
 		},
 		saveButton: {
 			flex: 2,
-			paddingBlock: 8
 		},
 		continueButton: {
 			marginTop: 0,
@@ -681,12 +680,12 @@ export default function RoutePlanScreen() {
 				{isCalculating ? (
 					<LoadingSpinner message="Calculating route..." />
 				) : (
-					<View style={styles.locationButtons}>
+					<View style={styles.buttonRow}>
 						<Button
 							title="Back"
 							onPress={() => setStep('equipment')}
 							variant="outline"
-							style={styles.locationBackButton}
+							style={styles.backButton}
 						/>
 						<Button
 							title="Calculate Route"

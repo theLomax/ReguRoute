@@ -34,11 +34,14 @@ export default function Badge({
 	const theme = useTheme();
 	const sizeStyle = sizeStyles[size];
 
+	// Get custom semantic colors from theme
+	const warningColor = (theme as any).customColors?.semantic?.warning || '#FB923C';
+
 	const variantColors: Record<BadgeVariant, { bg: string; text: string }> = {
 		default: { bg: theme.colors.onSurfaceVariant, text: theme.colors.surface },
 		primary: { bg: theme.colors.primary, text: theme.colors.surface },
 		success: { bg: theme.colors.tertiary, text: theme.colors.surface },
-		warning: { bg: '#FB923C', text: theme.colors.surface },
+		warning: { bg: warningColor, text: theme.colors.surface },
 		error: { bg: theme.colors.error, text: theme.colors.surface },
 	};
 
