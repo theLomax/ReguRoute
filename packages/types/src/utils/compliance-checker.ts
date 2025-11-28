@@ -280,6 +280,13 @@ export function checkEquipmentCompliance(
 	const warnings: JurisdictionRestriction[] = [];
 
 	for (const restriction of restrictions) {
+		// Check if restriction applies to this equipment
+		const applies = restrictionApplies(equipment, restriction.applies_to);
+
+		if (!applies) {
+			continue; // Skip restrictions that don't apply
+		}
+
 		const compliant = checkSingleRestriction(equipment, restriction, magazineCapacity);
 
 		if (!compliant) {
@@ -289,7 +296,7 @@ export function checkEquipmentCompliance(
 				warnings.push(restriction);
 			}
 		} else {
-			// Even if compliant, check if it's a regulatory requirement
+			// Even if compliant, check if it's a regulatory requirement that applies
 			if (
 				restriction.restriction_type === 'permit_required' ||
 				restriction.restriction_type === 'registration_required' ||

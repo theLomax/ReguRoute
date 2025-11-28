@@ -149,7 +149,7 @@ export const newYorkRestrictions: JurisdictionRestriction[] = [
 		jurisdiction_name: 'New York',
 		restriction_type: 'permit_required',
 		applies_to: {
-			platforms: ['handgun'],
+			categories: ['handgun'],
 		},
 		rule: {
 			conditions: {
