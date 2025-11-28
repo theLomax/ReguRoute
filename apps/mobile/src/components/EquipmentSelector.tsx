@@ -991,9 +991,6 @@ export default function EquipmentSelector({
 										onValueChange={(value) =>
 											setItemFormData({ ...itemFormData, accepts_detachable_magazine: value })
 										}
-										
-									  styles='styles.primary' // Applies to active state
-										textColor={itemFormData.accepts_detachable_magazine ? 'white' : 'black'}
 									/>
 									<Text style={styles.fieldLabel}>
 										{itemFormData.accepts_detachable_magazine
