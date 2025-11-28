@@ -126,6 +126,7 @@ export default function LocationAutocomplete({
 	onChangeText,
 	onSelectLocation,
 	placeholder = 'Enter city name',
+	icon,
 	isSelected,
 }: LocationAutocompleteProps) {
 	const theme = useTheme();
@@ -133,6 +134,11 @@ export default function LocationAutocomplete({
 	const [apiSuggestions, setApiSuggestions] = useState<LocationSuggestion[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// Guard against undefined theme
+	if (!theme || !theme.colors) {
+		return null;
+	}
 
 	// Local suggestions for instant feedback (fallback/offline)
 	const localSuggestions = useMemo(() => {

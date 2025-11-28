@@ -21,7 +21,7 @@ import type {
 import { buildCargoProfile } from '@reguroute/types';
 import { useRoutes, useAuth } from '../contexts';
 import { routesApi, equipmentItemsApi, loadoutsApi, permitsApi, analyzeApi } from '../api';
-import { Card, Button, LoadingSpinner, LocationAutocomplete, EquipmentSelector, Text, Icon } from '../components';
+import { Card, Button, LoadingSpinner, LocationAutocomplete, EquipmentSelector, Text, Icon, CheckeredFlagIcon } from '../components';
 
 interface LocationInput {
 	name: string;
@@ -575,7 +575,7 @@ export default function RoutePlanScreen() {
 				{activeCargoProfile?.has_firearms && restrictedJurisdictions.length === 0 && (
 					<Card style={styles.cargoCard}>
 						<View style={styles.cargoHeader}>
-							<Icon name="checkmark-circle" size={20} color={statusColors.go} />
+							<Icon name="checkmark-circle-outline" size={20} color={statusColors.go} />
 							<Text style={[styles.cargoTitle, { color: statusColors.go }]}>No Restrictions</Text>
 						</View>
 						<Text style={styles.cargoText}>
@@ -630,7 +630,7 @@ export default function RoutePlanScreen() {
 						onChangeText={handleOriginChange}
 						onSelectLocation={handleOriginSelect}
 						placeholder="Origin (e.g., Boston)"
-						icon={<Icon name="location" size={20} color={statusColors.go} />}
+						icon={<Icon name="location" size={30} color={statusColors.go} />}
 						isSelected={!!origin.coordinates}
 					/>
 
@@ -641,7 +641,7 @@ export default function RoutePlanScreen() {
 						onChangeText={handleDestinationChange}
 						onSelectLocation={handleDestinationSelect}
 						placeholder="Destination (e.g., New York)"
-						icon={<Icon name="flag" size={20} color={statusColors.noGo} />}
+						icon={<CheckeredFlagIcon size={30} color={theme.colors.onSurfaceVariant} />}
 						isSelected={!!destination.coordinates}
 					/>
 				</Card>

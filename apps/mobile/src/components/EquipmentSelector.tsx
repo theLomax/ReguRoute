@@ -158,7 +158,7 @@ export default function EquipmentSelector({
 			color: theme.colors.primary,
 		},
 		section: {
-			padding: 16,
+			padding: 0,
 			marginBottom: 16,
 		},
 		itemRow: {
@@ -832,70 +832,71 @@ export default function EquipmentSelector({
 			) : (
 				// Loadout selection mode
 				<View>
+
+					<Card style={styles.section}>
 					<Text style={styles.label}>Select Loadouts</Text>
 					<Text style={styles.helperText}>
 						Choose one or more loadouts for this route
 					</Text>
-
-					{loadouts.length === 0 ? (
-						<Card style={styles.emptyCard}>
-							<Icon name="briefcase-outline" size={48} color={theme.colors.onSurfaceVariant} />
-							<Text style={styles.emptyText}>No loadouts yet</Text>
-							<Text style={styles.emptySubtext}>Create your first loadout in the Cargo Profile screen</Text>
-						</Card>
-					) : (
-						<>
-							{loadouts.map((loadout) => {
-								const isSelected = selectedLoadouts.some(l => l.id === loadout.id);
-								return (
-									<View
-										key={loadout.id}
-										style={[
-											styles.loadoutCard,
-											isSelected && styles.loadoutCardSelected,
-										]}
-									>
-										<TouchableOpacity
-											style={styles.loadoutContent}
-											onPress={() => toggleLoadoutSelection(loadout)}
+						{loadouts.length === 0 ? (
+							<View style={styles.emptyCard}>
+								<Icon name="briefcase-outline" size={48} color={theme.colors.onSurfaceVariant} />
+								<Text style={styles.emptyText}>No loadouts yet</Text>
+								<Text style={styles.emptySubtext}>Create your first loadout to get started</Text>
+							</View>
+						) : (
+							<>
+								{loadouts.map((loadout) => {
+									const isSelected = selectedLoadouts.some(l => l.id === loadout.id);
+									return (
+										<View
+											key={loadout.id}
+											style={[
+												styles.loadoutCard,
+												isSelected && styles.loadoutCardSelected,
+											]}
 										>
-											<Icon
-												name={isSelected ? 'checkbox' : 'square-outline'}
-												size={24}
-												color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
-											/>
-											<View style={styles.loadoutText}>
-												<Text style={styles.loadoutName}>{loadout.name}</Text>
-												<Text style={styles.loadoutDetail}>
-													{loadout.items.length} item{loadout.items.length !== 1 ? 's' : ''}
-												</Text>
-											</View>
-											{loadout.is_default && (
-												<View style={styles.defaultBadge}>
-													<Text style={styles.defaultBadgeText}>Default</Text>
+											<TouchableOpacity
+												style={styles.loadoutContent}
+												onPress={() => toggleLoadoutSelection(loadout)}
+											>
+												<Icon
+													name={isSelected ? 'checkbox' : 'square-outline'}
+													size={24}
+													color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
+												/>
+												<View style={styles.loadoutText}>
+													<Text style={styles.loadoutName}>{loadout.name}</Text>
+													<Text style={styles.loadoutDetail}>
+														{loadout.items.length} item{loadout.items.length !== 1 ? 's' : ''}
+													</Text>
 												</View>
-											)}
-										</TouchableOpacity>
-										<TouchableOpacity
-											onPress={() => handleOpenLoadoutModal(loadout)}
-											style={styles.iconButton}
-										>
-											<Icon name="create-outline" size={24} color={theme.colors.primary} />
-										</TouchableOpacity>
-									</View>
-								);
-							})}
-						</>
-					)}
-
-					{onCreateLoadout && (
-						<Button
-							title="+ Create New Loadout"
-							onPress={() => handleOpenLoadoutModal()}
-							variant="secondary"
-							style={styles.createButton}
-						/>
-					)}
+												{loadout.is_default && (
+													<View style={styles.defaultBadge}>
+														<Text style={styles.defaultBadgeText}>Default</Text>
+													</View>
+												)}
+											</TouchableOpacity>
+											<TouchableOpacity
+												onPress={() => handleOpenLoadoutModal(loadout)}
+												style={styles.iconButton}
+											>
+												<Icon name="create-outline" size={24} color={theme.colors.primary} />
+											</TouchableOpacity>
+										</View>
+									);
+								})}
+							</>
+						)}
+						{onCreateLoadout && (
+							<Button
+								title="+ Create New Loadout"
+								onPress={() => handleOpenLoadoutModal()}
+								variant="secondary"
+								style={styles.createButton}
+							/>
+						)}
+					</Card>
 				</View>
 			)}
 
@@ -991,6 +992,8 @@ export default function EquipmentSelector({
 										onValueChange={(value) =>
 											setItemFormData({ ...itemFormData, accepts_detachable_magazine: value })
 										}
+										thumbColorOn={theme.colors.primary}
+										trackColorOn={theme.colors.outline}
 									/>
 									<Text style={styles.fieldLabel}>
 										{itemFormData.accepts_detachable_magazine

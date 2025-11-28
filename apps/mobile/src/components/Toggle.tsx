@@ -16,6 +16,12 @@ interface ToggleProps {
 	helperText?: string;
 	/** Container style overrides */
 	style?: ViewStyle;
+	/** Color for the switch track when turned on */
+	trackColorOn?: string;
+	/** Color for the switch track when turned off */
+	trackColorOff?: string;
+	/** Color for the switch thumb when turned on */
+	thumbColorOn?: string;
 }
 
 export default function Toggle({
@@ -25,9 +31,15 @@ export default function Toggle({
 	disabled = false,
 	helperText,
 	style,
+	trackColorOn,
+	trackColorOff,
+	thumbColorOn,
 }: ToggleProps) {
 	const theme = useTheme();
 
+	const finalTrackColorOn = trackColorOn || `${theme.colors.primary}80`;
+	const finalTrackColorOff = trackColorOff || theme.colors.outline;
+	const finalThumbColorOn = thumbColorOn || theme.colors.primary;
 	const styles = React.useMemo(() => StyleSheet.create({
 		container: {
 			marginBottom: 16,
@@ -63,8 +75,8 @@ export default function Toggle({
 					value={value}
 					onValueChange={onValueChange}
 					disabled={disabled}
-					trackColor={{ false: theme.colors.outline, true: `${theme.colors.primary}80` }}
-					thumbColor={value ? theme.colors.primary : theme.colors.surface}
+					trackColor={{ false: finalTrackColorOff, true: finalTrackColorOn }}
+					thumbColor={value ? finalThumbColorOn : theme.colors.surface}
 				/>
 			</View>
 			{helperText && <Text style={styles.helperText}>{helperText}</Text>}
