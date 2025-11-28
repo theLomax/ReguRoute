@@ -213,7 +213,7 @@ export default function CargoProfileScreen() {
 			borderRadius: 8,
 		},
 		tabActive: {
-			backgroundColor: theme.colors.primary,
+			backgroundColor: theme.colors.onSurface,
 		},
 		tabText: {
 			fontSize: 14,
@@ -221,7 +221,7 @@ export default function CargoProfileScreen() {
 			color: theme.colors.onSurfaceVariant,
 		},
 		tabTextActive: {
-			color: theme.colors.onPrimary,
+			color: theme.colors.surface,
 		},
 		tabContent: {
 			flex: 1,

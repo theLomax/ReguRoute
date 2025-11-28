@@ -61,12 +61,14 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
 	if (body) {
 		config.body = JSON.stringify(body);
+		console.log(`[API] ${method} ${endpoint}`, body);
 	}
 
 	const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
 	if (!response.ok) {
 		const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+		console.error(`[API Error] ${method} ${endpoint}`, response.status, error);
 		throw new ApiError(response.status, error.error || 'Request failed');
 	}
 

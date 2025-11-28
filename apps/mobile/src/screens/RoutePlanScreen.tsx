@@ -384,9 +384,11 @@ export default function RoutePlanScreen() {
 		},
 		saveButton: {
 			flex: 2,
+			paddingBlock: 8
 		},
 		continueButton: {
-			marginTop: 16,
+			marginTop: 0,
+			paddingBlock: 8
 		},
 		equipmentSummary: {
 			padding: 12,

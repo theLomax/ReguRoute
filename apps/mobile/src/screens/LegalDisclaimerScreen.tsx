@@ -38,7 +38,7 @@ export default function LegalDisclaimerScreen() {
 	return (
 		<ScrollView style={styles.container}>
 			<View style={styles.content}>
-				<Text style={styles.title}>Legal Disclaimer</Text>
+				<Text style={styles.title}>This is not legal advice.</Text>
 
 				<Text style={styles.sectionTitle}>General Information</Text>
 				<Text style={styles.paragraph}>

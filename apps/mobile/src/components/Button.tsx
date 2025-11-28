@@ -63,7 +63,7 @@ export default function Button({
 			compact={isCompact}
 			style={[fullWidth && { width: '100%' }, style]}
 			contentStyle={contentStyle}
-			buttonColor={variant === 'danger' ? '#DC2626' : undefined}
+			buttonColor={variant === 'danger' ? '#B33024' : undefined}
 			textColor={variant === 'danger' ? '#FFFFFF' : undefined}
 		>
 			{title}

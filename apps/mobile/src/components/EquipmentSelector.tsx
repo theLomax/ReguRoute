@@ -115,8 +115,8 @@ export default function EquipmentSelector({
 			marginRight: 8,
 		},
 		categoryChipSelected: {
-			backgroundColor: theme.colors.primary,
-			borderColor: theme.colors.primary,
+			backgroundColor: theme.colors.onSurface,
+			borderColor: theme.colors.onSurface,
 		},
 		categoryChipText: {
 			fontSize: 14,
@@ -127,8 +127,8 @@ export default function EquipmentSelector({
 			color: theme.colors.surface,
 		},
 		categoryChipActive: {
-			backgroundColor: theme.colors.primary,
-			borderColor: theme.colors.primary,
+			backgroundColor: theme.colors.onSurface,
+			borderColor: theme.colors.onSurface,
 		},
 		categoryChipTextActive: {
 			color: theme.colors.surface,
@@ -226,7 +226,7 @@ export default function EquipmentSelector({
 		},
 		loadoutCardSelected: {
 			borderColor: theme.colors.primary,
-			backgroundColor: theme.colors.secondaryContainer,
+			backgroundColor: theme.colors.primaryContainer,
 		},
 		loadoutContent: {
 			flexDirection: 'row',
@@ -304,14 +304,14 @@ export default function EquipmentSelector({
 			padding: 16,
 		},
 		modalSection: {
-			padding: 16,
-			marginBottom: 16,
+			padding: 0,
+			marginBottom: 8,
 		},
 		fieldLabel: {
 			fontSize: 14,
 			fontWeight: '500',
 			color: theme.colors.onSurface,
-			marginTop: 16,
+			marginTop: 8,
 			marginBottom: 8,
 		},
 		input: {
@@ -344,7 +344,7 @@ export default function EquipmentSelector({
 			marginBottom: 8,
 		},
 		categoryButtonSelected: {
-			backgroundColor: theme.colors.primary,
+			backgroundColor: theme.colors.onSurface,
 			borderColor: theme.colors.primary,
 		},
 		categoryButtonText: {
@@ -394,10 +394,12 @@ export default function EquipmentSelector({
 			paddingVertical: 6,
 			borderRadius: 16,
 			gap: 6,
+			outlineWidth: 1,
+			outlineColor: theme.colors.onSurfaceVariant
 		},
 		caliberChipText: {
 			fontSize: 14,
-			color: theme.colors.surface,
+			color: theme.colors.onSurface,
 			fontWeight: '500',
 		},
 		addCaliberButton: {
@@ -510,7 +512,9 @@ export default function EquipmentSelector({
 			setShowItemModal(false);
 			setEditingItem(null);
 		} catch (error) {
-			Alert.alert('Error', 'Failed to save equipment item.');
+			console.error('Failed to save equipment item:', error);
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+			Alert.alert('Error', `Failed to save equipment item: ${errorMessage}`);
 		}
 	};
 
@@ -750,13 +754,13 @@ export default function EquipmentSelector({
 								<Button
 									title="+ Add Item"
 									onPress={() => handleOpenItemModal()}
-									variant="secondary"
+									variant="primary"
 									style={styles.actionButton}
 								/>
 								<Button
 									title="Reorder"
 									onPress={handleEnterReorderMode}
-									variant="secondary"
+									variant="primary"
 									style={styles.actionButton}
 									disabled={displayItems.length === 0}
 								/>
@@ -987,6 +991,9 @@ export default function EquipmentSelector({
 										onValueChange={(value) =>
 											setItemFormData({ ...itemFormData, accepts_detachable_magazine: value })
 										}
+										
+									  styles='styles.primary' // Applies to active state
+										textColor={itemFormData.accepts_detachable_magazine ? 'white' : 'black'}
 									/>
 									<Text style={styles.fieldLabel}>
 										{itemFormData.accepts_detachable_magazine
