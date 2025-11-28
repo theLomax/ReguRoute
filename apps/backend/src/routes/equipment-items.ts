@@ -13,6 +13,7 @@ interface CreateEquipmentItemBody {
 	platform?: FirearmPlatform;
 	ammunition_capacity?: number;
 	nfa_subtype?: NFASubtype;
+	features?: string[];
 	barrel_length_inches?: number;
 	overall_length_inches?: number;
 	notes?: string;
@@ -26,6 +27,7 @@ interface UpdateEquipmentItemBody {
 	platform?: FirearmPlatform;
 	ammunition_capacity?: number;
 	nfa_subtype?: NFASubtype;
+	features?: string[];
 	barrel_length_inches?: number;
 	overall_length_inches?: number;
 	notes?: string;
@@ -49,7 +51,7 @@ export async function equipmentItemsRoutes(fastify: FastifyInstance) {
 		try {
 			const result = await client.query(
 				`SELECT id, name, category, accepts_detachable_magazine, calibers,
-				        platform, ammunition_capacity, nfa_subtype,
+				        platform, ammunition_capacity, nfa_subtype, features,
 				        barrel_length_inches, overall_length_inches,
 				        notes, created_at, updated_at
 				 FROM equipment_items
@@ -85,7 +87,7 @@ export async function equipmentItemsRoutes(fastify: FastifyInstance) {
 			try {
 				const result = await client.query(
 					`SELECT id, name, category, accepts_detachable_magazine, calibers,
-					        platform, ammunition_capacity, nfa_subtype,
+					        platform, ammunition_capacity, nfa_subtype, features,
 					        barrel_length_inches, overall_length_inches,
 					        notes, created_at, updated_at
 					 FROM equipment_items
@@ -120,6 +122,7 @@ export async function equipmentItemsRoutes(fastify: FastifyInstance) {
 						platform: { type: ['string', 'null'] },
 						ammunition_capacity: { type: ['number', 'null'], minimum: 1, maximum: 999 },
 						nfa_subtype: { type: ['string', 'null'] },
+						features: { type: ['array', 'null'], items: { type: 'string' } },
 						barrel_length_inches: { type: ['number', 'null'], minimum: 0 },
 						overall_length_inches: { type: ['number', 'null'], minimum: 0 },
 						notes: { type: ['string', 'null'] },
@@ -136,6 +139,7 @@ export async function equipmentItemsRoutes(fastify: FastifyInstance) {
 				platform,
 				ammunition_capacity,
 				nfa_subtype,
+				features,
 				barrel_length_inches,
 				overall_length_inches,
 				notes,
@@ -146,10 +150,10 @@ export async function equipmentItemsRoutes(fastify: FastifyInstance) {
 				const result = await client.query(
 					`INSERT INTO equipment_items (
 						user_id, name, category, accepts_detachable_magazine, calibers,
-						platform, ammunition_capacity, nfa_subtype,
+						platform, ammunition_capacity, nfa_subtype, features,
 						barrel_length_inches, overall_length_inches, notes
 					)
-					 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+					 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 					 RETURNING *`,
 					[
 						request.user.id,
@@ -160,6 +164,7 @@ export async function equipmentItemsRoutes(fastify: FastifyInstance) {
 						platform || null,
 						ammunition_capacity || null,
 						nfa_subtype || null,
+						features && features.length > 0 ? features : null,
 						barrel_length_inches || null,
 						overall_length_inches || null,
 						notes || null,
@@ -200,6 +205,7 @@ export async function equipmentItemsRoutes(fastify: FastifyInstance) {
 						platform: { type: ['string', 'null'] },
 						ammunition_capacity: { type: ['number', 'null'], minimum: 1, maximum: 999 },
 						nfa_subtype: { type: ['string', 'null'] },
+						features: { type: ['array', 'null'], items: { type: 'string' } },
 						barrel_length_inches: { type: ['number', 'null'], minimum: 0 },
 						overall_length_inches: { type: ['number', 'null'], minimum: 0 },
 						notes: { type: ['string', 'null'] },
@@ -236,6 +242,7 @@ export async function equipmentItemsRoutes(fastify: FastifyInstance) {
 					'platform',
 					'ammunition_capacity',
 					'nfa_subtype',
+					'features',
 					'barrel_length_inches',
 					'overall_length_inches',
 					'notes',

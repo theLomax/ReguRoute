@@ -135,6 +135,9 @@ export interface EquipmentItem {
 	// NFA-specific fields
 	nfa_subtype?: NFASubtype; // Required if category is 'nfa_item'
 
+	// Firearm features (for feature-based restrictions like CA-compliant, NY-compliant)
+	features?: FirearmFeature[];
+
 	// Measurement fields (for SBR/SBS classification, concealment laws)
 	barrel_length_inches?: number;
 	overall_length_inches?: number;
@@ -152,6 +155,7 @@ export interface CreateEquipmentItemRequest {
 	platform?: FirearmPlatform;
 	ammunition_capacity?: number;
 	nfa_subtype?: NFASubtype;
+	features?: FirearmFeature[];
 	barrel_length_inches?: number;
 	overall_length_inches?: number;
 	notes?: string;
@@ -165,6 +169,7 @@ export interface UpdateEquipmentItemRequest {
 	platform?: FirearmPlatform;
 	ammunition_capacity?: number;
 	nfa_subtype?: NFASubtype;
+	features?: FirearmFeature[];
 	barrel_length_inches?: number;
 	overall_length_inches?: number;
 	notes?: string;
@@ -735,3 +740,9 @@ export interface RouteComplianceResult {
 	/** Overall assessment */
 	overall_status: 'compliant' | 'fopa_protected' | 'non_compliant';
 }
+
+// ============================================
+// Compliance Checker Utilities
+// ============================================
+
+export * from './utils/compliance-checker';
