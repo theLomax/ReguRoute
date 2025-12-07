@@ -10,6 +10,7 @@ import { equipmentRoutes } from './routes/equipment.js';
 import { equipmentItemsRoutes } from './routes/equipment-items.js';
 import { loadoutsRoutes } from './routes/loadouts.js';
 import { permitsRoutes } from './routes/permits.js';
+import { routeComplianceRoutes } from './routes/route-compliance-simple.js';
 
 const server = Fastify({
     logger: true,
@@ -62,6 +63,7 @@ const start = async () => {
         await server.register(equipmentItemsRoutes, { prefix: '/equipment-items' });
         await server.register(loadoutsRoutes, { prefix: '/loadouts' });
         await server.register(permitsRoutes, { prefix: '/permits' });
+        await server.register(routeComplianceRoutes, { prefix: '/route-compliance' });
 
         const port = Number(process.env.PORT) || 3000;
         const host = process.env.HOST || '0.0.0.0';
