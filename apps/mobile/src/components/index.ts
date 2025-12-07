@@ -13,3 +13,4 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as LocationAutocomplete } from './LocationAutocomplete';
 export { default as Text } from './Text';
 export { default as Toggle } from './Toggle';
+export { default as RouteMap } from './RouteMap';

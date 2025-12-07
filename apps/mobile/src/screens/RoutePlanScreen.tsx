@@ -21,7 +21,7 @@ import type {
 import { buildCargoProfile } from '@reguroute/types';
 import { useRoutes, useAuth } from '../contexts';
 import { routesApi, equipmentItemsApi, loadoutsApi, permitsApi, analyzeApi } from '../api';
-import { Card, Button, LoadingSpinner, LocationAutocomplete, EquipmentSelector, Text, Icon, CheckeredFlagIcon } from '../components';
+import { Card, Button, LoadingSpinner, LocationAutocomplete, EquipmentSelector, Text, Icon, CheckeredFlagIcon, RouteMap } from '../components';
 
 interface LocationInput {
 	name: string;
@@ -347,7 +347,7 @@ export default function RoutePlanScreen() {
 		cargoCard: {
 			padding: 16,
 			marginBottom: 16,
-			backgroundColor: theme.colors.secondaryContainer,
+			backgroundColor: theme.colors.onSecondaryContainer,
 		},
 		cargoHeader: {
 			flexDirection: 'row',
@@ -509,6 +509,13 @@ export default function RoutePlanScreen() {
 		return (
 			<ScrollView style={styles.container} contentContainerStyle={styles.content}>
 				<Text style={styles.stepTitle}>Route Preview</Text>
+
+				<RouteMap
+					origin={origin.coordinates!}
+					destination={destination.coordinates!}
+					routeGeometry={routePreview.route.geometry}
+					style={styles.previewCard}
+				/>
 
 				<Card style={styles.previewCard}>
 					<View style={styles.routeSummary}>

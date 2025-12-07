@@ -36,3 +36,5 @@ data/raw/**/*.rds
 # Backend build artifacts
 apps/backend/dist-migrations-build/
 apps/backend/dist-migrations/nul
+CUsersthelocodeReguRouteappsbackendsrcroutesequipment-items.ts
+nul

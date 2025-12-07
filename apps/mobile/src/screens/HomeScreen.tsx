@@ -6,15 +6,19 @@ import {
 	RefreshControl,
 	TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { useTheme } from 'react-native-paper';
 import type { Route } from '@reguroute/types';
-import type { MainTabsParamList } from '../navigation';
+import type { MainTabsParamList, MainStackParamList } from '../navigation';
 import { useRoutes } from '../contexts';
 import { Card, Badge, EmptyState, LoadingSpinner, Text, Icon } from '../components';
 
-type HomeNavigationProp = BottomTabNavigationProp<MainTabsParamList, 'Home'>;
+type HomeNavigationProp = CompositeNavigationProp<
+	BottomTabNavigationProp<MainTabsParamList, 'Home'>,
+	StackNavigationProp<MainStackParamList>
+>;
 
 function RouteCard({ route, onPress }: { route: Route; onPress: () => void }) {
 	const theme = useTheme();
@@ -129,9 +133,8 @@ export default function HomeScreen() {
 	}, [navigation]);
 
 	const handleRoutePress = useCallback((route: Route) => {
-		// TODO: Navigate to route detail screen
-		console.log('Route pressed:', route.id);
-	}, []);
+		navigation.navigate('RouteDetail', { routeId: route.id });
+	}, [navigation]);
 
 	const styles = React.useMemo(() => StyleSheet.create({
 		container: {
