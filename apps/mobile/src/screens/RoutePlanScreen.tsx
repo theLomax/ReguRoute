@@ -177,27 +177,37 @@ export default function RoutePlanScreen() {
 		setRestrictedJurisdictions([]);
 
 		try {
-			// If user has cargo with restrictions, get avoidance polygons
-			let avoidPolygons: GeoJSON.MultiPolygon | null = null;
-
-			if (activeCargoProfile?.has_firearms) {
-				try {
-					const avoidanceResult = await analyzeApi.getAvoidancePolygons(activeCargoProfile);
-					if (avoidanceResult.has_restrictions) {
-						avoidPolygons = avoidanceResult.avoid_polygons;
-						setRestrictedJurisdictions(avoidanceResult.restricted_jurisdictions);
-					}
-				} catch (error) {
-					console.warn('Failed to get avoidance polygons, routing without restrictions:', error);
-				}
-			}
-
-			// Calculate route with optional avoidance
+			// Step 1: Calculate INITIAL route without avoidance to detect states crossed
 			const result = await routesApi.calculate({
 				origin: origin.coordinates,
 				destination: destination.coordinates,
-				...(avoidPolygons && { avoid_polygons: avoidPolygons }),
+				cargo_profile: activeCargoProfile || undefined,
 			});
+
+			// Output states crossed to console
+			if (result.analysis) {
+				console.log('\n========================================');
+				console.log('🗺️  ROUTE CALCULATED');
+				console.log('========================================');
+				console.log(`From: ${origin.name}`);
+				console.log(`To: ${destination.name}`);
+				console.log(`Distance: ${(result.route.summary.distance_meters / 1609.34).toFixed(1)} miles`);
+				console.log(`Duration: ${Math.round(result.route.summary.duration_seconds / 60)} minutes`);
+				console.log('\n📍 States Crossed:');
+				result.analysis.jurisdictions_crossed.forEach(state => {
+					console.log(`   • ${state}`);
+				});
+				if (result.analysis.alerts.length > 0) {
+					console.log('\n⚠️  Regulation Alerts:');
+					console.log(`   Critical: ${result.analysis.summary.critical_alerts}`);
+					console.log(`   Warning: ${result.analysis.summary.warning_alerts}`);
+					console.log(`   Info: ${result.analysis.summary.info_alerts}`);
+				} else {
+					console.log('\n✅ No regulation alerts');
+				}
+				console.log('========================================\n');
+			}
+
 			setRoutePreview(result);
 			setStep('preview');
 		} catch (error) {
@@ -548,6 +558,25 @@ export default function RoutePlanScreen() {
 					</View>
 				</Card>
 
+				{/* States Crossed */}
+				{routePreview.analysis && routePreview.analysis.jurisdictions_crossed.length > 0 && (
+					<Card style={styles.previewCard}>
+						<View style={styles.cargoHeader}>
+							<Icon name="map-outline" size={20} color={theme.colors.primary} />
+							<Text style={[styles.cargoTitle, { color: theme.colors.onSurface }]}>
+								States Crossed ({routePreview.analysis.summary.total_jurisdictions})
+							</Text>
+						</View>
+						<View style={{ marginTop: 8 }}>
+							{routePreview.analysis.jurisdictions_crossed.map((state, index) => (
+								<Text key={index} style={[styles.cargoText, { marginTop: 4 }]}>
+									• {state}
+								</Text>
+							))}
+						</View>
+					</Card>
+				)}
+
 				{/* Restricted Jurisdictions Feedback */}
 				{restrictedJurisdictions.length > 0 && (
 					<Card style={styles.restrictionsCard}>
@@ -578,8 +607,41 @@ export default function RoutePlanScreen() {
 					</Card>
 				)}
 
+				{/* Regulation Alerts */}
+				{routePreview.analysis && routePreview.analysis.alerts.length > 0 && (
+					<Card style={[styles.previewCard, { backgroundColor: theme.colors.errorContainer }]}>
+						<View style={styles.cargoHeader}>
+							<Icon name="alert-circle" size={20} color={theme.colors.error} />
+							<Text style={[styles.cargoTitle, { color: theme.colors.error }]}>
+								Regulation Alerts ({routePreview.analysis.alerts.length})
+							</Text>
+						</View>
+						<View style={{ marginTop: 12 }}>
+							{routePreview.analysis.alerts.map((alert, index) => (
+								<View key={index} style={styles.jurisdictionItem}>
+									<Text style={styles.jurisdictionName}>
+										{alert.severity.toUpperCase()} - {alert.category}
+									</Text>
+									<Text style={[styles.cargoText, { marginTop: 4 }]}>
+										{alert.jurisdiction} ({alert.postal_code})
+									</Text>
+									<Text style={[styles.cargoText, { marginTop: 4 }]}>
+										{alert.message}
+									</Text>
+									{alert.citation && (
+										<Text style={styles.jurisdictionCitation}>
+											Citation: {alert.citation}
+										</Text>
+									)}
+								</View>
+							))}
+						</View>
+					</Card>
+				)}
+
 				{/* Active Cargo Profile Info */}
-				{activeCargoProfile?.has_firearms && restrictedJurisdictions.length === 0 && (
+				{activeCargoProfile?.has_firearms && restrictedJurisdictions.length === 0 &&
+				 (!routePreview.analysis || routePreview.analysis.alerts.length === 0) && (
 					<Card style={styles.cargoCard}>
 						<View style={styles.cargoHeader}>
 							<Icon name="checkmark-circle-outline" size={20} color={statusColors.go} />
