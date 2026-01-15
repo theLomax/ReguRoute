@@ -637,3 +637,25 @@ The docker-compose.yml file adapts this production-ready image for development u
 **command:** Because the dist folder is hidden, the Dockerfile's default CMD would fail. To fix this, we override it with command: pnpm run dev. This tells the container to run the development script, which uses nodemon and ts-node to execute your TypeScript source code directly from the mounted volume.
 
 By combining these two overrides, you get a development environment where your code changes are reflected immediately, without needing to rebuild the Docker image.
+
+## Project Documentation
+
+### Architecture & Development
+- **[Workflow Documentation](docs/WORKFLOW.md)** - Complete user workflow analysis and critical gap identification
+- **[Development Plan](docs/DEVELOPMENT_PLAN.md)** - Detailed implementation strategy with milestones and gap-specific solutions
+
+### Current Implementation Status
+- ✅ **Equipment Management** - Comprehensive loadout system with detailed firearm specifications
+- ✅ **Basic Route Planning** - OpenStreetMap location selection with OpenRouteService routing
+- ✅ **Regulation Analysis** - PostGIS jurisdiction detection with alert generation
+- ⚠️ **Smart Avoidance** - `getAvoidancePolygons()` exists but not integrated with routing
+- ❌ **Route-Equipment Linking** - Routes don't store which loadout was used
+- ❌ **Multi-route Generation** - No alternatives or compliance-based scoring
+- ❌ **Waypoint Management** - No intermediate stop support
+- ❌ **Pre-validation** - Compliance checked after route calculation, not before
+
+### Priority Development Areas
+1. **Route-Equipment Integration** - Associate saved routes with equipment loadouts
+2. **Smart Avoidance Routing** - Use regulation analysis to avoid restricted jurisdictions
+3. **Multi-route Alternatives** - Generate and score multiple route options by compliance + efficiency
+4. **Waypoint Support** - Add intermediate stops with per-location compliance checking
