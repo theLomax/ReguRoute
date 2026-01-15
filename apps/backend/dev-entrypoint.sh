@@ -7,6 +7,9 @@ export PATH=/usr/src/app/node_modules/.bin:$PATH
 set -e
 
 # Run the initial build.
+echo "--- Installing dependencies ---"
+pnpm install --no-frozen-lockfile
+
 echo "--- Running initial build ---"
 tsc -p ./apps/backend/tsconfig.json
 

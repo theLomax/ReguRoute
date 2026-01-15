@@ -1,0 +1,455 @@
+[2025-12-07T19:37:29.285Z] analyzeRoute jurisdictions found: []
+[2025-12-08T17:15:46.722Z] analyzeRoute jurisdictions found: [
+  {
+    "id": "1ad77835-4e3e-4bad-86ef-6a54fe1ab0b6",
+    "name": "Connecticut",
+    "postal_code": "CT"
+  },
+  {
+    "id": "ef1bd5ff-9523-4999-b427-e870b9ba0249",
+    "name": "Massachusetts",
+    "postal_code": "MA"
+  },
+  {
+    "id": "41e3b30f-4e5d-485a-98d8-a9846b13d4c0",
+    "name": "New York",
+    "postal_code": "NY"
+  }
+]
+[2025-12-08T17:15:46.726Z] generateAlerts called with: {
+  "cargoProfile": {
+    "has_firearms": false,
+    "firearm_platforms": [],
+    "max_ammunition_capacity_by_platform": {
+      "handgun": 0,
+      "rifle": 0,
+      "shotgun": 0
+    },
+    "has_nfa_items": false,
+    "nfa_subtypes": [],
+    "has_concealed_carry_permit": false,
+    "permit_states": [],
+    "has_handgun": false,
+    "has_rifle": false,
+    "has_shotgun": false,
+    "has_suppressor": false,
+    "has_sbr": false,
+    "has_sbs": false
+  },
+  "regulationsCount": 4,
+  "regulationsSummary": [
+    "New York:assault_weapons:null",
+    "New York:magazine_capacity:10",
+    "New York:concealed_carry:null",
+    "New York:vehicle_carry:null"
+  ]
+}
+[2025-12-08T17:15:46.736Z] No firearms in profile, returning empty alerts 
+[2025-12-08T17:15:46.748Z] analyzeRoute generated alerts: []
+[2025-12-08T17:16:08.442Z] analyzeRoute jurisdictions found: [
+  {
+    "id": "1ad77835-4e3e-4bad-86ef-6a54fe1ab0b6",
+    "name": "Connecticut",
+    "postal_code": "CT"
+  },
+  {
+    "id": "ef1bd5ff-9523-4999-b427-e870b9ba0249",
+    "name": "Massachusetts",
+    "postal_code": "MA"
+  },
+  {
+    "id": "41e3b30f-4e5d-485a-98d8-a9846b13d4c0",
+    "name": "New York",
+    "postal_code": "NY"
+  }
+]
+[2025-12-08T17:16:08.447Z] generateAlerts called with: {
+  "cargoProfile": {
+    "has_firearms": true,
+    "ammunition_capacity": 15,
+    "has_concealed_carry_permit": false
+  },
+  "regulationsCount": 4,
+  "regulationsSummary": [
+    "New York:assault_weapons:null",
+    "New York:magazine_capacity:10",
+    "New York:concealed_carry:null",
+    "New York:vehicle_carry:null"
+  ]
+}
+[2025-12-08T17:16:08.458Z] Checking magazine capacity for New York {
+  "limit": 10,
+  "profileCapacity": 15,
+  "isRestricted": true,
+  "willAlert": true
+}
+[2025-12-08T17:16:08.466Z] analyzeRoute generated alerts: [
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "critical",
+    "category": "Ammunition Capacity",
+    "message": "New York limits ammunition capacity to 10 rounds. Your 15-round capacity exceeds the limit.",
+    "citation": "N.Y. Penal Law § 265.00"
+  },
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "critical",
+    "category": "Concealed Carry",
+    "message": "New York requires a concealed carry permit. Your permit may not be recognized.",
+    "citation": "N.Y. Penal Law § 400.00"
+  },
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "warning",
+    "category": "Transport Requirements",
+    "message": "New York requires firearms be transported unloaded, in a locked container, ammunition stored separately.",
+    "requirements": {
+      "separate_ammo": true,
+      "must_be_locked": true,
+      "not_accessible": true,
+      "must_be_unloaded": true
+    },
+    "citation": "N.Y. Penal Law § 265.20"
+  }
+]
+[2025-12-08T17:32:36.907Z] analyzeRoute jurisdictions found: [
+  {
+    "id": "1ad77835-4e3e-4bad-86ef-6a54fe1ab0b6",
+    "name": "Connecticut",
+    "postal_code": "CT"
+  },
+  {
+    "id": "ef1bd5ff-9523-4999-b427-e870b9ba0249",
+    "name": "Massachusetts",
+    "postal_code": "MA"
+  },
+  {
+    "id": "41e3b30f-4e5d-485a-98d8-a9846b13d4c0",
+    "name": "New York",
+    "postal_code": "NY"
+  }
+]
+[2025-12-08T17:32:36.916Z] generateAlerts called with: {
+  "cargoProfile": {
+    "has_firearms": true,
+    "ammunition_capacity": 15,
+    "has_concealed_carry_permit": false
+  },
+  "regulationsCount": 4,
+  "regulationsSummary": [
+    "New York:assault_weapons:null",
+    "New York:magazine_capacity:10",
+    "New York:concealed_carry:null",
+    "New York:vehicle_carry:null"
+  ]
+}
+[2025-12-08T17:32:36.930Z] Checking magazine capacity for New York {
+  "limit": 10,
+  "profileCapacity": 15,
+  "isRestricted": true,
+  "willAlert": true
+}
+[2025-12-08T17:32:36.943Z] analyzeRoute generated alerts: [
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "critical",
+    "category": "Ammunition Capacity",
+    "message": "New York limits ammunition capacity to 10 rounds. Your 15-round capacity exceeds the limit.",
+    "citation": "N.Y. Penal Law § 265.00"
+  },
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "critical",
+    "category": "Concealed Carry",
+    "message": "New York requires a concealed carry permit. Your permit may not be recognized.",
+    "citation": "N.Y. Penal Law § 400.00"
+  },
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "warning",
+    "category": "Transport Requirements",
+    "message": "New York requires firearms be transported unloaded, in a locked container, ammunition stored separately.",
+    "requirements": {
+      "separate_ammo": true,
+      "must_be_locked": true,
+      "not_accessible": true,
+      "must_be_unloaded": true
+    },
+    "citation": "N.Y. Penal Law § 265.20"
+  }
+]
+[2025-12-08T17:34:47.713Z] analyzeRoute jurisdictions found: [
+  {
+    "id": "1ad77835-4e3e-4bad-86ef-6a54fe1ab0b6",
+    "name": "Connecticut",
+    "postal_code": "CT"
+  },
+  {
+    "id": "ef1bd5ff-9523-4999-b427-e870b9ba0249",
+    "name": "Massachusetts",
+    "postal_code": "MA"
+  },
+  {
+    "id": "41e3b30f-4e5d-485a-98d8-a9846b13d4c0",
+    "name": "New York",
+    "postal_code": "NY"
+  }
+]
+[2025-12-08T17:34:47.720Z] generateAlerts called with: {
+  "cargoProfile": {
+    "has_firearms": true,
+    "firearm_platforms": [
+      "handgun",
+      "rifle"
+    ],
+    "max_ammunition_capacity_by_platform": {},
+    "has_nfa_items": false,
+    "nfa_subtypes": [],
+    "has_concealed_carry_permit": false,
+    "permit_states": [],
+    "has_handgun": true,
+    "has_rifle": true,
+    "has_shotgun": false,
+    "has_suppressor": false,
+    "has_sbr": false,
+    "has_sbs": false
+  },
+  "regulationsCount": 4,
+  "regulationsSummary": [
+    "New York:assault_weapons:null",
+    "New York:magazine_capacity:10",
+    "New York:concealed_carry:null",
+    "New York:vehicle_carry:null"
+  ]
+}
+[2025-12-08T17:34:47.733Z] Checking magazine capacity for New York {
+  "limit": 10,
+  "isRestricted": true,
+  "willAlert": false
+}
+[2025-12-08T17:34:47.745Z] analyzeRoute generated alerts: [
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "critical",
+    "category": "Concealed Carry",
+    "message": "New York requires a concealed carry permit. Your permit may not be recognized.",
+    "citation": "N.Y. Penal Law § 400.00"
+  },
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "warning",
+    "category": "Transport Requirements",
+    "message": "New York requires firearms be transported unloaded, in a locked container, ammunition stored separately.",
+    "requirements": {
+      "separate_ammo": true,
+      "must_be_locked": true,
+      "not_accessible": true,
+      "must_be_unloaded": true
+    },
+    "citation": "N.Y. Penal Law § 265.20"
+  }
+]
+[2025-12-08T17:35:23.087Z] analyzeRoute jurisdictions found: [
+  {
+    "id": "1ad77835-4e3e-4bad-86ef-6a54fe1ab0b6",
+    "name": "Connecticut",
+    "postal_code": "CT"
+  },
+  {
+    "id": "ef1bd5ff-9523-4999-b427-e870b9ba0249",
+    "name": "Massachusetts",
+    "postal_code": "MA"
+  },
+  {
+    "id": "afeb4b94-830d-49d8-b6fa-98abeb4c3584",
+    "name": "New Jersey",
+    "postal_code": "NJ"
+  },
+  {
+    "id": "41e3b30f-4e5d-485a-98d8-a9846b13d4c0",
+    "name": "New York",
+    "postal_code": "NY"
+  },
+  {
+    "id": "333b09c3-eb37-47e8-ac17-05aea3a6f080",
+    "name": "Pennsylvania",
+    "postal_code": "PA"
+  }
+]
+[2025-12-08T17:35:23.093Z] generateAlerts called with: {
+  "cargoProfile": {
+    "has_firearms": true,
+    "firearm_platforms": [
+      "handgun",
+      "rifle"
+    ],
+    "max_ammunition_capacity_by_platform": {},
+    "has_nfa_items": false,
+    "nfa_subtypes": [],
+    "has_concealed_carry_permit": false,
+    "permit_states": [],
+    "has_handgun": true,
+    "has_rifle": true,
+    "has_shotgun": false,
+    "has_suppressor": false,
+    "has_sbr": false,
+    "has_sbs": false
+  },
+  "regulationsCount": 10,
+  "regulationsSummary": [
+    "New Jersey:assault_weapons:null",
+    "New Jersey:magazine_capacity:10",
+    "New Jersey:concealed_carry:null",
+    "New Jersey:vehicle_carry:null",
+    "New York:assault_weapons:null",
+    "New York:magazine_capacity:10",
+    "New York:concealed_carry:null",
+    "New York:vehicle_carry:null",
+    "Pennsylvania:concealed_carry:null",
+    "Pennsylvania:vehicle_carry:null"
+  ]
+}
+[2025-12-08T17:35:23.107Z] Checking magazine capacity for New Jersey {
+  "limit": 10,
+  "isRestricted": true,
+  "willAlert": false
+}
+[2025-12-08T17:35:23.117Z] Checking magazine capacity for New York {
+  "limit": 10,
+  "isRestricted": true,
+  "willAlert": false
+}
+[2025-12-08T17:35:23.126Z] analyzeRoute generated alerts: [
+  {
+    "jurisdiction": "New Jersey",
+    "postal_code": "NJ",
+    "severity": "critical",
+    "category": "Concealed Carry",
+    "message": "New Jersey requires a concealed carry permit. Your permit may not be recognized.",
+    "citation": "N.J. Stat. § 2C:58-4"
+  },
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "critical",
+    "category": "Concealed Carry",
+    "message": "New York requires a concealed carry permit. Your permit may not be recognized.",
+    "citation": "N.Y. Penal Law § 400.00"
+  },
+  {
+    "jurisdiction": "New Jersey",
+    "postal_code": "NJ",
+    "severity": "warning",
+    "category": "Transport Requirements",
+    "message": "New Jersey requires firearms be transported unloaded, in a locked container, ammunition stored separately.",
+    "requirements": {
+      "separate_ammo": true,
+      "must_be_locked": true,
+      "must_be_unloaded": true
+    },
+    "citation": "N.J. Stat. § 2C:39-6"
+  },
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "warning",
+    "category": "Transport Requirements",
+    "message": "New York requires firearms be transported unloaded, in a locked container, ammunition stored separately.",
+    "requirements": {
+      "separate_ammo": true,
+      "must_be_locked": true,
+      "not_accessible": true,
+      "must_be_unloaded": true
+    },
+    "citation": "N.Y. Penal Law § 265.20"
+  },
+  {
+    "jurisdiction": "Pennsylvania",
+    "postal_code": "PA",
+    "severity": "warning",
+    "category": "Concealed Carry",
+    "message": "Pennsylvania requires a concealed carry permit. Your permit may not be recognized.",
+    "citation": "18 Pa. C.S. § 6109"
+  }
+]
+[2025-12-08T18:23:02.384Z] analyzeRoute jurisdictions found: [
+  {
+    "id": "1ad77835-4e3e-4bad-86ef-6a54fe1ab0b6",
+    "name": "Connecticut",
+    "postal_code": "CT"
+  },
+  {
+    "id": "ef1bd5ff-9523-4999-b427-e870b9ba0249",
+    "name": "Massachusetts",
+    "postal_code": "MA"
+  },
+  {
+    "id": "41e3b30f-4e5d-485a-98d8-a9846b13d4c0",
+    "name": "New York",
+    "postal_code": "NY"
+  }
+]
+[2025-12-08T18:23:02.393Z] generateAlerts called with: {
+  "cargoProfile": {
+    "has_firearms": true,
+    "firearm_platforms": [
+      "handgun",
+      "rifle"
+    ],
+    "max_ammunition_capacity_by_platform": {},
+    "has_nfa_items": false,
+    "nfa_subtypes": [],
+    "has_concealed_carry_permit": false,
+    "permit_states": [],
+    "has_handgun": true,
+    "has_rifle": true,
+    "has_shotgun": false,
+    "has_suppressor": false,
+    "has_sbr": false,
+    "has_sbs": false
+  },
+  "regulationsCount": 4,
+  "regulationsSummary": [
+    "New York:assault_weapons:null",
+    "New York:magazine_capacity:10",
+    "New York:concealed_carry:null",
+    "New York:vehicle_carry:null"
+  ]
+}
+[2025-12-08T18:23:02.405Z] Checking magazine capacity for New York {
+  "limit": 10,
+  "isRestricted": true,
+  "willAlert": false
+}
+[2025-12-08T18:23:02.415Z] analyzeRoute generated alerts: [
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "critical",
+    "category": "Concealed Carry",
+    "message": "New York requires a concealed carry permit. Your permit may not be recognized.",
+    "citation": "N.Y. Penal Law § 400.00"
+  },
+  {
+    "jurisdiction": "New York",
+    "postal_code": "NY",
+    "severity": "warning",
+    "category": "Transport Requirements",
+    "message": "New York requires firearms be transported unloaded, in a locked container, ammunition stored separately.",
+    "requirements": {
+      "separate_ammo": true,
+      "must_be_locked": true,
+      "not_accessible": true,
+      "must_be_unloaded": true
+    },
+    "citation": "N.Y. Penal Law § 265.20"
+  }
+]

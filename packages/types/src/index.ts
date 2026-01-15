@@ -263,6 +263,7 @@ export interface CargoProfile {
 	has_suppressor: boolean;
 	has_sbr: boolean;
 	has_sbs: boolean;
+	ammunition_capacity?: number; // Max capacity across all platforms (for legacy/backend compatibility)
 }
 
 /** @deprecated Use nfa_subtypes instead */
@@ -359,6 +360,12 @@ export function buildCargoProfile(
 	profile.firearm_platforms = Array.from(platforms);
 	profile.nfa_subtypes = Array.from(nfaTypes);
 	profile.max_ammunition_capacity_by_platform = capacityByPlatform as Record<FirearmPlatform, number>;
+
+	// Calculate max capacity across all platforms for backend compatibility
+	const maxCapacity = Math.max(0, ...Object.values(capacityByPlatform));
+	if (maxCapacity > 0) {
+		profile.ammunition_capacity = maxCapacity;
+	}
 
 	return profile;
 }
@@ -459,6 +466,7 @@ export interface CalculateRouteRequest {
 	waypoints?: Coordinates[];
 	profile?: 'driving-car' | 'driving-hgv';
 	avoid_polygons?: GeoJSON.MultiPolygon;
+	cargo_profile?: CargoProfile;
 }
 
 export interface CalculateRouteResponse {
@@ -468,6 +476,7 @@ export interface CalculateRouteResponse {
 		segments: unknown[];
 		bbox: [number, number, number, number];
 	};
+	analysis?: RouteAnalysis;
 }
 
 // ============================================

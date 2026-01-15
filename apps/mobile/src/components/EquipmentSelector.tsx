@@ -48,6 +48,16 @@ const CATEGORIES: { value: EquipmentItemCategory | 'all'; label: string }[] = [
 	{ value: 'other', label: 'Other' },
 ];
 
+const TRANSPORT_MODES = [
+	{ value: 'hardcase', label: 'Hard-side case', icon: 'briefcase' },
+	{ value: 'softcase', label: 'Soft case', icon: 'bag-suitcase' },
+	{ value: 'ccw', label: 'Concealed on person', icon: 'put-outline' },
+	{ value: 'ocw', label: 'Visible on person', icon: 'open-outline' },
+	{ value: 'vehicleBox', label: 'Glove box / console', icon: 'car-outline' },
+	{ value: 'trunk', label: 'Locked in trunk', icon: 'car_rental' },
+	{ value: 'other', label: 'Other', icon: 'quiz' },
+];
+
 export default function EquipmentSelector({
 	loadouts,
 	selectedLoadouts,
@@ -77,6 +87,10 @@ export default function EquipmentSelector({
 	const [loadoutName, setLoadoutName] = useState('');
 	const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 	const [loadoutCategoryFilter, setLoadoutCategoryFilter] = useState<EquipmentItemCategory | 'all'>('all');
+	const [isAddingEquipment, setIsAddingEquipment] = useState(false);
+	const [tempSelectedItemIds, setTempSelectedItemIds] = useState<string[]>([]);
+	const [itemTransportModes, setItemTransportModes] = useState<Record<string, string>>({});
+	const [editingTransportForItem, setEditingTransportForItem] = useState<string | null>(null);
 
 	// Caliber picker state
 	const [showCaliberPicker, setShowCaliberPicker] = useState(false);
@@ -462,6 +476,100 @@ export default function EquipmentSelector({
 			color: theme.colors.primary,
 			fontWeight: '600',
 		},
+		emptyEquipmentContainer: {
+			padding: 16,
+			alignItems: 'center',
+		},
+		selectedItemsList: {
+			marginBottom: 12,
+		},
+		selectedItemRow: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			padding: 12,
+			backgroundColor: theme.colors.surface,
+			borderRadius: 8,
+			marginBottom: 8,
+			borderWidth: 1,
+			borderColor: theme.colors.outlineVariant,
+		},
+		removeItemButton: {
+			padding: 4,
+			marginLeft: 'auto',
+		},
+		addEquipmentButton: {
+			marginTop: 8,
+			marginBottom: 16,
+		},
+		equipmentCheckList: {
+			maxHeight: 250,
+			marginBottom: 12,
+			borderWidth: 1,
+			borderColor: theme.colors.outlineVariant,
+			borderRadius: 8,
+			padding: 4,
+		},
+		equipmentActionButtons: {
+			flexDirection: 'row',
+			gap: 12,
+			marginTop: 12,
+			paddingTop: 12,
+			borderTopWidth: 1,
+			borderTopColor: theme.colors.outlineVariant,
+		},
+		equipmentCancelButton: {
+			flex: 1,
+		},
+		equipmentSaveButton: {
+			flex: 2,
+		},
+		selectField: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			paddingHorizontal: 16,
+			paddingVertical: 14,
+			backgroundColor: theme.colors.surface,
+			borderRadius: 12,
+			borderWidth: 1,
+			borderColor: theme.colors.outline,
+			marginBottom: 24,
+		},
+		selectFieldText: {
+			fontSize: 16,
+			color: theme.colors.onSurface,
+			flex: 1,
+		},
+		transportOption: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			padding: 16,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.colors.outlineVariant,
+		},
+		transportOptionText: {
+			fontSize: 16,
+			color: theme.colors.onSurface,
+			flex: 1,
+		},
+		transportOptionSelected: {
+			backgroundColor: theme.colors.primaryContainer,
+		},
+		transportMethodButton: {
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 6,
+			paddingVertical: 6,
+			paddingHorizontal: 10,
+			backgroundColor: theme.colors.surfaceVariant,
+			borderRadius: 6,
+			marginLeft: 28,
+		},
+		transportMethodText: {
+			fontSize: 13,
+			color: theme.colors.onSurfaceVariant,
+			flex: 1,
+		},
 	}), [theme]);
 
 	// Filter items by category
@@ -834,10 +942,10 @@ export default function EquipmentSelector({
 				<View>
 
 					<Card style={styles.section}>
-					<Text style={styles.label}>Select Loadouts</Text>
-					<Text style={styles.helperText}>
-						Choose one or more loadouts for this route
-					</Text>
+						<Text style={styles.label}>Select Loadouts</Text>
+						<Text style={styles.helperText}>
+							Choose one or more loadouts for this route
+						</Text>
 						{loadouts.length === 0 ? (
 							<View style={styles.emptyCard}>
 								<Icon name="briefcase-outline" size={48} color={theme.colors.onSurfaceVariant} />
@@ -1127,68 +1235,169 @@ export default function EquipmentSelector({
 								placeholderTextColor={theme.colors.onSurfaceVariant}
 							/>
 
-							<Text style={styles.fieldLabel}>Select Equipment</Text>
+							<Text style={styles.fieldLabel}>Equipment in Loadout</Text>
 
-							<ScrollView
-								horizontal
-								showsHorizontalScrollIndicator={false}
-								style={styles.categoryFilterContainer}
-							>
-								{CATEGORIES.map((cat) => (
-									<TouchableOpacity
-										key={cat.value}
-										style={[
-											styles.categoryChip,
-											loadoutCategoryFilter === cat.value && styles.categoryChipActive,
-										]}
-										onPress={() => setLoadoutCategoryFilter(cat.value)}
-									>
-										<Text
-											style={[
-												styles.categoryChipText,
-												loadoutCategoryFilter === cat.value && styles.categoryChipTextActive,
-											]}
-										>
-											{cat.label}
-										</Text>
-									</TouchableOpacity>
-								))}
-							</ScrollView>
+							{!isAddingEquipment ? (
+								<>
+									{/* Collapsed view - show selected items */}
+									{selectedItemIds.length === 0 ? (
+										<View style={styles.emptyEquipmentContainer}>
+											<Text style={styles.helperText}>No equipment added yet.</Text>
+										</View>
+									) : (
+										<View style={styles.selectedItemsList}>
+											{equipmentItems
+												.filter((item) => selectedItemIds.includes(item.id))
+												.map((item) => (
+													<View key={item.id} style={styles.selectedItemRow}>
+														<View style={{ flex: 1 }}>
+															<View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+																<Icon
+																	name="checkmark-circle"
+																	size={20}
+																	color={theme.colors.primary}
+																	style={{ marginRight: 8 }}
+																/>
+																<View style={{ flex: 1 }}>
+																	<Text style={styles.itemName}>{item.name}</Text>
+																	<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
+																</View>
+															</View>
+															<TouchableOpacity
+																style={styles.transportMethodButton}
+																onPress={() => setEditingTransportForItem(item.id)}
+															>
+																<Icon
+																	name={itemTransportModes[item.id]
+																		? TRANSPORT_MODES.find(m => m.value === itemTransportModes[item.id])?.icon
+																		: "car-outline"}
+																	size={16} color={theme.colors.onSurfaceVariant} />
+																<Text style={styles.transportMethodText}>
+																	{itemTransportModes[item.id]
+																		? TRANSPORT_MODES.find(m => m.value === itemTransportModes[item.id])?.label
+																		: 'Set transport method'}
+																</Text>
+																<Icon name="chevron-forward" size={16} color={theme.colors.onSurfaceVariant} />
+															</TouchableOpacity>
+														</View>
+														<TouchableOpacity
+															onPress={() => toggleItemInLoadout(item.id)}
+															style={styles.removeItemButton}
+														>
+															<Icon
+																name="close-circle"
+																size={20}
+																color={theme.colors.error}
+															/>
+														</TouchableOpacity>
+													</View>
+												))}
+										</View>
+									)}
 
-							{editingLoadout && (
-								<Text style={styles.helperText}>
-									Select which items to include in this loadout.
-								</Text>
-							)}
-							{equipmentItems.length === 0 ? (
-								<Text style={styles.helperText}>
-									No equipment yet. Create items first.
-								</Text>
+									<Button
+										title="+ Add Equipment"
+										onPress={() => {
+											setTempSelectedItemIds([...selectedItemIds]);
+											setIsAddingEquipment(true);
+										}}
+										variant="outline"
+										style={styles.addEquipmentButton}
+									/>
+								</>
 							) : (
 								<>
-									{equipmentItems
-										.filter((item) => loadoutCategoryFilter === 'all' || item.category === loadoutCategoryFilter)
-										.map((item) => {
-											const isSelected = selectedItemIds.includes(item.id);
-											return (
-												<TouchableOpacity
-													key={item.id}
-													style={styles.selectableItem}
-													onPress={() => toggleItemInLoadout(item.id)}
+									{/* Expanded view - show all equipment with checkboxes */}
+									<ScrollView
+										horizontal
+										showsHorizontalScrollIndicator={false}
+										style={styles.categoryFilterContainer}
+									>
+										{CATEGORIES.map((cat) => (
+											<TouchableOpacity
+												key={cat.value}
+												style={[
+													styles.categoryChip,
+													loadoutCategoryFilter === cat.value && styles.categoryChipActive,
+												]}
+												onPress={() => setLoadoutCategoryFilter(cat.value)}
+											>
+												<Text
+													style={[
+														styles.categoryChipText,
+														loadoutCategoryFilter === cat.value && styles.categoryChipTextActive,
+													]}
 												>
-												<Icon
-													name={isSelected ? 'checkbox' : 'square-outline'}
-													size={24}
-													color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
-													style={{ marginRight: 10 }}
-												/>
-												<View style={styles.itemInfo}>
-													<Text style={styles.itemName}>{item.name}</Text>
-													<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
-												</View>
+													{cat.label}
+												</Text>
 											</TouchableOpacity>
-										);
-									})}
+										))}
+									</ScrollView>
+
+									<Text style={styles.helperText}>
+										Select equipment to include in this loadout.
+									</Text>
+
+									{equipmentItems.length === 0 ? (
+										<Text style={styles.helperText}>
+											No equipment yet. Create items first.
+										</Text>
+									) : (
+										<ScrollView style={styles.equipmentCheckList} nestedScrollEnabled>
+											{equipmentItems
+												.filter((item) => loadoutCategoryFilter === 'all' || item.category === loadoutCategoryFilter)
+												.map((item) => {
+													const isSelected = tempSelectedItemIds.includes(item.id);
+													return (
+														<TouchableOpacity
+															key={item.id}
+															style={styles.selectableItem}
+															onPress={() => {
+																setTempSelectedItemIds((prev) =>
+																	prev.includes(item.id)
+																		? prev.filter((id) => id !== item.id)
+																		: [...prev, item.id]
+																);
+															}}
+														>
+															<Icon
+																name={isSelected ? 'checkbox' : 'square-outline'}
+																size={24}
+																color={isSelected ? theme.colors.primary : theme.colors.onSurfaceVariant}
+																style={{ marginRight: 10 }}
+															/>
+															<View style={styles.itemInfo}>
+																<Text style={styles.itemName}>{item.name}</Text>
+																<Text style={styles.itemDetail}>{getCategoryLabel(item.category)}</Text>
+															</View>
+														</TouchableOpacity>
+													);
+												})}
+										</ScrollView>
+									)}
+
+									{/* Save/Cancel buttons */}
+									<View style={styles.equipmentActionButtons}>
+										<Button
+											title="Cancel"
+											onPress={() => {
+												setTempSelectedItemIds([]);
+												setIsAddingEquipment(false);
+											}}
+											variant="outline"
+											style={styles.equipmentCancelButton}
+										/>
+										<Button
+											title="Save Selection"
+											onPress={() => {
+												setSelectedItemIds(tempSelectedItemIds);
+												setTempSelectedItemIds([]);
+												setIsAddingEquipment(false);
+											}}
+											variant="secondary"
+											style={styles.equipmentSaveButton}
+										/>
+									</View>
 								</>
 							)}
 						</Card>
@@ -1294,6 +1503,53 @@ export default function EquipmentSelector({
 								style={styles.addButton}
 							/>
 						</Card>
+					</ScrollView>
+				</View>
+			</Modal>
+
+			{/* Transport Mode Picker Modal */}
+			<Modal
+				visible={!!editingTransportForItem}
+				animationType="slide"
+				presentationStyle="pageSheet"
+				onRequestClose={() => setEditingTransportForItem(null)}
+			>
+				<View style={styles.modalContainer}>
+					<View style={styles.modalHeader}>
+						<TouchableOpacity
+							onPress={() => setEditingTransportForItem(null)}
+							style={styles.backButton}
+						>
+							<Icon name="chevron-back" size={28} color={theme.colors.primary} />
+						</TouchableOpacity>
+						<Text style={styles.modalTitle}>Select Transport Method</Text>
+						<View style={styles.modalHeaderSpacer} />
+					</View>
+
+					<ScrollView style={styles.modalContent}>
+						{TRANSPORT_MODES.map((mode) => (
+							<TouchableOpacity
+								key={mode.value}
+								style={[
+									styles.transportOption,
+									editingTransportForItem && itemTransportModes[editingTransportForItem] === mode.value && styles.transportOptionSelected,
+								]}
+								onPress={() => {
+									if (editingTransportForItem) {
+										setItemTransportModes(prev => ({
+											...prev,
+											[editingTransportForItem]: mode.value,
+										}));
+										setEditingTransportForItem(null);
+									}
+								}}
+							>
+								<Text style={styles.transportOptionText}>{mode.label}</Text>
+								{editingTransportForItem && itemTransportModes[editingTransportForItem] === mode.value && (
+									<Icon name="checkmark" size={24} color={theme.colors.primary} />
+								)}
+							</TouchableOpacity>
+						))}
 					</ScrollView>
 				</View>
 			</Modal>

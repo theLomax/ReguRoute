@@ -52,6 +52,8 @@ services:
       - ./apps/backend/tsconfig.json:/usr/src/app/apps/backend/tsconfig.json
       - ./apps/backend/tsconfig.migrations.json:/usr/src/app/apps/backend/tsconfig.migrations.json
       - ./apps/backend/dev-entrypoint.sh:/usr/src/app/apps/backend/dev-entrypoint.sh
+      - ./packages/types:/usr/src/app/packages/types
+      - /usr/src/app/packages/types/node_modules
       - ./tsconfig.base.json:/usr/src/app/tsconfig.base.json
     env_file: ./apps/backend/.env
     depends_on:

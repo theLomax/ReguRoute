@@ -22,7 +22,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       10,
       'N.J.S.A. 2C:39-1(y)',
       'Possession of magazines capable of holding more than 10 rounds is prohibited.'
-    );
+    ) ON CONFLICT (jurisdiction_id, category) DO NOTHING;
   `);
 
   // 2. Concealed Carry: Strict permit requirement
@@ -38,7 +38,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       true,
       'N.J.S.A. 2C:58-4',
       'New Jersey has strict permitting requirements and does not recognize permits from other states.'
-    );
+    ) ON CONFLICT (jurisdiction_id, category) DO NOTHING;
   `);
 
   // 3. Transport Requirements
@@ -55,7 +55,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       '{"must_be_unloaded": true, "must_be_locked": true, "separate_ammo": true, "must_be_in_trunk": true}',
       'N.J.S.A. 2C:39-6(g)',
       'Firearms must be unloaded and contained in a closed and fastened case, gunbox, securely tied package, or locked in the trunk.'
-    );
+    ) ON CONFLICT (jurisdiction_id, category) DO NOTHING;
   `);
 
   // Maryland Regulations
@@ -73,7 +73,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       10,
       'Md. Code, Crim. Law § 4-305',
       'Manufacturing, selling, offering for sale, purchasing, receiving, or transferring a detachable magazine that has a capacity of more than 10 rounds follows strict rules.'
-    );
+    ) ON CONFLICT (jurisdiction_id, category) DO NOTHING;
   `);
 
   // Delaware Regulations
@@ -90,7 +90,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       false,
       'Del. Const. art. I, § 20',
       'Open carry is generally legal without a permit for anyone at least 18 years of age who is not prohibited from owning a firearm.'
-    );
+    ) ON CONFLICT (jurisdiction_id, category) DO NOTHING;
   `);
 }
 

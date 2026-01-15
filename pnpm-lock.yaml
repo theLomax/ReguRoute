@@ -24,6 +24,9 @@ importers:
       '@fastify/postgres':
         specifier: ^5.2.2
         version: 5.2.2(pg@8.16.3)
+      '@reguroute/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3

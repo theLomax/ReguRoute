@@ -4,15 +4,28 @@
  */
 
 import type { PoolClient } from 'pg';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 
-export interface CargoProfile {
-	has_firearms: boolean;
-	firearm_types?: ('handgun' | 'rifle' | 'shotgun')[];
-	has_concealed_carry_permit?: boolean;
-	permit_states?: string[]; // States where permit is valid
-	ammunition_capacity?: number; // Max rounds (magazine, tube, cylinder, etc.)
-	// TODO: Future - add firearm_id to reference a firearms database
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// Write to src directory so it syncs to host via volume mount
+// Write to src directory so it syncs to host via volume mount
+const LOG_FILE = '/usr/src/app/apps/backend/src/debug_regulations.log';
+
+function logToFile(message: string, data?: any) {
+    const timestamp = new Date().toISOString();
+    const logLine = `[${timestamp}] ${message} ${data ? JSON.stringify(data, null, 2) : ''}\n`;
+    try {
+        fs.appendFileSync(LOG_FILE, logLine);
+    } catch (e) {
+        // ignore logging errors
+    }
 }
+
+import type { CargoProfile } from '@reguroute/types';
+export type { CargoProfile };
 
 export interface JurisdictionRegulation {
 	jurisdiction_id: string;
@@ -113,17 +126,41 @@ export async function getRegulationsForJurisdictions(
 /**
  * Generate alerts based on regulations and cargo profile
  */
+
 export function generateAlerts(
 	regulations: JurisdictionRegulation[],
 	cargoProfile: CargoProfile
 ): RegulationAlert[] {
 	const alerts: RegulationAlert[] = [];
+    
+    logToFile('generateAlerts called with:', { 
+        cargoProfile, 
+        regulationsCount: regulations.length,
+        regulationsSummary: regulations.map(r => `${r.jurisdiction_name}:${r.category}:${r.magazine_capacity_limit}`)
+    });
 
 	if (!cargoProfile.has_firearms) {
+        logToFile('No firearms in profile, returning empty alerts');
 		return alerts; // No firearms, no alerts needed
 	}
 
+	console.log('--- Generating Alerts ---');
+	console.log('Cargo Profile Capacity:', cargoProfile.ammunition_capacity);
+	console.log('Regulations Found:', regulations.length);
+
 	for (const reg of regulations) {
+		// console.log(`Checking ${reg.jurisdiction_name} ${reg.category}`, reg);
+
+        // Debug specific checks
+        if (reg.category === 'magazine_capacity') {
+            logToFile(`Checking magazine capacity for ${reg.jurisdiction_name}`, {
+                limit: reg.magazine_capacity_limit,
+                profileCapacity: cargoProfile.ammunition_capacity,
+                isRestricted: reg.is_restricted,
+                willAlert: (cargoProfile.ammunition_capacity || 0) > (reg.magazine_capacity_limit || 999)
+            });
+        }
+
 		// Check concealed carry requirements
 		if (reg.category === 'concealed_carry' && reg.is_restricted) {
 			if (reg.permit_required && !cargoProfile.has_concealed_carry_permit) {
@@ -229,6 +266,8 @@ export async function analyzeRoute(
 ): Promise<RouteAnalysis> {
 	// Find jurisdictions the route passes through
 	const jurisdictions = await findJurisdictionsOnRoute(client, routeGeometry);
+    
+    logToFile('analyzeRoute jurisdictions found:', jurisdictions);
 
 	if (jurisdictions.length === 0) {
 		// No jurisdictions with geometry data found - fall back to basic response
@@ -250,6 +289,8 @@ export async function analyzeRoute(
 
 	// Generate alerts based on cargo profile
 	const alerts = generateAlerts(regulations, cargoProfile);
+    
+    logToFile('analyzeRoute generated alerts:', alerts);
 
 	return {
 		jurisdictions_crossed: jurisdictions.map((j) => `${j.name} (${j.postal_code})`),
