@@ -7,6 +7,7 @@ import {
 	type RouteResult,
 } from '../services/ors.js';
 import { analyzeRoute, type CargoProfile } from '../services/regulations.js';
+import { generateRouteAlternatives, type RouteOptions } from '../services/routing.js';
 
 interface CalculateRouteBody {
 	origin: Coordinate;
@@ -20,6 +21,18 @@ interface CalculateRouteBody {
 interface SaveCalculatedRouteBody extends CalculateRouteBody {
 	name: string;
 	loadout_id?: string;
+}
+
+interface MultiRouteRequestBody {
+	origin: Coordinate;
+	destination: Coordinate;
+	loadout_id: string;
+	options?: {
+		preference?: 'compliant' | 'fast' | 'balanced';
+		avoid_states?: string[];
+		max_detour_minutes?: number;
+		generate_alternatives?: boolean;
+	};
 }
 
 const coordinateSchema = {
@@ -443,6 +456,138 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 						bbox: routeResult.bbox,
 					},
 				});
+			} finally {
+				client.release();
+			}
+		}
+	);
+
+	// POST /calculate/alternatives - Generate multiple route alternatives with smart avoidance
+	fastify.post<{ Body: MultiRouteRequestBody }>(
+		'/alternatives',
+		{
+			onRequest: [fastify.authenticate],
+			schema: {
+				body: {
+					type: 'object',
+					required: ['origin', 'destination', 'loadout_id'],
+					properties: {
+						origin: coordinateSchema,
+						destination: coordinateSchema,
+						loadout_id: { type: 'string', format: 'uuid' },
+						options: {
+							type: 'object',
+							properties: {
+								preference: { 
+									type: 'string', 
+									enum: ['compliant', 'fast', 'balanced'],
+									default: 'balanced'
+								},
+								avoid_states: { 
+									type: 'array', 
+									items: { type: 'string', pattern: '^[A-Z]{2}$' }
+								},
+								max_detour_minutes: { type: 'number', minimum: 0, maximum: 240 },
+								generate_alternatives: { type: 'boolean', default: true },
+							},
+						},
+					},
+				},
+			},
+		},
+		async (request, reply) => {
+			const { origin, destination, loadout_id, options = {} } = request.body;
+			const userId = request.user.id;
+
+			const client = await fastify.pg.connect();
+			try {
+				// Get loadout and build cargo profile (reuse logic from validate-locations)
+				const loadoutResult = await client.query(
+					`SELECT l.*, array_agg(
+						json_build_object(
+							'id', ei.id,
+							'category', ei.category,
+							'platform', ei.platform,
+							'ammunition_capacity', ei.ammunition_capacity,
+							'nfa_subtype', ei.nfa_subtype
+						)
+					) as items
+					FROM loadouts l
+					LEFT JOIN loadout_items li ON l.id = li.loadout_id
+					LEFT JOIN equipment_items ei ON li.equipment_item_id = ei.id
+					WHERE l.id = $1 AND l.user_id = $2
+					GROUP BY l.id`,
+					[loadout_id, userId]
+				);
+
+				if (loadoutResult.rows.length === 0) {
+					return reply.code(404).send({ error: 'Loadout not found' });
+				}
+
+				const loadout = loadoutResult.rows[0];
+				const items = loadout.items.filter((item: any) => item.id !== null);
+
+				// Build cargo profile from loadout
+				const cargoProfile: CargoProfile = {
+					has_firearms: items.some((item: any) => ['handgun', 'rifle', 'shotgun'].includes(item.category)),
+					firearm_platforms: [...new Set(items.filter((item: any) => item.platform).map((item: any) => item.platform))],
+					max_ammunition_capacity_by_platform: {
+						handgun: Math.max(0, ...items.filter((item: any) => item.platform === 'handgun').map((item: any) => item.ammunition_capacity || 0)),
+						rifle: Math.max(0, ...items.filter((item: any) => item.platform === 'rifle').map((item: any) => item.ammunition_capacity || 0)),
+						shotgun: Math.max(0, ...items.filter((item: any) => item.platform === 'shotgun').map((item: any) => item.ammunition_capacity || 0)),
+					},
+					has_nfa_items: items.some((item: any) => item.category === 'nfa_item'),
+					nfa_subtypes: [...new Set(items.filter((item: any) => item.nfa_subtype).map((item: any) => item.nfa_subtype))],
+					has_concealed_carry_permit: false, // TODO: Get from user permits
+					permit_states: [], // TODO: Get from user permits
+					has_handgun: items.some((item: any) => item.category === 'handgun'),
+					has_rifle: items.some((item: any) => item.category === 'rifle'),
+					has_shotgun: items.some((item: any) => item.category === 'shotgun'),
+					has_suppressor: items.some((item: any) => item.nfa_subtype === 'suppressor'),
+					has_sbr: items.some((item: any) => item.nfa_subtype === 'sbr'),
+					has_sbs: items.some((item: any) => item.nfa_subtype === 'sbs'),
+					ammunition_capacity: Math.max(0, ...items.map((item: any) => item.ammunition_capacity || 0)),
+				};
+
+				// Generate route alternatives using the new routing service
+				const routeOptions: RouteOptions = {
+					preference: options.preference || 'balanced',
+					avoid_states: options.avoid_states,
+					max_detour_minutes: options.max_detour_minutes,
+					generate_alternatives: options.generate_alternatives !== false, // Default to true
+				};
+
+				const multiRouteResponse = await generateRouteAlternatives(
+					client,
+					origin,
+					destination,
+					cargoProfile,
+					routeOptions
+				);
+
+				return {
+					loadout_id,
+					loadout_name: loadout.name,
+					origin_coordinates: origin,
+					destination_coordinates: destination,
+					options: routeOptions,
+					...multiRouteResponse,
+					metadata: {
+						total_routes_generated: multiRouteResponse.routes.length,
+						cargo_profile_summary: {
+							has_firearms: cargoProfile.has_firearms,
+							max_capacity: cargoProfile.ammunition_capacity,
+							platforms: cargoProfile.firearm_platforms,
+							nfa_items: cargoProfile.has_nfa_items,
+						},
+						generated_at: new Date().toISOString(),
+					},
+				};
+
+			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Route alternatives generation failed';
+				fastify.log.error('Route alternatives error:', error);
+				return reply.code(500).send({ error: message });
 			} finally {
 				client.release();
 			}
