@@ -28,7 +28,7 @@ interface LocationInput {
 	coordinates: Coordinates | null;
 }
 
-type WizardStep = 'equipment' | 'locations' | 'preview';
+type WizardStep = 'equipment' | 'locations' | 'validation' | 'preview';
 
 export default function RoutePlanScreen() {
 	const theme = useTheme();
@@ -50,6 +50,10 @@ export default function RoutePlanScreen() {
 	const [isCalculating, setIsCalculating] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [routePreview, setRoutePreview] = useState<CalculateRouteResponse | null>(null);
+
+	// Validation state
+	const [isValidating, setIsValidating] = useState(false);
+	const [validationResults, setValidationResults] = useState<any>(null);
 
 	// Restriction analysis state
 	const [restrictedJurisdictions, setRestrictedJurisdictions] = useState<RestrictedJurisdiction[]>([]);
@@ -166,6 +170,63 @@ export default function RoutePlanScreen() {
 	const handleDestinationSelect = (name: string, coordinates: Coordinates) => {
 		setDestination({ name, coordinates });
 	};
+
+	const handleValidateLocations = useCallback(async () => {
+		if (!origin.coordinates || !destination.coordinates) {
+			Alert.alert('Invalid Locations', 'Please select valid cities from the suggestions.');
+			return;
+		}
+
+		if (selectedLoadouts.length === 0) {
+			Alert.alert('No Equipment Selected', 'Please select a loadout before validating locations.');
+			return;
+		}
+
+		setIsValidating(true);
+		try {
+			// Use the first selected loadout for validation
+			const primaryLoadout = selectedLoadouts[0];
+			
+			const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/calculate/validate-locations`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`,
+				},
+				body: JSON.stringify({
+					loadout_id: primaryLoadout.id,
+					locations: [
+						{
+							lat: origin.coordinates.lat,
+							lng: origin.coordinates.lng,
+							name: origin.name,
+							type: 'origin',
+						},
+						{
+							lat: destination.coordinates.lat,
+							lng: destination.coordinates.lng,
+							name: destination.name,
+							type: 'destination',
+						},
+					],
+				}),
+			});
+
+			if (!response.ok) {
+				throw new Error(`Validation failed: ${response.statusText}`);
+			}
+
+			const results = await response.json();
+			setValidationResults(results);
+			setStep('validation');
+
+		} catch (error) {
+			Alert.alert('Validation Error', 'Failed to validate locations. Please try again.');
+			console.error('Location validation error:', error);
+		} finally {
+			setIsValidating(false);
+		}
+	}, [origin.coordinates, destination.coordinates, selectedLoadouts, token]);
 
 	const handleCalculateRoute = useCallback(async () => {
 		if (!origin.coordinates || !destination.coordinates) {
@@ -515,6 +576,120 @@ export default function RoutePlanScreen() {
 		);
 	}
 
+	if (step === 'validation' && validationResults) {
+		const nonCompliantLocations = validationResults.location_results.filter((r: any) => !r.is_compliant);
+		const hasWarnings = validationResults.summary.total_warning_alerts > 0;
+		const hasCritical = validationResults.summary.total_critical_alerts > 0;
+
+		return (
+			<ScrollView style={styles.container} contentContainerStyle={styles.content}>
+				<Text style={styles.stepTitle}>Location Compliance Check</Text>
+				<Text style={styles.description}>
+					Checking your equipment against regulations at your selected locations.
+				</Text>
+
+				{/* Overall status */}
+				<Card style={styles.validationCard}>
+					<View style={styles.validationHeader}>
+						<Icon 
+							name={validationResults.overall_compliance ? "checkmark-circle" : "warning"} 
+							size={24} 
+							color={validationResults.overall_compliance ? statusColors.go : statusColors.caution} 
+						/>
+						<Text style={[
+							styles.validationTitle, 
+							{ color: validationResults.overall_compliance ? statusColors.go : statusColors.caution }
+						]}>
+							{validationResults.overall_compliance ? "All Locations Compliant" : "Compliance Issues Found"}
+						</Text>
+					</View>
+					<Text style={styles.validationSummary}>
+						{validationResults.summary.compliant_locations} of {validationResults.summary.total_locations} locations are compliant
+						{hasCritical && ` • ${validationResults.summary.total_critical_alerts} critical alerts`}
+						{hasWarnings && ` • ${validationResults.summary.total_warning_alerts} warnings`}
+					</Text>
+				</Card>
+
+				{/* Location details */}
+				{validationResults.location_results.map((location: any, index: number) => (
+					<Card key={index} style={styles.locationCard}>
+						<View style={styles.locationHeader}>
+							<Icon 
+								name={location.type === 'origin' ? 'location' : 'flag'} 
+								size={20} 
+								color={location.is_compliant ? statusColors.go : statusColors.noGo} 
+							/>
+							<Text style={styles.locationName}>{location.location}</Text>
+							<Text style={[
+								styles.complianceStatus,
+								{ color: location.is_compliant ? statusColors.go : statusColors.noGo }
+							]}>
+								{location.is_compliant ? "✓ Compliant" : "⚠ Issues"}
+							</Text>
+						</View>
+
+						{location.alerts.length > 0 && (
+							<View style={styles.alertsList}>
+								{location.alerts.map((alert: any, alertIndex: number) => (
+									<View key={alertIndex} style={styles.alert}>
+										<Text style={[
+											styles.alertSeverity,
+											{ color: alert.severity === 'critical' ? statusColors.noGo : statusColors.caution }
+										]}>
+											{alert.severity.toUpperCase()}
+										</Text>
+										<Text style={styles.alertMessage}>{alert.message}</Text>
+										{alert.citation && (
+											<Text style={styles.alertCitation}>{alert.citation}</Text>
+										)}
+									</View>
+								))}
+							</View>
+						)}
+					</Card>
+				))}
+
+				{/* Suggestions */}
+				{validationResults.suggested_modifications.length > 0 && (
+					<Card style={styles.suggestionsCard}>
+						<Text style={styles.suggestionsTitle}>Suggested Modifications</Text>
+						{validationResults.suggested_modifications.map((suggestion: any, index: number) => (
+							<View key={index} style={styles.suggestion}>
+								<Text style={styles.suggestionDescription}>{suggestion.description}</Text>
+								<Text style={styles.suggestionImpact}>{suggestion.impact}</Text>
+							</View>
+						))}
+					</Card>
+				)}
+
+				<View style={styles.buttonRow}>
+					<Button
+						title="Back"
+						onPress={() => setStep('locations')}
+						variant="outline"
+						style={styles.backButton}
+					/>
+					{validationResults.overall_compliance ? (
+						<Button
+							title="Calculate Route"
+							onPress={handleCalculateRoute}
+							loading={isCalculating}
+							style={styles.calculateButton}
+						/>
+					) : (
+						<Button
+							title="Continue Anyway"
+							onPress={handleCalculateRoute}
+							loading={isCalculating}
+							variant="outline"
+							style={styles.calculateButton}
+						/>
+					)}
+				</View>
+			</ScrollView>
+		);
+	}
+
 	if (step === 'preview' && routePreview) {
 		return (
 			<ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -664,7 +839,7 @@ export default function RoutePlanScreen() {
 				<View style={styles.buttonRow}>
 					<Button
 						title="Back"
-						onPress={() => setStep('locations')}
+						onPress={() => setStep('validation')}
 						variant="outline"
 						style={styles.backButton}
 					/>
@@ -746,8 +921,8 @@ export default function RoutePlanScreen() {
 					</Card>
 				)}
 
-				{isCalculating ? (
-					<LoadingSpinner message="Calculating route..." />
+				{isValidating ? (
+					<LoadingSpinner message="Validating locations..." />
 				) : (
 					<View style={styles.buttonRow}>
 						<Button
@@ -757,9 +932,9 @@ export default function RoutePlanScreen() {
 							style={styles.backButton}
 						/>
 						<Button
-							title="Calculate Route"
-							onPress={handleCalculateRoute}
-							disabled={!origin.coordinates || !destination.coordinates}
+							title="Validate Locations"
+							onPress={handleValidateLocations}
+							disabled={!origin.coordinates || !destination.coordinates || selectedLoadouts.length === 0}
 							style={styles.calculateButton}
 						/>
 					</View>
