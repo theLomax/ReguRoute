@@ -55,6 +55,9 @@ export default function RoutePlanScreen() {
 	const [isValidating, setIsValidating] = useState(false);
 	const [validationResults, setValidationResults] = useState<any>(null);
 
+	// Multi-route state
+	const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
+
 	// Restriction analysis state
 	const [restrictedJurisdictions, setRestrictedJurisdictions] = useState<RestrictedJurisdiction[]>([]);
 
@@ -234,50 +237,87 @@ export default function RoutePlanScreen() {
 			return;
 		}
 
+		if (selectedLoadouts.length === 0) {
+			Alert.alert('No Equipment Selected', 'Please select a loadout before calculating routes.');
+			return;
+		}
+
 		setIsCalculating(true);
 		setRestrictedJurisdictions([]);
 
 		try {
-			// Step 1: Calculate INITIAL route without avoidance to detect states crossed
-			const result = await routesApi.calculate({
-				origin: origin.coordinates,
-				destination: destination.coordinates,
-				cargo_profile: activeCargoProfile || undefined,
+			const primaryLoadout = selectedLoadouts[0];
+
+			// Call the new multi-route alternatives API
+			const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/calculate/alternatives`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`,
+				},
+				body: JSON.stringify({
+					origin: origin.coordinates,
+					destination: destination.coordinates,
+					loadout_id: primaryLoadout.id,
+					options: {
+						preference: 'balanced',
+						generate_alternatives: true,
+					},
+				}),
 			});
 
-			// Output states crossed to console
-			if (result.analysis) {
-				console.log('\n========================================');
-				console.log('🗺️  ROUTE CALCULATED');
-				console.log('========================================');
-				console.log(`From: ${origin.name}`);
-				console.log(`To: ${destination.name}`);
-				console.log(`Distance: ${(result.route.summary.distance_meters / 1609.34).toFixed(1)} miles`);
-				console.log(`Duration: ${Math.round(result.route.summary.duration_seconds / 60)} minutes`);
-				console.log('\n📍 States Crossed:');
-				result.analysis.jurisdictions_crossed.forEach(state => {
-					console.log(`   • ${state}`);
-				});
-				if (result.analysis.alerts.length > 0) {
-					console.log('\n⚠️  Regulation Alerts:');
-					console.log(`   Critical: ${result.analysis.summary.critical_alerts}`);
-					console.log(`   Warning: ${result.analysis.summary.warning_alerts}`);
-					console.log(`   Info: ${result.analysis.summary.info_alerts}`);
-				} else {
-					console.log('\n✅ No regulation alerts');
-				}
-				console.log('========================================\n');
+			if (!response.ok) {
+				throw new Error(`Route calculation failed: ${response.statusText}`);
 			}
 
-			setRoutePreview(result);
+			const multiRouteResult = await response.json();
+
+			// Output route alternatives to console
+			console.log('\n========================================');
+			console.log('🗺️  ROUTE ALTERNATIVES GENERATED');
+			console.log('========================================');
+			console.log(`From: ${origin.name}`);
+			console.log(`To: ${destination.name}`);
+			console.log(`Loadout: ${multiRouteResult.loadout_name}`);
+			console.log(`Total Routes: ${multiRouteResult.routes.length}`);
+			console.log(`Recommended: Route ${multiRouteResult.recommendation.recommended_route_index + 1} - ${multiRouteResult.recommendation.reason}`);
+			console.log(`Compliance: ${multiRouteResult.recommendation.compliance_summary}`);
+
+			multiRouteResult.routes.forEach((route: any, index: number) => {
+				console.log(`\n📍 Route ${index + 1} (${route.metadata.route_type}):`);
+				console.log(`   Distance: ${(route.route.summary.distance / 1609.34).toFixed(1)} miles`);
+				console.log(`   Duration: ${Math.round(route.route.summary.duration / 60)} minutes`);
+				console.log(`   Compliance Score: ${route.scores.compliance_score}/100`);
+				console.log(`   Efficiency Score: ${route.scores.efficiency_score}/100`);
+				console.log(`   Overall Score: ${route.scores.overall_score}/100`);
+				if (route.metadata.detour_minutes > 0) {
+					console.log(`   Detour: +${route.metadata.detour_minutes} minutes (${route.metadata.detour_percentage}%)`);
+				}
+				if (route.metadata.restricted_states_avoided.length > 0) {
+					console.log(`   States Avoided: ${route.metadata.restricted_states_avoided.join(', ')}`);
+				}
+				
+				const criticalAlerts = route.analysis.alerts.filter((a: any) => a.severity === 'critical').length;
+				const warningAlerts = route.analysis.alerts.filter((a: any) => a.severity === 'warning').length;
+				
+				if (criticalAlerts > 0 || warningAlerts > 0) {
+					console.log(`   Alerts: ${criticalAlerts} critical, ${warningAlerts} warnings`);
+				} else {
+					console.log('   ✅ No compliance issues');
+				}
+			});
+			console.log('========================================\n');
+
+			// Store the multi-route result and navigate to preview
+			setRoutePreview(multiRouteResult);
 			setStep('preview');
 		} catch (error) {
-			Alert.alert('Error', 'Failed to calculate route. Please try again.');
-			console.error('Route calculation error:', error);
+			Alert.alert('Error', 'Failed to calculate route alternatives. Please try again.');
+			console.error('Route alternatives calculation error:', error);
 		} finally {
 			setIsCalculating(false);
 		}
-	}, [origin.coordinates, destination.coordinates, activeCargoProfile]);
+	}, [origin.coordinates, destination.coordinates, selectedLoadouts, token]);
 
 	const handleSaveRoute = useCallback(async () => {
 		if (!routePreview || !origin.coordinates || !destination.coordinates) return;
