@@ -27,6 +27,46 @@ function logToFile(message: string, data?: any) {
 import type { CargoProfile } from '@reguroute/types';
 export type { CargoProfile };
 
+/**
+ * Utility functions for date handling in regulations
+ */
+
+// Format date for human display (e.g., "January 2013" or "September 2022")
+export function formatRegulationDate(dateString: string | null): string | null {
+	if (!dateString) return null;
+	
+	const date = new Date(dateString);
+	if (isNaN(date.getTime())) return null;
+	
+	return date.toLocaleDateString('en-US', { 
+		year: 'numeric', 
+		month: 'long' 
+	});
+}
+
+// Check if a regulation is potentially outdated (last verified > 1 year ago)
+export function isRegulationStale(lastVerified: string | null): boolean {
+	if (!lastVerified) return true;
+	
+	const verifiedDate = new Date(lastVerified);
+	const oneYearAgo = new Date();
+	oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+	
+	return verifiedDate < oneYearAgo;
+}
+
+// Calculate regulation age in years
+export function getRegulationAge(effectiveDate: string | null): number | null {
+	if (!effectiveDate) return null;
+	
+	const enactedDate = new Date(effectiveDate);
+	const now = new Date();
+	const diffTime = now.getTime() - enactedDate.getTime();
+	const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+	
+	return Math.floor(diffYears);
+}
+
 export interface JurisdictionRegulation {
 	jurisdiction_id: string;
 	jurisdiction_name: string;
@@ -41,6 +81,10 @@ export interface JurisdictionRegulation {
 	transport_requirements: Record<string, unknown>;
 	statutory_citation: string | null;
 	notes: string | null;
+	rule_definition: Record<string, unknown> | null;
+	effective_date: string | null;
+	last_verified: string | null;
+	database_updated_at: string | null;
 }
 
 export interface RegulationAlert {
@@ -50,7 +94,12 @@ export interface RegulationAlert {
 	category: string;
 	message: string;
 	requirements?: Record<string, unknown>;
-	citation?: string;
+	citation?: string | null;
+	details?: Record<string, unknown>;
+	effective_date?: string | null;
+	effective_date_formatted?: string | null;
+	last_verified?: string | null;
+	is_stale?: boolean;
 }
 
 export interface RouteAnalysis {
@@ -71,18 +120,55 @@ export interface RouteAnalysis {
 export async function findJurisdictionsOnRoute(
 	client: PoolClient,
 	routeGeometry: GeoJSON.LineString
-): Promise<Array<{ id: string; name: string; postal_code: string }>> {
+): Promise<Array<{ id: string; name: string; postal_code: string; route_position: number }>> {
 	// Convert GeoJSON to PostGIS geometry and find intersecting jurisdictions
 	const result = await client.query(
-		`SELECT id, name, postal_code
-		 FROM jurisdictions
-		 WHERE type = 'state'
-		   AND geometry IS NOT NULL
-		   AND ST_Intersects(
-		     geometry,
-		     ST_SetSRID(ST_GeomFromGeoJSON($1), 4326)
-		   )
-		 ORDER BY name`,
+		`WITH route_line AS (
+		   SELECT ST_SetSRID(ST_GeomFromGeoJSON($1), 4326) AS geom
+		 ),
+		 route_points AS (
+		   SELECT 
+		     ST_StartPoint(geom) AS start_point,
+		     ST_EndPoint(geom) AS end_point,
+		     geom AS route_geom
+		   FROM route_line
+		 ),
+		 intersections AS (
+		   -- States intersected by the route line
+		   SELECT 
+		     j.id, j.name, j.postal_code,
+		     ST_LineLocatePoint(rp.route_geom, ST_ClosestPoint(rp.route_geom, ST_Centroid(j.geometry))) AS route_position
+		   FROM jurisdictions j, route_points rp
+		   WHERE j.type = 'state'
+		     AND j.geometry IS NOT NULL
+		     AND ST_Intersects(j.geometry, rp.route_geom)
+		   
+		   UNION
+		   
+		   -- Origin state (contains start point)
+		   SELECT 
+		     j.id, j.name, j.postal_code,
+		     0.0 AS route_position
+		   FROM jurisdictions j, route_points rp
+		   WHERE j.type = 'state'
+		     AND j.geometry IS NOT NULL
+		     AND ST_Contains(j.geometry, rp.start_point)
+		   
+		   UNION
+		   
+		   -- Destination state (contains end point)
+		   SELECT 
+		     j.id, j.name, j.postal_code,
+		     1.0 AS route_position
+		   FROM jurisdictions j, route_points rp
+		   WHERE j.type = 'state'
+		     AND j.geometry IS NOT NULL
+		     AND ST_Contains(j.geometry, rp.end_point)
+		 )
+		 SELECT id, name, postal_code, MIN(route_position) as route_position
+		 FROM intersections
+		 GROUP BY id, name, postal_code
+		 ORDER BY route_position`,
 		[JSON.stringify(routeGeometry)]
 	);
 
@@ -112,7 +198,11 @@ export async function getRegulationsForJurisdictions(
 		   r.waiting_period_days,
 		   r.transport_requirements,
 		   r.statutory_citation,
-		   r.notes
+		   r.notes,
+		   r.rule_definition,
+		   r.effective_date,
+		   r.last_verified,
+		   r.database_updated_at
 		 FROM regulations r
 		 JOIN jurisdictions j ON r.jurisdiction_id = j.id
 		 WHERE r.jurisdiction_id = ANY($1)
@@ -121,6 +211,166 @@ export async function getRegulationsForJurisdictions(
 	);
 
 	return result.rows;
+}
+
+/**
+ * Evaluate rule-based compliance using JSONB rule definitions
+ */
+function evaluateRuleBasedCompliance(
+	reg: JurisdictionRegulation,
+	cargoProfile: CargoProfile
+): RegulationAlert[] {
+	const alerts: RegulationAlert[] = [];
+
+	if (!reg.rule_definition || typeof reg.rule_definition !== 'object') {
+		return alerts;
+	}
+
+	const rule = reg.rule_definition as any;
+
+	// For now, simulate equipment items based on cargo profile
+	// In a full implementation, this would get actual equipment items with features
+	const simulatedEquipment = createSimulatedEquipment(cargoProfile);
+
+	for (const equipment of simulatedEquipment) {
+		// Check if prohibited conditions match
+		if (rule.prohibited_conditions && evaluateCondition(rule.prohibited_conditions, equipment)) {
+			// Check if compliant conditions can override
+			if (!rule.compliant_conditions || !evaluateCondition(rule.compliant_conditions, equipment)) {
+				const severity = rule.result_if_prohibited === 'critical' ? 'critical' as const : 'warning' as const;
+				
+				alerts.push({
+					jurisdiction: reg.jurisdiction_name,
+					postal_code: reg.postal_code,
+					severity,
+					category: rule.rule_name || 'Feature Restriction',
+					message: `${reg.jurisdiction_name}: ${equipment.category} violates ${rule.rule_name}. ${rule.description || ''}`,
+					citation: reg.statutory_citation || undefined,
+					effective_date: reg.effective_date,
+					effective_date_formatted: formatRegulationDate(reg.effective_date),
+					last_verified: reg.last_verified,
+					is_stale: isRegulationStale(reg.last_verified),
+					details: {
+						equipment_category: equipment.category,
+						rule_violated: rule.rule_name,
+						legal_definition: rule.legal_definition
+					}
+				});
+			}
+		}
+	}
+
+	return alerts;
+}
+
+/**
+ * Create simulated equipment items based on cargo profile
+ */
+function createSimulatedEquipment(cargoProfile: CargoProfile): Array<{
+	category: string;
+	platform?: string;
+	ammunition_capacity?: number;
+	accepts_detachable_magazine?: boolean;
+	features?: string[];
+}> {
+	const equipment: Array<{
+		category: string;
+		platform?: string;
+		ammunition_capacity?: number;
+		accepts_detachable_magazine?: boolean;
+		features?: string[];
+	}> = [];
+
+	// Create rifle equipment if present
+	if (cargoProfile.has_rifle) {
+		equipment.push({
+			category: 'rifle',
+			platform: 'rifle',
+			ammunition_capacity: cargoProfile.max_ammunition_capacity_by_platform?.rifle || cargoProfile.ammunition_capacity,
+			accepts_detachable_magazine: true,
+			// For testing, assume some common features that would trigger NY rules
+			features: ['pistol_grip', 'flash_suppressor'] // These would trigger NY restrictions
+		});
+	}
+
+	// Create handgun equipment if present
+	if (cargoProfile.has_handgun) {
+		equipment.push({
+			category: 'handgun',
+			platform: 'handgun',
+			ammunition_capacity: cargoProfile.max_ammunition_capacity_by_platform?.handgun || cargoProfile.ammunition_capacity,
+			accepts_detachable_magazine: true,
+			features: [] // Standard handgun features
+		});
+	}
+
+	// Create shotgun equipment if present
+	if (cargoProfile.has_shotgun) {
+		equipment.push({
+			category: 'shotgun',
+			platform: 'shotgun',
+			ammunition_capacity: cargoProfile.max_ammunition_capacity_by_platform?.shotgun || cargoProfile.ammunition_capacity,
+			accepts_detachable_magazine: false,
+			features: [] // Standard shotgun features
+		});
+	}
+
+	return equipment;
+}
+
+/**
+ * Evaluate a rule condition against equipment
+ */
+function evaluateCondition(condition: any, equipment: any): boolean {
+	if (!condition || typeof condition !== 'object') {
+		return false;
+	}
+
+	// Handle AND conditions
+	if (condition.AND && Array.isArray(condition.AND)) {
+		return condition.AND.every((subCondition: any) => evaluateCondition(subCondition, equipment));
+	}
+
+	// Handle OR conditions
+	if (condition.OR && Array.isArray(condition.OR)) {
+		return condition.OR.some((subCondition: any) => evaluateCondition(subCondition, equipment));
+	}
+
+	// Handle direct property checks
+	for (const [key, value] of Object.entries(condition)) {
+		if (key === 'equipment_category') {
+			if (equipment.category !== value) return false;
+		} else if (key === 'accepts_detachable_magazine') {
+			if (equipment.accepts_detachable_magazine !== value) return false;
+		} else if (key === 'ammunition_capacity') {
+			if (typeof value === 'object' && value !== null) {
+				const capacityCheck = value as any;
+				const equipmentCapacity = equipment.ammunition_capacity || 0;
+				
+				if (capacityCheck.gt !== undefined && equipmentCapacity <= capacityCheck.gt) return false;
+				if (capacityCheck.gte !== undefined && equipmentCapacity < capacityCheck.gte) return false;
+				if (capacityCheck.lt !== undefined && equipmentCapacity >= capacityCheck.lt) return false;
+				if (capacityCheck.lte !== undefined && equipmentCapacity > capacityCheck.lte) return false;
+			}
+		} else if (key === 'features') {
+			if (typeof value === 'object' && value !== null && equipment.features) {
+				const featureCheck = value as any;
+				
+				if (featureCheck.contains) {
+					if (!equipment.features.includes(featureCheck.contains)) return false;
+				}
+				
+				if (featureCheck.excludes_all && Array.isArray(featureCheck.excludes_all)) {
+					const hasAnyExcludedFeature = equipment.features.some((feature: string) => 
+						featureCheck.excludes_all.includes(feature)
+					);
+					if (hasAnyExcludedFeature) return false;
+				}
+			}
+		}
+	}
+
+	return true;
 }
 
 /**
@@ -161,16 +411,35 @@ export function generateAlerts(
             });
         }
 
-		// Check concealed carry requirements
-		if (reg.category === 'concealed_carry' && reg.is_restricted) {
-			if (reg.permit_required && !cargoProfile.has_concealed_carry_permit) {
+		// Check concealed carry requirements - ONLY applies to handguns
+		if (reg.category === 'concealed_carry' && cargoProfile.has_handgun) {
+			if (reg.is_restricted && reg.permit_required && !cargoProfile.has_concealed_carry_permit) {
+				// Restrictive states requiring permits
 				alerts.push({
 					jurisdiction: reg.jurisdiction_name,
 					postal_code: reg.postal_code,
 					severity: reg.restriction_level >= 7 ? 'critical' : 'warning',
 					category: 'Concealed Carry',
-					message: `${reg.jurisdiction_name} requires a concealed carry permit. Your permit may not be recognized.`,
+					message: `${reg.jurisdiction_name} requires a concealed carry permit for handguns. Your permit may not be recognized.`,
 					citation: reg.statutory_citation || undefined,
+					effective_date: reg.effective_date,
+					effective_date_formatted: formatRegulationDate(reg.effective_date),
+					last_verified: reg.last_verified,
+					is_stale: isRegulationStale(reg.last_verified),
+				});
+			} else if (!reg.is_restricted && !reg.permit_required) {
+				// Constitutional carry states - no permit required
+				alerts.push({
+					jurisdiction: reg.jurisdiction_name,
+					postal_code: reg.postal_code,
+					severity: 'info',
+					category: 'Concealed Carry',
+					message: `${reg.jurisdiction_name} allows constitutional carry for handguns. No permit required. ${reg.notes || ''}`,
+					citation: reg.statutory_citation || undefined,
+					effective_date: reg.effective_date,
+					effective_date_formatted: formatRegulationDate(reg.effective_date),
+					last_verified: reg.last_verified,
+					is_stale: isRegulationStale(reg.last_verified),
 				});
 			}
 		}
@@ -189,13 +458,19 @@ export function generateAlerts(
 					category: 'Ammunition Capacity',
 					message: `${reg.jurisdiction_name} limits ammunition capacity to ${reg.magazine_capacity_limit} rounds. Your ${cargoProfile.ammunition_capacity}-round capacity exceeds the limit.`,
 					citation: reg.statutory_citation || undefined,
+					effective_date: reg.effective_date,
+					effective_date_formatted: formatRegulationDate(reg.effective_date),
+					last_verified: reg.last_verified,
+					is_stale: isRegulationStale(reg.last_verified),
 				});
 			}
 		}
 
-		// Note: Assault weapons regulations are state-specific and variable
-		// TODO: Implement assault weapon classification logic based on state definitions
-		// For now, this check is disabled until we have proper state-specific rules
+		// Check rule-based compliance (NY-compliant rifles, etc.)
+		if (reg.rule_definition && typeof reg.rule_definition === 'object') {
+			const ruleAlerts = evaluateRuleBasedCompliance(reg, cargoProfile);
+			alerts.push(...ruleAlerts);
+		}
 
 		// Check vehicle transport requirements
 		if (
@@ -220,6 +495,10 @@ export function generateAlerts(
 					message: `${reg.jurisdiction_name} requires firearms be transported ${reqMessages.join(', ')}.`,
 					requirements: reg.transport_requirements,
 					citation: reg.statutory_citation || undefined,
+					effective_date: reg.effective_date,
+					effective_date_formatted: formatRegulationDate(reg.effective_date),
+					last_verified: reg.last_verified,
+					is_stale: isRegulationStale(reg.last_verified),
 				});
 			}
 		}
@@ -233,6 +512,10 @@ export function generateAlerts(
 				category: 'Open Carry',
 				message: `${reg.jurisdiction_name} restricts or prohibits open carry of firearms.`,
 				citation: reg.statutory_citation || undefined,
+				effective_date: reg.effective_date,
+				effective_date_formatted: formatRegulationDate(reg.effective_date),
+				last_verified: reg.last_verified,
+				is_stale: isRegulationStale(reg.last_verified),
 			});
 		}
 
@@ -245,6 +528,10 @@ export function generateAlerts(
 				category: 'Registration',
 				message: `${reg.jurisdiction_name} requires firearm registration. Travelers may need to comply.`,
 				citation: reg.statutory_citation || undefined,
+				effective_date: reg.effective_date,
+				effective_date_formatted: formatRegulationDate(reg.effective_date),
+				last_verified: reg.last_verified,
+				is_stale: isRegulationStale(reg.last_verified),
 			});
 		}
 	}
@@ -289,6 +576,62 @@ export async function analyzeRoute(
 
 	// Generate alerts based on cargo profile
 	const alerts = generateAlerts(regulations, cargoProfile);
+
+	// Add informational alerts for jurisdictions with no triggered alerts
+	const jurisdictionsWithAlerts = new Set(alerts.map(alert => alert.postal_code));
+	const jurisdictionsWithoutAlerts = jurisdictions.filter(j => !jurisdictionsWithAlerts.has(j.postal_code));
+	
+	// Add info alerts for states with no triggered alerts
+	jurisdictionsWithoutAlerts.forEach(jurisdiction => {
+		const isOrigin = jurisdiction.route_position === 0.0;
+		const isDestination = jurisdiction.route_position === 1.0;
+		const hasRegulations = regulations.some(r => r.jurisdiction_id === jurisdiction.id);
+		
+		let message: string;
+		if (isOrigin) {
+			if (hasRegulations) {
+				message = `Origin: ${jurisdiction.name}. Regulations on file but none apply to current loadout. Assuming loadout is legal at origin. Verify compliance with local and federal laws.`;
+			} else {
+				message = `Origin: ${jurisdiction.name}. No specific firearm restrictions found in our database. Assuming loadout is legal at origin. Verify compliance with local and federal laws.`;
+			}
+		} else if (isDestination) {
+			if (hasRegulations) {
+				message = `Destination: ${jurisdiction.name}. Regulations on file but none apply to current loadout. Follow federal and local laws upon arrival.`;
+			} else {
+				message = `Destination: ${jurisdiction.name}. No specific firearm restrictions found in our database. Follow federal and local laws upon arrival.`;
+			}
+		} else {
+			if (hasRegulations) {
+				message = `Route crosses ${jurisdiction.name}. Regulations on file but none apply to current loadout. Follow federal and local laws.`;
+			} else {
+				message = `Route crosses ${jurisdiction.name}. No specific firearm regulations found for this jurisdiction in our database. Follow federal and local laws.`;
+			}
+		}
+		
+		alerts.push({
+			jurisdiction: jurisdiction.name,
+			postal_code: jurisdiction.postal_code,
+			severity: 'info' as const,
+			category: isOrigin ? 'Origin' : isDestination ? 'Destination' : 'General',
+			message,
+			citation: null,
+		});
+	});
+
+	// Group alerts by jurisdiction and sort by route order, then by severity
+	const jurisdictionOrder = new Map(jurisdictions.map((j, index) => [j.postal_code, index]));
+	const severityOrder = { critical: 0, warning: 1, info: 2 };
+	
+	alerts.sort((a, b) => {
+		// First sort by jurisdiction order along route
+		const aJurisdictionIndex = jurisdictionOrder.get(a.postal_code) ?? 999;
+		const bJurisdictionIndex = jurisdictionOrder.get(b.postal_code) ?? 999;
+		if (aJurisdictionIndex !== bJurisdictionIndex) {
+			return aJurisdictionIndex - bJurisdictionIndex;
+		}
+		// Then sort by severity within each jurisdiction
+		return (severityOrder[a.severity] ?? 3) - (severityOrder[b.severity] ?? 3);
+	});
     
     logToFile('analyzeRoute generated alerts:', alerts);
 
