@@ -67,6 +67,116 @@ export function getRegulationAge(effectiveDate: string | null): number | null {
 	return Math.floor(diffYears);
 }
 
+// Get all stale regulations that need verification (last verified > threshold days)
+export async function getStaleRegulations(
+	client: PoolClient, 
+	thresholdDays: number = 365
+): Promise<Array<{
+	jurisdiction_name: string;
+	postal_code: string;
+	category: string;
+	last_verified: string;
+	days_since_verified: number;
+	statutory_citation: string;
+}>> {
+	const result = await client.query(`
+		SELECT 
+			j.name as jurisdiction_name,
+			j.postal_code,
+			r.category,
+			r.last_verified,
+			EXTRACT(days FROM (CURRENT_DATE - r.last_verified::date)) as days_since_verified,
+			r.statutory_citation
+		FROM regulations r
+		JOIN jurisdictions j ON r.jurisdiction_id = j.id
+		WHERE j.type = 'state' 
+			AND r.last_verified IS NOT NULL
+			AND r.last_verified < (CURRENT_DATE - INTERVAL '${thresholdDays} days')
+		ORDER BY r.last_verified ASC
+	`);
+
+	return result.rows.map(row => ({
+		...row,
+		days_since_verified: parseInt(row.days_since_verified)
+	}));
+}
+
+// Get data quality summary for monitoring
+export async function getDataQualitySummary(client: PoolClient): Promise<{
+	total_regulations: number;
+	recent_verifications: number;
+	with_effective_dates: number;
+	with_specific_citations: number;
+	stale_regulations: number;
+	verification_freshness_pct: number;
+	effective_date_completeness_pct: number;
+	citation_specificity_pct: number;
+}> {
+	const queries = {
+		total: `
+			SELECT COUNT(*) as count 
+			FROM regulations r
+			JOIN jurisdictions j ON r.jurisdiction_id = j.id
+			WHERE j.type = 'state'
+		`,
+		recent_verifications: `
+			SELECT COUNT(*) as count 
+			FROM regulations r
+			JOIN jurisdictions j ON r.jurisdiction_id = j.id
+			WHERE j.type = 'state'
+				AND r.last_verified >= (CURRENT_DATE - INTERVAL '6 months')
+		`,
+		with_effective_dates: `
+			SELECT COUNT(*) as count 
+			FROM regulations r
+			JOIN jurisdictions j ON r.jurisdiction_id = j.id
+			WHERE j.type = 'state'
+				AND r.effective_date IS NOT NULL
+		`,
+		with_specific_citations: `
+			SELECT COUNT(*) as count 
+			FROM regulations r
+			JOIN jurisdictions j ON r.jurisdiction_id = j.id
+			WHERE j.type = 'state'
+				AND r.statutory_citation IS NOT NULL
+				AND r.statutory_citation NOT IN ('State law', 'Federal law', 'N/A')
+		`,
+		stale_regulations: `
+			SELECT COUNT(*) as count 
+			FROM regulations r
+			JOIN jurisdictions j ON r.jurisdiction_id = j.id
+			WHERE j.type = 'state'
+				AND r.last_verified IS NOT NULL
+				AND r.last_verified < (CURRENT_DATE - INTERVAL '1 year')
+		`
+	};
+
+	const results = await Promise.all([
+		client.query(queries.total),
+		client.query(queries.recent_verifications),
+		client.query(queries.with_effective_dates),
+		client.query(queries.with_specific_citations),
+		client.query(queries.stale_regulations)
+	]);
+
+	const total = parseInt(results[0].rows[0].count);
+	const recent = parseInt(results[1].rows[0].count);
+	const dated = parseInt(results[2].rows[0].count);
+	const specific = parseInt(results[3].rows[0].count);
+	const stale = parseInt(results[4].rows[0].count);
+
+	return {
+		total_regulations: total,
+		recent_verifications: recent,
+		with_effective_dates: dated,
+		with_specific_citations: specific,
+		stale_regulations: stale,
+		verification_freshness_pct: Math.round((recent / total) * 100),
+		effective_date_completeness_pct: Math.round((dated / total) * 100),
+		citation_specificity_pct: Math.round((specific / total) * 100)
+	};
+}
+
 export interface JurisdictionRegulation {
 	jurisdiction_id: string;
 	jurisdiction_name: string;
