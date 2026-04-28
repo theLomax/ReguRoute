@@ -11,9 +11,25 @@ import { equipmentItemsRoutes } from './routes/equipment-items.js';
 import { loadoutsRoutes } from './routes/loadouts.js';
 import { permitsRoutes } from './routes/permits.js';
 import { routeComplianceRoutes } from './routes/route-compliance-simple.js';
+import { reciprocityRoutes } from './routes/reciprocity.js';
+import { nfaRoutes } from './routes/nfa.js';
+import { localOrdinancesRoutes } from './routes/local-ordinances.js';
+import { advancedComplianceRoutes } from './routes/advanced-compliance.js';
 
 const server = Fastify({
     logger: true,
+});
+
+// Add CORS support for web testing
+server.addHook('preHandler', async (request, reply) => {
+    reply.header('Access-Control-Allow-Origin', '*');
+    reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    if (request.method === 'OPTIONS') {
+        reply.code(200).send();
+        return;
+    }
 });
 
 // Declare a route
@@ -64,6 +80,10 @@ const start = async () => {
         await server.register(loadoutsRoutes, { prefix: '/loadouts' });
         await server.register(permitsRoutes, { prefix: '/permits' });
         await server.register(routeComplianceRoutes, { prefix: '/route-compliance' });
+        await server.register(reciprocityRoutes, { prefix: '/api/reciprocity' });
+        await server.register(nfaRoutes, { prefix: '/api/nfa' });
+        await server.register(localOrdinancesRoutes, { prefix: '/api/local-ordinances' });
+        await server.register(advancedComplianceRoutes, { prefix: '/api/compliance' });
 
         const port = Number(process.env.PORT) || 3000;
         const host = process.env.HOST || '0.0.0.0';

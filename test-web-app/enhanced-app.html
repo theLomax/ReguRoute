@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReguRoute - Enhanced Test App</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+        }
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-weight: 500;
+        }
+        .status.success { background: #d5f4e6; border-left: 4px solid #27ae60; color: #27ae60; }
+        .status.error { background: #ffeaa7; border-left: 4px solid #e17055; color: #e17055; }
+        .status.info { background: #dff2ff; border-left: 4px solid #3498db; color: #3498db; }
+        
+        .wizard {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            height: fit-content;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .step-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .step-nav li {
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .step-nav li:hover {
+            background: #f8f9fa;
+        }
+        
+        .step-nav li.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .step-nav li.completed {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .step-nav li.active .step-icon,
+        .step-nav li.completed .step-icon {
+            opacity: 1;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            min-height: 600px;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .autocomplete {
+            position: relative;
+        }
+        
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e0e6ed;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .autocomplete-suggestions.show {
+            display: block;
+        }
+        
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            margin-right: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .equipment-card {
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .equipment-card:hover {
+            border-color: #3498db;
+        }
+        
+        .equipment-card.selected {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+        
+        .equipment-card h4 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+        
+        .equipment-card p {
+            margin: 4px 0;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .loadout-item {
+            background: #f8f9fa;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 8px 0;
+        }
+        
+        .loadout-item.selected {
+            border-color: #27ae60;
+            background: #d5f4e6;
+        }
+        
+        .loadout-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .loadout-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .item-count {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .create-loadout {
+            border: 2px dashed #bdc3c7;
+            background: #f8f9fa;
+            text-align: center;
+            padding: 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .create-loadout:hover {
+            border-color: #3498db;
+            background: #dff2ff;
+        }
+        
+        .results {
+            margin-top: 24px;
+            background: #f8f9fa;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .alert.critical {
+            background: #ffe6e6;
+            border-left-color: #e74c3c;
+            color: #c0392b;
+        }
+        
+        .alert.warning {
+            background: #fff8dc;
+            border-left-color: #f39c12;
+            color: #d68910;
+        }
+        
+        .alert.info {
+            background: #e8f4f8;
+            border-left-color: #3498db;
+            color: #2980b9;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .coord-display {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 768px) {
+            .wizard {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                order: 2;
+            }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .step-header {
+            margin-bottom: 24px;
+        }
+        
+        .step-title {
+            font-size: 1.8em;
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+        
+        .step-description {
+            color: #7f8c8d;
+            margin: 0;
+        }
+        
+        .validation-summary {
+            background: white;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .summary-value {
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🛡️ ReguRoute</h1>
+            <p>Enhanced Route Planning & Compliance Testing</p>
+            <div id="status" class="status info">
+                Ready to test - Backend: <span id="backend-status">Checking...</span>
+            </div>
+        </div>
+
+        <div class="wizard">
+            <div class="sidebar">
+                <h3>Route Planning</h3>
+                <ul class="step-nav">
+                    <li id="nav-equipment" class="active" onclick="goToStep('equipment')">
+                        <span class="step-icon">1</span>
+                        <span>Equipment</span>
+                    </li>
+                    <li id="nav-locations" onclick="goToStep('locations')">
+                        <span class="step-icon">2</span>
+                        <span>Locations</span>
+                    </li>
+                    <li id="nav-validation" onclick="goToStep('validation')">
+                        <span class="step-icon">3</span>
+                        <span>Validation</span>
+                    </li>
+                    <li id="nav-results" onclick="goToStep('results')">
+                        <span class="step-icon">4</span>
+                        <span>Results</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <!-- Step 1: Equipment Selection -->
+                <div id="step-equipment" class="step-content active">
+                    <div class="step-header">
+                        <h2 class="step-title">Select Equipment</h2>
+                        <p class="step-description">Choose your loadout or create custom equipment items</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Quick Presets</label>
+                        <button class="btn" onclick="selectPresetLoadout('standard_ar')">Standard AR-15 (30rd)</button>
+                        <button class="btn" onclick="selectPresetLoadout('ny_compliant')">NY-Compliant (10rd)</button>
+                        <button class="btn" onclick="selectPresetLoadout('handgun_only')">Handgun Only</button>
+                        <button class="btn" onclick="selectPresetLoadout('hunting_rifle')">Hunting Rifle</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Custom Equipment</label>
+                        <div class="grid-2">
+                            <div>
+                                <label class="form-label">Category</label>
+                                <select id="equipment-category" class="form-input">
+                                    <option value="rifle">Rifle</option>
+                                    <option value="handgun">Handgun</option>
+                                    <option value="shotgun">Shotgun</option>
+                                    <option value="nfa_item">NFA Item</option>
+                                    <option value="magazine">Magazine</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Name</label>
+                                <input type="text" id="equipment-name" class="form-input" placeholder="e.g., AR-15, Glock 19">
+                            </div>
+                        </div>
+                        <div class="grid-2" style="margin-top: 12px;">
+                            <div>
+                                <label class="form-label">Ammunition Capacity</label>
+                                <input type="number" id="equipment-capacity" class="form-input" placeholder="10" min="1" max="100">
+                            </div>
+                            <div>
+                                <label class="form-label">Features</label>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                                    <label><input type="checkbox" value="pistol_grip"> Pistol Grip</label>
+                                    <label><input type="checkbox" value="flash_suppressor"> Flash Suppressor</label>
+                                    <label><input type="checkbox" value="folding_stock"> Folding Stock</label>
+                                    <label><input type="checkbox" value="featureless"> Featureless</label>
+                                    <label><input type="checkbox" value="fixed_magazine"> Fixed Magazine</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="addCustomEquipment()">Add Equipment</button>
+                    </div>
+
+                    <div id="selected-equipment">
+                        <!-- Equipment items will be added here -->
+                    </div>
+
+                    <button class="btn btn-success" onclick="goToStep('locations')" id="next-to-locations">
+                        Next: Choose Locations
+                    </button>
+                </div>
+
+                <!-- Step 2: Location Selection -->
+                <div id="step-locations" class="step-content">
+                    <div class="step-header">
+                        <h2 class="step-title">Route Locations</h2>
+                        <p class="step-description">Enter cities for your route planning</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Origin City</label>
+                        <div class="autocomplete">
+                            <input type="text" id="origin-input" class="form-input" placeholder="e.g., New York, NY" 
+                                   oninput="onLocationInput('origin')" onfocus="onLocationFocus('origin')">
+                            <div id="origin-suggestions" class="autocomplete-suggestions"></div>
+                        </div>
+                        <div id="origin-coords" class="coord-display" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Destination City</label>
+                        <div class="autocomplete">
+                            <input type="text" id="destination-input" class="form-input" placeholder="e.g., Boston, MA"
+                                   oninput="onLocationInput('destination')" onfocus="onLocationFocus('destination')">
+                            <div id="destination-suggestions" class="autocomplete-suggestions"></div>
+                        </div>
+                        <div id="destination-coords" class="coord-display" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Waypoints (Optional)</label>
+                        <div id="waypoints-container">
+                            <!-- Waypoints will be added here -->
+                        </div>
+                        <button class="btn btn-secondary" onclick="addWaypoint()">Add Waypoint</button>
+                    </div>
+
+                    <button class="btn" onclick="goToStep('equipment')">Back: Equipment</button>
+                    <button class="btn btn-success" onclick="goToStep('validation')" id="next-to-validation">
+                        Next: Validate Route
+                    </button>
+                </div>
+
+                <!-- Step 3: Validation -->
+                <div id="step-validation" class="step-content">
+                    <div class="step-header">
+                        <h2 class="step-title">Route Validation</h2>
+                        <p class="step-description">Review your route and check for compliance issues</p>
+                    </div>
+
+                    <div class="validation-summary" id="validation-summary">
+                        <div class="summary-row">
+                            <span class="summary-label">Equipment Items:</span>
+                            <span class="summary-value" id="summary-equipment">0 items</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Origin:</span>
+                            <span class="summary-value" id="summary-origin">Not set</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Destination:</span>
+                            <span class="summary-value" id="summary-destination">Not set</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Route Distance:</span>
+                            <span class="summary-value" id="summary-distance">Calculating...</span>
+                        </div>
+                    </div>
+
+                    <div id="validation-loading" class="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Validating route and checking regulations...</p>
+                    </div>
+
+                    <div id="validation-results"></div>
+
+                    <button class="btn" onclick="goToStep('locations')">Back: Locations</button>
+                    <button class="btn btn-success" onclick="validateRoute()" id="validate-btn">
+                        Validate Route
+                    </button>
+                    <button class="btn btn-success" onclick="goToStep('results')" id="next-to-results" style="display: none;">
+                        View Detailed Results
+                    </button>
+                </div>
+
+                <!-- Step 4: Results -->
+                <div id="step-results" class="step-content">
+                    <div class="step-header">
+                        <h2 class="step-title">Route Analysis Results</h2>
+                        <p class="step-description">Detailed compliance analysis and recommendations</p>
+                    </div>
+
+                    <div id="final-results"></div>
+
+                    <button class="btn" onclick="goToStep('validation')">Back: Validation</button>
+                    <button class="btn btn-success" onclick="startOver()">Plan Another Route</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        
+        // Application state
+        let currentStep = 'equipment';
+        let selectedEquipment = [];
+        let locations = {
+            origin: { name: '', coordinates: null },
+            destination: { name: '', coordinates: null },
+            waypoints: []
+        };
+        let routeData = null;
+
+        // US cities data for autocomplete
+        const US_CITIES = [
+            { name: 'New York', state: 'NY', coords: { lat: 40.7128, lng: -74.0060 } },
+            { name: 'Boston', state: 'MA', coords: { lat: 42.3601, lng: -71.0589 } },
+            { name: 'Philadelphia', state: 'PA', coords: { lat: 39.9526, lng: -75.1652 } },
+            { name: 'Washington', state: 'DC', coords: { lat: 38.9072, lng: -77.0369 } },
+            { name: 'Baltimore', state: 'MD', coords: { lat: 39.2904, lng: -76.6122 } },
+            { name: 'Atlanta', state: 'GA', coords: { lat: 33.7490, lng: -84.3880 } },
+            { name: 'Miami', state: 'FL', coords: { lat: 25.7617, lng: -80.1918 } },
+            { name: 'Orlando', state: 'FL', coords: { lat: 28.5383, lng: -81.3792 } },
+            { name: 'Chicago', state: 'IL', coords: { lat: 41.8781, lng: -87.6298 } },
+            { name: 'Detroit', state: 'MI', coords: { lat: 42.3314, lng: -83.0458 } },
+            { name: 'Cleveland', state: 'OH', coords: { lat: 41.4993, lng: -81.6944 } },
+            { name: 'Columbus', state: 'OH', coords: { lat: 39.9612, lng: -82.9988 } },
+            { name: 'Indianapolis', state: 'IN', coords: { lat: 39.7684, lng: -86.1581 } },
+            { name: 'Nashville', state: 'TN', coords: { lat: 36.1627, lng: -86.7816 } },
+            { name: 'Charlotte', state: 'NC', coords: { lat: 35.2271, lng: -80.8431 } },
+            { name: 'Raleigh', state: 'NC', coords: { lat: 35.7796, lng: -78.6382 } },
+            { name: 'Richmond', state: 'VA', coords: { lat: 37.5407, lng: -77.4360 } },
+            { name: 'Buffalo', state: 'NY', coords: { lat: 42.8864, lng: -78.8784 } },
+            { name: 'Albany', state: 'NY', coords: { lat: 42.6526, lng: -73.7562 } },
+            { name: 'Rochester', state: 'NY', coords: { lat: 43.1566, lng: -77.6088 } },
+            { name: 'Syracuse', state: 'NY', coords: { lat: 43.0481, lng: -76.1474 } },
+            { name: 'Hartford', state: 'CT', coords: { lat: 41.7658, lng: -72.6734 } },
+            { name: 'Providence', state: 'RI', coords: { lat: 41.8240, lng: -71.4128 } },
+            { name: 'Burlington', state: 'VT', coords: { lat: 44.4759, lng: -73.2121 } },
+            { name: 'Portland', state: 'ME', coords: { lat: 43.6591, lng: -70.2568 } },
+            { name: 'Manchester', state: 'NH', coords: { lat: 42.9956, lng: -71.4548 } },
+            { name: 'Newark', state: 'NJ', coords: { lat: 40.7357, lng: -74.1724 } },
+            { name: 'Trenton', state: 'NJ', coords: { lat: 40.2206, lng: -74.7562 } },
+            { name: 'Pittsburgh', state: 'PA', coords: { lat: 40.4406, lng: -79.9959 } },
+            { name: 'Harrisburg', state: 'PA', coords: { lat: 40.2732, lng: -76.8839 } },
+            { name: 'Annapolis', state: 'MD', coords: { lat: 38.9784, lng: -76.5013 } },
+            { name: 'Dover', state: 'DE', coords: { lat: 39.1573, lng: -75.5277 } },
+            { name: 'Charleston', state: 'SC', coords: { lat: 32.7767, lng: -79.9311 } },
+            { name: 'Columbia', state: 'SC', coords: { lat: 34.0007, lng: -81.0348 } },
+            { name: 'Jacksonville', state: 'FL', coords: { lat: 30.3322, lng: -81.6557 } },
+            { name: 'Tampa', state: 'FL', coords: { lat: 27.9506, lng: -82.4572 } },
+            { name: 'Los Angeles', state: 'CA', coords: { lat: 34.0522, lng: -118.2437 } },
+            { name: 'San Francisco', state: 'CA', coords: { lat: 37.7749, lng: -122.4194 } },
+            { name: 'San Diego', state: 'CA', coords: { lat: 32.7157, lng: -117.1611 } },
+            { name: 'Sacramento', state: 'CA', coords: { lat: 38.5816, lng: -121.4944 } },
+            { name: 'Las Vegas', state: 'NV', coords: { lat: 36.1699, lng: -115.1398 } },
+            { name: 'Phoenix', state: 'AZ', coords: { lat: 33.4484, lng: -112.0740 } },
+            { name: 'Denver', state: 'CO', coords: { lat: 39.7392, lng: -104.9903 } },
+            { name: 'Salt Lake City', state: 'UT', coords: { lat: 40.7608, lng: -111.8910 } },
+            { name: 'Seattle', state: 'WA', coords: { lat: 47.6062, lng: -122.3321 } },
+            { name: 'Portland', state: 'OR', coords: { lat: 45.5152, lng: -122.6784 } },
+            { name: 'Dallas', state: 'TX', coords: { lat: 32.7767, lng: -96.7970 } },
+            { name: 'Houston', state: 'TX', coords: { lat: 29.7604, lng: -95.3698 } },
+            { name: 'Austin', state: 'TX', coords: { lat: 30.2672, lng: -97.7431 } },
+            { name: 'San Antonio', state: 'TX', coords: { lat: 29.4241, lng: -98.4936 } }
+        ];
+
+        // Equipment presets
+        const EQUIPMENT_PRESETS = {
+            standard_ar: {
+                name: 'Standard AR-15 Configuration',
+                items: [{
+                    id: 'preset-ar15',
+                    name: 'AR-15 Semi-Automatic Rifle',
+                    category: 'rifle',
+                    ammunition_capacity: 30,
+                    features: ['pistol_grip', 'flash_suppressor'],
+                    accepts_detachable_magazine: true
+                }]
+            },
+            ny_compliant: {
+                name: 'NY-Compliant Configuration',
+                items: [{
+                    id: 'preset-ny-rifle',
+                    name: 'NY-Compliant Featureless Rifle',
+                    category: 'rifle',
+                    ammunition_capacity: 10,
+                    features: ['featureless'],
+                    accepts_detachable_magazine: true
+                }]
+            },
+            handgun_only: {
+                name: 'Handgun Only',
+                items: [{
+                    id: 'preset-glock',
+                    name: 'Glock 19 9mm',
+                    category: 'handgun',
+                    ammunition_capacity: 15,
+                    features: [],
+                    accepts_detachable_magazine: true
+                }]
+            },
+            hunting_rifle: {
+                name: 'Hunting Rifle',
+                items: [{
+                    id: 'preset-hunting',
+                    name: 'Bolt-Action Hunting Rifle',
+                    category: 'rifle',
+                    ammunition_capacity: 5,
+                    features: [],
+                    accepts_detachable_magazine: false
+                }]
+            }
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            checkBackendStatus();
+            updateEquipmentDisplay();
+        });
+
+        // Backend status check
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                document.getElementById('backend-status').textContent = data.status === 'ok' ? '✅ Connected' : '❌ Error';
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').innerHTML = `✅ Backend Connected - Ready to plan routes`;
+            } catch (error) {
+                document.getElementById('backend-status').textContent = '❌ Offline';
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML = `❌ Backend Offline - Make sure Docker services are running`;
+            }
+        }
+
+        // Navigation
+        function goToStep(stepName) {
+            // Update UI
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.step-nav li').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`step-${stepName}`).classList.add('active');
+            document.getElementById(`nav-${stepName}`).classList.add('active');
+            
+            currentStep = stepName;
+
+            // Update step completion status
+            updateStepStatus();
+
+            // Step-specific actions
+            if (stepName === 'validation') {
+                updateValidationSummary();
+            } else if (stepName === 'results') {
+                displayFinalResults();
+            }
+        }
+
+        function updateStepStatus() {
+            // Mark completed steps
+            const steps = ['equipment', 'locations', 'validation', 'results'];
+            const currentIndex = steps.indexOf(currentStep);
+            
+            steps.forEach((step, index) => {
+                const navItem = document.getElementById(`nav-${step}`);
+                if (index < currentIndex) {
+                    navItem.classList.add('completed');
+                    navItem.classList.remove('active');
+                } else if (index === currentIndex) {
+                    navItem.classList.add('active');
+                    navItem.classList.remove('completed');
+                } else {
+                    navItem.classList.remove('active', 'completed');
+                }
+            });
+        }
+
+        // Equipment management
+        function selectPresetLoadout(presetKey) {
+            const preset = EQUIPMENT_PRESETS[presetKey];
+            if (preset) {
+                selectedEquipment = [...preset.items];
+                updateEquipmentDisplay();
+            }
+        }
+
+        function addCustomEquipment() {
+            const category = document.getElementById('equipment-category').value;
+            const name = document.getElementById('equipment-name').value.trim();
+            const capacity = parseInt(document.getElementById('equipment-capacity').value) || 10;
+            
+            if (!name) {
+                alert('Please enter equipment name');
+                return;
+            }
+
+            const features = Array.from(document.querySelectorAll('#step-equipment input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+
+            const newItem = {
+                id: `custom-${Date.now()}`,
+                name: name,
+                category: category,
+                ammunition_capacity: capacity,
+                features: features,
+                accepts_detachable_magazine: category !== 'nfa_item'
+            };
+
+            selectedEquipment.push(newItem);
+            updateEquipmentDisplay();
+
+            // Clear form
+            document.getElementById('equipment-name').value = '';
+            document.getElementById('equipment-capacity').value = '';
+            document.querySelectorAll('#step-equipment input[type="checkbox"]').forEach(cb => cb.checked = false);
+        }
+
+        function removeEquipment(itemId) {
+            selectedEquipment = selectedEquipment.filter(item => item.id !== itemId);
+            updateEquipmentDisplay();
+        }
+
+        function updateEquipmentDisplay() {
+            const container = document.getElementById('selected-equipment');
+            
+            if (selectedEquipment.length === 0) {
+                container.innerHTML = '<p style="color: #7f8c8d; font-style: italic;">No equipment selected. Choose a preset or add custom equipment.</p>';
+                return;
+            }
+
+            container.innerHTML = selectedEquipment.map(item => `
+                <div class="equipment-card selected">
+                    <div class="loadout-header">
+                        <h4>${item.name}</h4>
+                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="removeEquipment('${item.id}')">Remove</button>
+                    </div>
+                    <p><strong>Category:</strong> ${item.category}</p>
+                    <p><strong>Capacity:</strong> ${item.ammunition_capacity} rounds</p>
+                    <p><strong>Features:</strong> ${item.features.length ? item.features.join(', ') : 'None'}</p>
+                    <p><strong>Detachable Magazine:</strong> ${item.accepts_detachable_magazine ? 'Yes' : 'No'}</p>
+                </div>
+            `).join('');
+        }
+
+        // Location autocomplete
+        let locationTimeouts = {};
+
+        function onLocationInput(type) {
+            clearTimeout(locationTimeouts[type]);
+            locationTimeouts[type] = setTimeout(() => {
+                const input = document.getElementById(`${type}-input`);
+                const query = input.value.trim();
+                
+                if (query.length >= 2) {
+                    showLocationSuggestions(type, query);
+                } else {
+                    hideLocationSuggestions(type);
+                }
+            }, 300);
+        }
+
+        function onLocationFocus(type) {
+            const input = document.getElementById(`${type}-input`);
+            const query = input.value.trim();
+            if (query.length >= 2) {
+                showLocationSuggestions(type, query);
+            }
+        }
+
+        function showLocationSuggestions(type, query) {
+            const suggestions = US_CITIES.filter(city => 
+                city.name.toLowerCase().includes(query.toLowerCase()) ||
+                city.state.toLowerCase().includes(query.toLowerCase()) ||
+                `${city.name}, ${city.state}`.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 8);
+
+            const container = document.getElementById(`${type}-suggestions`);
+            
+            if (suggestions.length === 0) {
+                container.classList.remove('show');
+                return;
+            }
+
+            container.innerHTML = suggestions.map(city => `
+                <div class="suggestion-item" onclick="selectLocation('${type}', '${city.name}', '${city.state}', ${city.coords.lat}, ${city.coords.lng})">
+                    ${city.name}, ${city.state}
+                </div>
+            `).join('');
+            
+            container.classList.add('show');
+        }
+
+        function hideLocationSuggestions(type) {
+            document.getElementById(`${type}-suggestions`).classList.remove('show');
+        }
+
+        function selectLocation(type, name, state, lat, lng) {
+            const input = document.getElementById(`${type}-input`);
+            const coordsDisplay = document.getElementById(`${type}-coords`);
+            
+            input.value = `${name}, ${state}`;
+            coordsDisplay.textContent = `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            coordsDisplay.style.display = 'block';
+            
+            locations[type] = {
+                name: `${name}, ${state}`,
+                coordinates: { lat, lng }
+            };
+            
+            hideLocationSuggestions(type);
+        }
+
+        function addWaypoint() {
+            const container = document.getElementById('waypoints-container');
+            const waypointIndex = locations.waypoints.length;
+            
+            const waypointHtml = `
+                <div class="form-group" id="waypoint-${waypointIndex}">
+                    <label class="form-label">Waypoint ${waypointIndex + 1}</label>
+                    <div class="autocomplete">
+                        <input type="text" id="waypoint-${waypointIndex}-input" class="form-input" 
+                               placeholder="e.g., Philadelphia, PA" 
+                               oninput="onLocationInput('waypoint-${waypointIndex}')" 
+                               onfocus="onLocationFocus('waypoint-${waypointIndex}')">
+                        <div id="waypoint-${waypointIndex}-suggestions" class="autocomplete-suggestions"></div>
+                    </div>
+                    <div id="waypoint-${waypointIndex}-coords" class="coord-display" style="display: none;"></div>
+                    <button class="btn btn-secondary" style="margin-top: 8px;" onclick="removeWaypoint(${waypointIndex})">Remove Waypoint</button>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', waypointHtml);
+            locations.waypoints.push({ name: '', coordinates: null });
+        }
+
+        function removeWaypoint(index) {
+            document.getElementById(`waypoint-${index}`).remove();
+            locations.waypoints.splice(index, 1);
+        }
+
+        // Validation
+        function updateValidationSummary() {
+            document.getElementById('summary-equipment').textContent = `${selectedEquipment.length} items`;
+            document.getElementById('summary-origin').textContent = locations.origin.name || 'Not set';
+            document.getElementById('summary-destination').textContent = locations.destination.name || 'Not set';
+        }
+
+        async function validateRoute() {
+            if (!locations.origin.coordinates || !locations.destination.coordinates) {
+                alert('Please select both origin and destination cities');
+                return;
+            }
+
+            if (selectedEquipment.length === 0) {
+                alert('Please select at least one equipment item');
+                return;
+            }
+
+            const loadingEl = document.getElementById('validation-loading');
+            const resultsEl = document.getElementById('validation-results');
+            const validateBtn = document.getElementById('validate-btn');
+            const nextBtn = document.getElementById('next-to-results');
+
+            loadingEl.style.display = 'block';
+            resultsEl.innerHTML = '';
+            validateBtn.style.display = 'none';
+
+            try {
+                // Build cargo profile
+                const cargoProfile = buildCargoProfileFromEquipment(selectedEquipment);
+
+                // Calculate route
+                const response = await fetch(`${API_BASE}/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin: locations.origin.coordinates,
+                        destination: locations.destination.coordinates,
+                        cargo_profile: cargoProfile
+                    })
+                });
+
+                routeData = await response.json();
+
+                if (routeData.error) {
+                    throw new Error(routeData.error);
+                }
+
+                // Update distance
+                document.getElementById('summary-distance').textContent = 
+                    `${routeData.route?.summary?.distance_miles || 0} miles`;
+
+                // Show validation results
+                displayValidationResults(routeData);
+                
+                nextBtn.style.display = 'inline-block';
+
+            } catch (error) {
+                resultsEl.innerHTML = `<div class="alert critical">❌ Validation failed: ${error.message}</div>`;
+                validateBtn.style.display = 'inline-block';
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        function buildCargoProfileFromEquipment(equipment) {
+            const hasFirearms = equipment.some(item => 
+                ['handgun', 'rifle', 'shotgun'].includes(item.category)
+            );
+
+            const maxCapacity = Math.max(0, ...equipment.map(item => item.ammunition_capacity || 0));
+
+            const platformCapacities = {
+                handgun: Math.max(0, ...equipment.filter(item => item.category === 'handgun').map(item => item.ammunition_capacity || 0)),
+                rifle: Math.max(0, ...equipment.filter(item => item.category === 'rifle').map(item => item.ammunition_capacity || 0)),
+                shotgun: Math.max(0, ...equipment.filter(item => item.category === 'shotgun').map(item => item.ammunition_capacity || 0))
+            };
+
+            return {
+                has_firearms: hasFirearms,
+                has_rifle: equipment.some(item => item.category === 'rifle'),
+                has_handgun: equipment.some(item => item.category === 'handgun'),
+                has_shotgun: equipment.some(item => item.category === 'shotgun'),
+                ammunition_capacity: maxCapacity,
+                firearm_platforms: [...new Set(equipment.filter(item => 
+                    ['handgun', 'rifle', 'shotgun'].includes(item.category)
+                ).map(item => item.category))],
+                max_ammunition_capacity_by_platform: platformCapacities,
+                has_nfa_items: equipment.some(item => item.category === 'nfa_item'),
+                nfa_subtypes: [],
+                has_concealed_carry_permit: false,
+                permit_states: []
+            };
+        }
+
+        function displayValidationResults(data) {
+            const analysis = data.analysis || {};
+            const alerts = analysis.alerts || [];
+            const summary = analysis.summary || {};
+
+            let html = `
+                <h3>🔍 Route Validation Results</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 16px 0;">
+                    <div style="text-align: center; padding: 16px; background: ${summary.critical_alerts > 0 ? '#ffe6e6' : '#d5f4e6'}; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: bold; color: ${summary.critical_alerts > 0 ? '#e74c3c' : '#27ae60'};">
+                            ${summary.critical_alerts || 0}
+                        </div>
+                        <div style="color: #7f8c8d;">Critical Issues</div>
+                    </div>
+                    <div style="text-align: center; padding: 16px; background: #fff8dc; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #f39c12;">
+                            ${summary.warning_alerts || 0}
+                        </div>
+                        <div style="color: #7f8c8d;">Warnings</div>
+                    </div>
+                    <div style="text-align: center; padding: 16px; background: #e8f4f8; border-radius: 8px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #3498db;">
+                            ${summary.info_alerts || 0}
+                        </div>
+                        <div style="color: #7f8c8d;">Info Alerts</div>
+                    </div>
+                </div>
+
+                ${formatAlerts(alerts)}
+
+                <h4>🗺️ Jurisdictions Crossed:</h4>
+                <p>${analysis.jurisdictions_crossed?.join(', ') || 'None detected'}</p>
+            `;
+
+            document.getElementById('validation-results').innerHTML = html;
+        }
+
+        function displayFinalResults() {
+            if (!routeData) {
+                document.getElementById('final-results').innerHTML = 
+                    '<p style="color: #7f8c8d;">No route data available. Please validate your route first.</p>';
+                return;
+            }
+
+            const route = routeData.route || {};
+            const analysis = routeData.analysis || {};
+            const alerts = analysis.alerts || [];
+
+            let html = `
+                <h3>📊 Complete Route Analysis</h3>
+                
+                <div class="validation-summary">
+                    <div class="summary-row">
+                        <span class="summary-label">Route Distance:</span>
+                        <span class="summary-value">${route.summary?.distance_miles || 0} miles (${route.summary?.distance_km || 0} km)</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Estimated Duration:</span>
+                        <span class="summary-value">${route.summary?.duration_minutes || 0} minutes</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Equipment Items:</span>
+                        <span class="summary-value">${selectedEquipment.length} items</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Jurisdictions Crossed:</span>
+                        <span class="summary-value">${analysis.jurisdictions_crossed?.length || 0}</span>
+                    </div>
+                </div>
+
+                <h4>🚨 All Regulation Alerts:</h4>
+                ${formatAlerts(alerts)}
+
+                <h4>🛡️ Equipment Summary:</h4>
+                <div class="equipment-grid">
+                    ${selectedEquipment.map(item => `
+                        <div class="equipment-card">
+                            <h4>${item.name}</h4>
+                            <p><strong>Category:</strong> ${item.category}</p>
+                            <p><strong>Capacity:</strong> ${item.ammunition_capacity} rounds</p>
+                            <p><strong>Features:</strong> ${item.features.length ? item.features.join(', ') : 'None'}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <h4>🗺️ Route Details:</h4>
+                <p><strong>Origin:</strong> ${locations.origin.name}</p>
+                <p><strong>Destination:</strong> ${locations.destination.name}</p>
+                <p><strong>Jurisdictions:</strong> ${analysis.jurisdictions_crossed?.join(', ') || 'None detected'}</p>
+            `;
+
+            document.getElementById('final-results').innerHTML = html;
+        }
+
+        function formatAlerts(alerts) {
+            if (!alerts || alerts.length === 0) {
+                return '<div class="alert info">✅ No regulation conflicts detected for this route</div>';
+            }
+
+            return alerts.map(alert => `
+                <div class="alert ${alert.severity}">
+                    <strong>${alert.jurisdiction} (${alert.postal_code})</strong> - ${alert.category}<br>
+                    ${alert.message}
+                    ${alert.citation ? `<br><small><strong>Citation:</strong> ${alert.citation}</small>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function startOver() {
+            selectedEquipment = [];
+            locations = {
+                origin: { name: '', coordinates: null },
+                destination: { name: '', coordinates: null },
+                waypoints: []
+            };
+            routeData = null;
+
+            // Clear forms
+            document.getElementById('origin-input').value = '';
+            document.getElementById('destination-input').value = '';
+            document.getElementById('origin-coords').style.display = 'none';
+            document.getElementById('destination-coords').style.display = 'none';
+            document.getElementById('waypoints-container').innerHTML = '';
+            
+            updateEquipmentDisplay();
+            goToStep('equipment');
+        }
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.autocomplete')) {
+                document.querySelectorAll('.autocomplete-suggestions').forEach(el => {
+                    el.classList.remove('show');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

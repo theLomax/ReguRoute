@@ -5,11 +5,8 @@ import { Platform } from 'react-native';
 // Physical devices need the actual IP address
 const getBaseUrl = (): string => {
 	if (__DEV__) {
-		// For development - update this IP when testing on physical device
-		if (Platform.OS === 'android') {
-			// Use your computer's LAN IP for physical device testing
-			return 'http://192.168.5.11:3000';
-		}
+		// For tunnel mode or local development, use localhost
+		// For physical device testing, update IP address
 		return 'http://localhost:3000';
 	}
 	// Production URL - update when you deploy

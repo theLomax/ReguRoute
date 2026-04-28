@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReguRoute - ORS Route Testing</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .coverage-info {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .btn:hover { background: #2980b9; }
+        .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-weight: 500;
+            display: none;
+        }
+        .status.success { background: #d5f4e6; color: #27ae60; }
+        .status.error { background: #ffeaa7; color: #e17055; }
+        .status.info { background: #dff2ff; color: #3498db; }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        .alert-item {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+        }
+        .alert-critical { background: #ffeef0; border-color: #e74c3c; color: #c0392b; }
+        .alert-warning { background: #fff8dc; border-color: #f39c12; color: #d68910; }
+        .alert-info { background: #e8f4f8; border-color: #3498db; color: #2980b9; }
+        .route-info {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .coordinates {
+            font-family: monospace;
+            background: #f1f3f4;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛣️ ReguRoute - ORS Route Testing</h1>
+            <p>Test full ORS routing with compliance analysis (Northeast US coverage)</p>
+        </div>
+
+        <div class="coverage-info">
+            <h3>🗺️ ORS Coverage Area</h3>
+            <p><strong>Status:</strong> <span id="coverage-status">🔄 Rebuilding with Full US Data...</span></p>
+            <p><strong>Expected Coverage:</strong> All 50 US States (Continental US)</p>
+            <p><strong>Build Progress:</strong> <span id="build-progress">Processing 2.6GB US dataset...</span></p>
+        </div>
+
+        <form id="routeForm">
+            <div class="form-group">
+                <label for="route-preset">📍 Route Presets (All within ORS coverage)</label>
+                <select id="route-preset">
+                    <option value="">-- Select a preset route --</option>
+                    <optgroup label="Cross-Country Routes (After Build Complete)">
+                        <option value="dallas-boston">Dallas, TX → Boston, MA</option>
+                        <option value="la-nyc">Los Angeles, CA → New York City</option>
+                        <option value="seattle-miami">Seattle, WA → Miami, FL</option>
+                        <option value="chicago-la">Chicago, IL → Los Angeles, CA</option>
+                    </optgroup>
+                    <optgroup label="Regional Routes (Available Now)">
+                        <option value="dc-boston">Washington DC → Boston, MA</option>
+                        <option value="philly-boston">Philadelphia, PA → Boston, MA</option>
+                        <option value="nyc-dc">New York City → Washington DC</option>
+                        <option value="boston-philly">Boston, MA → Philadelphia, PA</option>
+                        <option value="baltimore-nyc">Baltimore, MD → New York City</option>
+                        <option value="albany-boston">Albany, NY → Boston, MA</option>
+                        <option value="pittsburgh-nyc">Pittsburgh, PA → New York City</option>
+                    </optgroup>
+                    <option value="custom">Custom Coordinates</option>
+                </select>
+            </div>
+
+            <div id="custom-coords" style="display: none;">
+                <div class="form-group">
+                    <label for="origin-lat">Origin Latitude (-90 to 90)</label>
+                    <input type="number" id="origin-lat" step="0.0001" min="-90" max="90" placeholder="40.7128">
+                </div>
+                <div class="form-group">
+                    <label for="origin-lng">Origin Longitude (-180 to 180)</label>
+                    <input type="number" id="origin-lng" step="0.0001" min="-180" max="180" placeholder="-74.0060">
+                </div>
+                <div class="form-group">
+                    <label for="dest-lat">Destination Latitude</label>
+                    <input type="number" id="dest-lat" step="0.0001" min="-90" max="90" placeholder="42.3601">
+                </div>
+                <div class="form-group">
+                    <label for="dest-lng">Destination Longitude</label>
+                    <input type="number" id="dest-lng" step="0.0001" min="-180" max="180" placeholder="-71.0589">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="cargo">🔫 Test Cargo Profile</label>
+                <select id="cargo">
+                    <option value="none">No Firearms (Baseline test)</option>
+                    <option value="basic">Basic Handgun (10 rounds)</option>
+                    <option value="high-cap">High-Capacity Magazine (30 rounds)</option>
+                    <option value="ccw">Concealed Carry Permit Holder</option>
+                    <option value="rifle">Rifle + Handgun</option>
+                </select>
+            </div>
+
+            <button type="button" id="testOrsBtn" class="btn">🔧 Test ORS Direct</button>
+            <button type="button" id="testRouteBtn" class="btn">🛣️ Test Full Route + Compliance</button>
+        </form>
+
+        <div id="status" class="status"></div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        // Route presets - cross-country routes will work after ORS rebuild completes
+        const ROUTE_PRESETS = {
+            // Cross-country routes (available after full US build completes)
+            "dallas-boston": {
+                name: "Dallas, TX → Boston, MA",
+                origin: { lat: 32.7767, lng: -96.7970 },
+                destination: { lat: 42.3601, lng: -71.0589 }
+            },
+            "la-nyc": {
+                name: "Los Angeles, CA → New York City",
+                origin: { lat: 34.0522, lng: -118.2437 },
+                destination: { lat: 40.7128, lng: -74.0060 }
+            },
+            "seattle-miami": {
+                name: "Seattle, WA → Miami, FL",
+                origin: { lat: 47.6062, lng: -122.3321 },
+                destination: { lat: 25.7617, lng: -80.1918 }
+            },
+            "chicago-la": {
+                name: "Chicago, IL → Los Angeles, CA",
+                origin: { lat: 41.8781, lng: -87.6298 },
+                destination: { lat: 34.0522, lng: -118.2437 }
+            },
+            
+            // Regional routes (currently available with existing northeast data)
+            "dc-boston": {
+                name: "Washington DC → Boston, MA",
+                origin: { lat: 38.9072, lng: -77.0369 },
+                destination: { lat: 42.3601, lng: -71.0589 }
+            },
+            "philly-boston": {
+                name: "Philadelphia, PA → Boston, MA", 
+                origin: { lat: 39.9526, lng: -75.1652 },
+                destination: { lat: 42.3601, lng: -71.0589 }
+            },
+            "nyc-dc": {
+                name: "New York City → Washington DC",
+                origin: { lat: 40.7128, lng: -74.0060 },
+                destination: { lat: 38.9072, lng: -77.0369 }
+            },
+            "boston-philly": {
+                name: "Boston, MA → Philadelphia, PA",
+                origin: { lat: 42.3601, lng: -71.0589 },
+                destination: { lat: 39.9526, lng: -75.1652 }
+            },
+            "baltimore-nyc": {
+                name: "Baltimore, MD → New York City",
+                origin: { lat: 39.2904, lng: -76.6122 },
+                destination: { lat: 40.7128, lng: -74.0060 }
+            },
+            "albany-boston": {
+                name: "Albany, NY → Boston, MA",
+                origin: { lat: 42.6526, lng: -73.7562 },
+                destination: { lat: 42.3601, lng: -71.0589 }
+            },
+            "pittsburgh-nyc": {
+                name: "Pittsburgh, PA → New York City",
+                origin: { lat: 40.4406, lng: -79.9959 },
+                destination: { lat: 40.7128, lng: -74.0060 }
+            }
+        };
+
+        const CARGO_PROFILES = {
+            none: { has_firearms: false },
+            basic: { 
+                has_firearms: true, 
+                has_handgun: true, 
+                ammunition_capacity: 10 
+            },
+            "high-cap": { 
+                has_firearms: true, 
+                has_handgun: true, 
+                ammunition_capacity: 30 
+            },
+            ccw: { 
+                has_firearms: true, 
+                has_handgun: true, 
+                has_concealed_carry_permit: true,
+                permit_holder_state: 'VA',
+                ammunition_capacity: 10 
+            },
+            rifle: { 
+                has_firearms: true, 
+                has_handgun: true,
+                has_rifle: true, 
+                ammunition_capacity: 30 
+            }
+        };
+
+        document.getElementById('route-preset').addEventListener('change', (e) => {
+            const customDiv = document.getElementById('custom-coords');
+            customDiv.style.display = e.target.value === 'custom' ? 'block' : 'none';
+        });
+
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        function getRouteCoordinates() {
+            const presetValue = document.getElementById('route-preset').value;
+            
+            if (!presetValue) {
+                throw new Error('Please select a route preset or choose custom coordinates');
+            }
+            
+            if (presetValue === 'custom') {
+                const originLat = parseFloat(document.getElementById('origin-lat').value);
+                const originLng = parseFloat(document.getElementById('origin-lng').value);
+                const destLat = parseFloat(document.getElementById('dest-lat').value);
+                const destLng = parseFloat(document.getElementById('dest-lng').value);
+                
+                if (isNaN(originLat) || isNaN(originLng) || isNaN(destLat) || isNaN(destLng)) {
+                    throw new Error('Please enter valid coordinates for all fields');
+                }
+                
+                return {
+                    name: "Custom Route",
+                    origin: { lat: originLat, lng: originLng },
+                    destination: { lat: destLat, lng: destLng }
+                };
+            }
+            
+            return ROUTE_PRESETS[presetValue];
+        }
+
+        // Test ORS directly (bypass ReguRoute backend)
+        document.getElementById('testOrsBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('testOrsBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Testing ORS...';
+            
+            try {
+                // First check ORS health
+                const healthResponse = await fetch('http://localhost:8080/ors/v2/health');
+                const healthData = await healthResponse.json();
+                
+                if (healthData.status !== 'ready') {
+                    throw new Error(`ORS is still building graphs (status: ${healthData.status}). Full US dataset is being processed. Please wait for build completion.`);
+                }
+                
+                const route = getRouteCoordinates();
+                showStatus(`Testing ORS routing for ${route.name}...`, 'info');
+                
+                // Test with increased search radius to handle coordinate precision
+                const orsBody = {
+                    coordinates: [
+                        [route.origin.lng, route.origin.lat],
+                        [route.destination.lng, route.destination.lat]
+                    ],
+                    instructions: false,
+                    geometry: true,
+                    format: 'geojson',
+                    radiuses: [1000, 1000]  // 1km search radius
+                };
+                
+                const response = await fetch('http://localhost:8080/ors/v2/directions/driving-car/geojson', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orsBody)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`ORS Error: ${errorData.error?.message || response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const summary = data.features[0].properties.summary;
+                
+                showStatus(`✅ ORS routing successful!`, 'success');
+                
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `
+                    <div class="route-info">
+                        <h3>🛣️ ORS Route Summary</h3>
+                        <p><strong>Route:</strong> ${route.name}</p>
+                        <div class="coordinates">Origin: ${route.origin.lat}, ${route.origin.lng}</div>
+                        <div class="coordinates">Destination: ${route.destination.lat}, ${route.destination.lng}</div>
+                        <p><strong>Distance:</strong> ${(summary.distance / 1000).toFixed(1)} km (${(summary.distance / 1609.34).toFixed(1)} miles)</p>
+                        <p><strong>Duration:</strong> ${Math.round(summary.duration / 60)} minutes</p>
+                        <p><strong>Geometry Points:</strong> ${data.features[0].geometry.coordinates.length}</p>
+                    </div>
+                `;
+                resultsDiv.style.display = 'block';
+                
+            } catch (error) {
+                console.error('ORS Test Error:', error);
+                showStatus(`❌ ORS Test Failed: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔧 Test ORS Direct';
+            }
+        });
+
+        // Test full route + compliance analysis
+        document.getElementById('testRouteBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('testRouteBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Testing Route...';
+            
+            try {
+                const route = getRouteCoordinates();
+                const cargoType = document.getElementById('cargo').value;
+                const cargoProfile = CARGO_PROFILES[cargoType];
+                
+                showStatus(`Calculating route and analyzing compliance for ${route.name}...`, 'info');
+                
+                const response = await fetch('http://localhost:3000/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin: route.origin,
+                        destination: route.destination,
+                        profile: 'driving-car',
+                        cargo_profile: cargoProfile
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${errorData.error || response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                showStatus(`✅ Route calculation and compliance analysis complete!`, 'success');
+                displayFullResults(data, route, cargoType);
+                
+            } catch (error) {
+                console.error('Route Test Error:', error);
+                showStatus(`❌ Route Test Failed: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🛣️ Test Full Route + Compliance';
+            }
+        });
+
+        function displayFullResults(data, route, cargoType) {
+            const resultsDiv = document.getElementById('results');
+            
+            const { route: routeData, analysis } = data;
+            
+            let html = `
+                <div class="route-info">
+                    <h3>🛣️ Route Information</h3>
+                    <p><strong>Route:</strong> ${route.name}</p>
+                    <p><strong>Cargo Profile:</strong> ${cargoType}</p>
+                    <p><strong>Distance:</strong> ${routeData.summary.distance_km} km (${routeData.summary.distance_miles} miles)</p>
+                    <p><strong>Duration:</strong> ${routeData.summary.duration_minutes} minutes</p>
+                    <div class="coordinates">
+                        Route Geometry: ${routeData.geometry.coordinates.length} coordinate points
+                    </div>
+                </div>
+            `;
+            
+            if (analysis) {
+                html += `
+                    <div class="route-info">
+                        <h3>📊 Compliance Analysis</h3>
+                        <p><strong>States Crossed:</strong> ${analysis.summary.total_jurisdictions}</p>
+                        <p><strong>Jurisdictions:</strong> ${analysis.jurisdictions_crossed.join(', ')}</p>
+                        <p><strong>Alerts:</strong> ${analysis.summary.critical_alerts} Critical, ${analysis.summary.warning_alerts} Warning, ${analysis.summary.info_alerts} Info</p>
+                    </div>
+                `;
+                
+                if (analysis.alerts && analysis.alerts.length > 0) {
+                    html += '<h3>🚨 Compliance Alerts</h3>';
+                    analysis.alerts.forEach(alert => {
+                        html += `
+                            <div class="alert-item alert-${alert.severity}">
+                                <strong>${alert.jurisdiction} (${alert.postal_code})</strong><br>
+                                <strong>${alert.category}:</strong> ${alert.message}
+                                ${alert.citation ? `<br><em>Citation: ${alert.citation}</em>` : ''}
+                            </div>
+                        `;
+                    });
+                }
+            }
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+        
+        // Auto-check ORS status every 30 seconds
+        async function updateOrsStatus() {
+            try {
+                const healthResponse = await fetch('http://localhost:8080/ors/v2/health');
+                const healthData = await healthResponse.json();
+                
+                const statusSpan = document.getElementById('coverage-status');
+                const progressSpan = document.getElementById('build-progress');
+                
+                if (healthData.status === 'ready') {
+                    // Check if we have full US coverage by getting status
+                    const statusResponse = await fetch('http://localhost:8080/ors/v2/status');
+                    const statusData = await statusResponse.json();
+                    
+                    statusSpan.textContent = '✅ Ready - Full US Coverage';
+                    statusSpan.style.color = '#27ae60';
+                    progressSpan.textContent = 'Build complete! Cross-country routing available.';
+                    progressSpan.style.color = '#27ae60';
+                } else {
+                    statusSpan.textContent = `🔄 Building (${healthData.status})`;
+                    statusSpan.style.color = '#f39c12';
+                    progressSpan.textContent = 'Processing full US dataset... Please wait.';
+                    progressSpan.style.color = '#f39c12';
+                }
+            } catch (error) {
+                const statusSpan = document.getElementById('coverage-status');
+                const progressSpan = document.getElementById('build-progress');
+                statusSpan.textContent = '⚠️ ORS Unavailable';
+                statusSpan.style.color = '#e74c3c';
+                progressSpan.textContent = 'Cannot connect to ORS service.';
+                progressSpan.style.color = '#e74c3c';
+            }
+        }
+        
+        // Initial status check
+        updateOrsStatus();
+        
+        // Check status every 30 seconds
+        setInterval(updateOrsStatus, 30000);
+        
+        console.log('🚀 ORS Route Tester Ready!');
+        console.log('📍 Available routes:', Object.keys(ROUTE_PRESETS));
+        console.log('🔄 Monitoring ORS build status...');
+    </script>
+</body>
+</html>

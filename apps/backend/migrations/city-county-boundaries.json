@@ -1,0 +1,269 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "New York City",
+        "type": "city",
+        "postal_code": "NY",
+        "state": "NY",
+        "population": 8336817
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-74.259090, 40.477399],
+            [-74.259090, 40.915568],
+            [-73.700272, 40.915568],
+            [-73.700272, 40.477399],
+            [-74.259090, 40.477399]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature", 
+      "properties": {
+        "name": "Los Angeles",
+        "type": "city",
+        "postal_code": "LA",
+        "state": "CA",
+        "population": 3979576
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-118.668176, 33.704538],
+            [-118.668176, 34.337306],
+            [-118.155289, 34.337306],
+            [-118.155289, 33.704538],
+            [-118.668176, 33.704538]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Chicago",
+        "type": "city", 
+        "postal_code": "CH",
+        "state": "IL",
+        "population": 2693976
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-87.940267, 41.644286],
+            [-87.940267, 42.023131],
+            [-87.523661, 42.023131],
+            [-87.523661, 41.644286],
+            [-87.940267, 41.644286]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Houston",
+        "type": "city",
+        "postal_code": "HU", 
+        "state": "TX",
+        "population": 2320268
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-95.823389, 29.523624],
+            [-95.823389, 30.110732],
+            [-95.069065, 30.110732],
+            [-95.069065, 29.523624],
+            [-95.823389, 29.523624]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Philadelphia", 
+        "type": "city",
+        "postal_code": "PL",
+        "state": "PA",
+        "population": 1584064
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-75.280303, 39.867004],
+            [-75.280303, 40.137959],
+            [-74.955763, 40.137959],
+            [-74.955763, 39.867004],
+            [-75.280303, 39.867004]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Phoenix",
+        "type": "city",
+        "postal_code": "PH", 
+        "state": "AZ",
+        "population": 1608139
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-112.323000, 33.378034],
+            [-112.323000, 33.809467],
+            [-111.933269, 33.809467],
+            [-111.933269, 33.378034],
+            [-112.323000, 33.378034]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "San Francisco",
+        "type": "city",
+        "postal_code": "SF",
+        "state": "CA", 
+        "population": 873965
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-122.514926, 37.708007],
+            [-122.514926, 37.812000],
+            [-122.357177, 37.812000],
+            [-122.357177, 37.708007],
+            [-122.514926, 37.708007]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Denver",
+        "type": "city",
+        "postal_code": "DE",
+        "state": "CO",
+        "population": 715522
+      },
+      "geometry": {
+        "type": "MultiPolygon", 
+        "coordinates": [
+          [[
+            [-105.109927, 39.614151],
+            [-105.109927, 39.914600],
+            [-104.600607, 39.914600], 
+            [-104.600607, 39.614151],
+            [-105.109927, 39.614151]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Boston",
+        "type": "city",
+        "postal_code": "BO",
+        "state": "MA",
+        "population": 695506
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-71.191155, 42.227925],
+            [-71.191155, 42.396849],
+            [-70.748802, 42.396849],
+            [-70.748802, 42.227925],
+            [-71.191155, 42.227925]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Seattle",
+        "type": "city",
+        "postal_code": "SE",
+        "state": "WA",
+        "population": 749256
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-122.459696, 47.481002],
+            [-122.459696, 47.734136],
+            [-122.224433, 47.734136], 
+            [-122.224433, 47.481002],
+            [-122.459696, 47.481002]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Washington D.C.",
+        "type": "city",
+        "postal_code": "WD",
+        "state": "DC",
+        "population": 705749
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-77.119759, 38.791645],
+            [-77.119759, 38.995548],
+            [-76.909395, 38.995548],
+            [-76.909395, 38.791645],
+            [-77.119759, 38.791645]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cook County",
+        "type": "county",
+        "postal_code": "CK",
+        "state": "IL", 
+        "population": 5194675
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-88.263506, 41.469835],
+            [-88.263506, 42.508481],
+            [-87.525295, 42.508481],
+            [-87.525295, 41.469835],
+            [-88.263506, 41.469835]
+          ]]
+        ]
+      }
+    }
+  ]
+}

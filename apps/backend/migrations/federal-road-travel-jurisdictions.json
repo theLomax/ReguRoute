@@ -1,0 +1,235 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "District of Columbia Federal District",
+        "type": "federal_district",
+        "postal_code": "DF",
+        "jurisdiction_type": "federal_exclusive",
+        "travel_significance": "high",
+        "description": "Federal district with unique firearm laws"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-77.119759, 38.791645],
+            [-77.119759, 38.995548],
+            [-76.909395, 38.995548],
+            [-76.909395, 38.791645],
+            [-77.119759, 38.791645]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Yellowstone National Park",
+        "type": "national_park",
+        "postal_code": "YN",
+        "jurisdiction_type": "federal_exclusive", 
+        "travel_significance": "high",
+        "description": "Major interstate travel corridor through WY/MT/ID"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-111.154175, 44.131775],
+            [-111.154175, 45.112230],
+            [-109.830326, 45.112230],
+            [-109.830326, 44.131775],
+            [-111.154175, 44.131775]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Grand Canyon National Park",
+        "type": "national_park",
+        "postal_code": "GC",
+        "jurisdiction_type": "federal_exclusive",
+        "travel_significance": "high", 
+        "description": "Major tourist destination with federal firearm restrictions"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-112.881348, 35.974654],
+            [-112.881348, 36.413308],
+            [-111.978149, 36.413308],
+            [-111.978149, 35.974654],
+            [-112.881348, 35.974654]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Great Smoky Mountains National Park",
+        "type": "national_park",
+        "postal_code": "GS",
+        "jurisdiction_type": "federal_exclusive",
+        "travel_significance": "high",
+        "description": "Major eastern corridor between TN and NC"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-83.942871, 35.433350],
+            [-83.942871, 35.774135],
+            [-83.090820, 35.774135],
+            [-83.090820, 35.433350],
+            [-83.942871, 35.433350]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Yosemite National Park",
+        "type": "national_park",
+        "postal_code": "YS",
+        "jurisdiction_type": "federal_exclusive",
+        "travel_significance": "medium",
+        "description": "California travel corridor"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-119.982910, 37.495562],
+            [-119.982910, 38.184067],
+            [-119.203644, 38.184067],
+            [-119.203644, 37.495562],
+            [-119.982910, 37.495562]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Glacier National Park",
+        "type": "national_park",
+        "postal_code": "GL",
+        "jurisdiction_type": "federal_exclusive",
+        "travel_significance": "medium",
+        "description": "Northern Montana corridor near Canadian border"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-114.411621, 48.247131],
+            [-114.411621, 48.999931],
+            [-113.323975, 48.999931],
+            [-113.323975, 48.247131],
+            [-114.411621, 48.247131]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature", 
+      "properties": {
+        "name": "Federal Aviation Administration Zones",
+        "type": "federal_airspace",
+        "postal_code": "FA",
+        "jurisdiction_type": "federal_overlay",
+        "travel_significance": "medium",
+        "description": "Airport security zones with firearm restrictions"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-125.000000, 24.000000],
+            [-125.000000, 49.000000],
+            [-66.000000, 49.000000],
+            [-66.000000, 24.000000],
+            [-125.000000, 24.000000]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "National Forest Interstate Corridors",
+        "type": "national_forest",
+        "postal_code": "NF",
+        "jurisdiction_type": "federal_managed",
+        "travel_significance": "medium",
+        "description": "Major interstate highways passing through national forests"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-124.000000, 25.000000],
+            [-124.000000, 48.000000],
+            [-67.000000, 48.000000],
+            [-67.000000, 25.000000],
+            [-124.000000, 25.000000]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Interstate Border Inspection Zones",
+        "type": "border_zone",
+        "postal_code": "BZ",
+        "jurisdiction_type": "federal_enforcement",
+        "travel_significance": "high",
+        "description": "100-mile border zone with enhanced federal enforcement"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-125.000000, 24.000000],
+            [-125.000000, 49.000000],
+            [-66.000000, 49.000000],
+            [-66.000000, 24.000000],
+            [-125.000000, 24.000000]
+          ]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Federal Courthouse Districts",
+        "type": "federal_building",
+        "postal_code": "FC",
+        "jurisdiction_type": "federal_exclusive",
+        "travel_significance": "medium",
+        "description": "Federal building zones with strict firearm prohibitions"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[
+            [-125.000000, 24.000000],
+            [-125.000000, 49.000000],
+            [-66.000000, 49.000000],
+            [-66.000000, 24.000000],
+            [-125.000000, 24.000000]
+          ]]
+        ]
+      }
+    }
+  ]
+}

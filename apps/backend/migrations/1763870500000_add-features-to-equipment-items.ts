@@ -16,6 +16,14 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 		'bayonet_lug',
 		'grenade_launcher',
 		'threaded_barrel',
+		'fixed_magazine',
+		'featureless',
+		'vertical_grip',
+		'magazine_well_outside_grip',
+		'shoulder_stock_pistol',
+		'barrel_shroud_pistol',
+		'capacity_over_ten',
+		'muzzle_device',
 	]);
 
 	// Add features array column to equipment_items

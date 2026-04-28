@@ -6,6 +6,7 @@ import {
 	type Coordinate,
 	type RouteResult,
 } from '../services/ors.js';
+import { hybridRouting } from '../services/hybrid-routing.js';
 import { analyzeRoute, type CargoProfile } from '../services/regulations.js';
 import { generateRouteAlternatives, type RouteOptions } from '../services/routing.js';
 
@@ -45,16 +46,29 @@ const coordinateSchema = {
 };
 
 export async function calculateRoutes(fastify: FastifyInstance) {
-	// GET /calculate/health - Check ORS service health
+	// GET /calculate/health - Check hybrid routing service health
 	fastify.get('/health', async (request, reply) => {
-		const health = await checkORSHealth();
-		if (!health.ready) {
+		const routingStatus = await hybridRouting.getRoutingStatus();
+		
+		// Hybrid routing is always available if either local or external works
+		const isAvailable = routingStatus.localOrs.available || routingStatus.externalRouting.available;
+		
+		if (!isAvailable) {
 			return reply.code(503).send({
 				status: 'unavailable',
-				message: 'OpenRouteService is not ready. It may still be building the routing graph.',
+				message: 'Both local ORS and external routing are unavailable.',
+				details: routingStatus
 			});
 		}
-		return health;
+		
+		return {
+			status: 'ready',
+			ready: true,
+			routing: routingStatus,
+			message: routingStatus.localOrs.available ? 
+				'Local ORS ready - full compliance analysis available' : 
+				'External routing available - basic routing with compliance analysis'
+		};
 	});
 
 	// POST /calculate/validate-locations - Pre-validate locations before route calculation
@@ -86,7 +100,7 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 			},
 		},
 		async (request, reply) => {
-			const { loadout_id, locations } = request.body;
+			const { loadout_id, locations } = request.body as { loadout_id: string; locations: any[] };
 			const userId = request.user.id;
 
 			const client = await fastify.pg.connect();
@@ -120,14 +134,14 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 				// Build cargo profile from loadout
 				const cargoProfile: CargoProfile = {
 					has_firearms: items.some((item: any) => ['handgun', 'rifle', 'shotgun'].includes(item.category)),
-					firearm_platforms: [...new Set(items.filter((item: any) => item.platform).map((item: any) => item.platform))],
+					firearm_platforms: [...new Set(items.filter((item: any) => item.platform).map((item: any) => item.platform))] as any,
 					max_ammunition_capacity_by_platform: {
 						handgun: Math.max(0, ...items.filter((item: any) => item.platform === 'handgun').map((item: any) => item.ammunition_capacity || 0)),
 						rifle: Math.max(0, ...items.filter((item: any) => item.platform === 'rifle').map((item: any) => item.ammunition_capacity || 0)),
 						shotgun: Math.max(0, ...items.filter((item: any) => item.platform === 'shotgun').map((item: any) => item.ammunition_capacity || 0)),
 					},
 					has_nfa_items: items.some((item: any) => item.category === 'nfa_item'),
-					nfa_subtypes: [...new Set(items.filter((item: any) => item.nfa_subtype).map((item: any) => item.nfa_subtype))],
+					nfa_subtypes: [...new Set(items.filter((item: any) => item.nfa_subtype).map((item: any) => item.nfa_subtype))] as any,
 					has_concealed_carry_permit: false, // TODO: Get from user permits
 					permit_states: [], // TODO: Get from user permits
 					has_handgun: items.some((item: any) => item.category === 'handgun'),
@@ -211,7 +225,7 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 					const concealedCarryIssues = allAlerts.filter(a => a.category === 'concealed_carry');
 
 					if (magazineCapacityIssues.length > 0) {
-						const minCapacity = Math.min(...magazineCapacityIssues.map(a => a.details?.capacity_limit || 10));
+						const minCapacity = Math.min(...magazineCapacityIssues.map((a: any) => Number(a.details?.capacity_limit) || 10));
 						suggestions.push({
 							type: 'reduce_capacity',
 							description: `Consider using magazines with ${minCapacity} rounds or fewer`,
@@ -243,8 +257,8 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 						total_locations: locations.length,
 						compliant_locations: validationResults.filter(r => r.is_compliant).length,
 						non_compliant_locations: nonCompliantLocations.length,
-						total_critical_alerts: validationResults.reduce((sum, r) => sum + r.alerts.filter(a => a.severity === 'critical').length, 0),
-						total_warning_alerts: validationResults.reduce((sum, r) => sum + r.alerts.filter(a => a.severity === 'warning').length, 0),
+						total_critical_alerts: validationResults.reduce((sum, r) => sum + r.alerts.filter((a: any) => a.severity === 'critical').length, 0),
+						total_warning_alerts: validationResults.reduce((sum, r) => sum + r.alerts.filter((a: any) => a.severity === 'warning').length, 0),
 					},
 				};
 
@@ -298,7 +312,7 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 			const { origin, destination, waypoints, profile, avoid_polygons, cargo_profile } = request.body;
 
 			try {
-				const route = await calculateRoute({
+				const route = await hybridRouting.calculateRoute({
 					origin,
 					destination,
 					waypoints,
@@ -397,7 +411,7 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 
 			let routeResult: RouteResult;
 			try {
-				routeResult = await calculateRoute({
+				routeResult = await hybridRouting.calculateRoute({
 					origin,
 					destination,
 					waypoints,
@@ -530,14 +544,14 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 				// Build cargo profile from loadout
 				const cargoProfile: CargoProfile = {
 					has_firearms: items.some((item: any) => ['handgun', 'rifle', 'shotgun'].includes(item.category)),
-					firearm_platforms: [...new Set(items.filter((item: any) => item.platform).map((item: any) => item.platform))],
+					firearm_platforms: [...new Set(items.filter((item: any) => item.platform).map((item: any) => item.platform))] as any,
 					max_ammunition_capacity_by_platform: {
 						handgun: Math.max(0, ...items.filter((item: any) => item.platform === 'handgun').map((item: any) => item.ammunition_capacity || 0)),
 						rifle: Math.max(0, ...items.filter((item: any) => item.platform === 'rifle').map((item: any) => item.ammunition_capacity || 0)),
 						shotgun: Math.max(0, ...items.filter((item: any) => item.platform === 'shotgun').map((item: any) => item.ammunition_capacity || 0)),
 					},
 					has_nfa_items: items.some((item: any) => item.category === 'nfa_item'),
-					nfa_subtypes: [...new Set(items.filter((item: any) => item.nfa_subtype).map((item: any) => item.nfa_subtype))],
+					nfa_subtypes: [...new Set(items.filter((item: any) => item.nfa_subtype).map((item: any) => item.nfa_subtype))] as any,
 					has_concealed_carry_permit: false, // TODO: Get from user permits
 					permit_states: [], // TODO: Get from user permits
 					has_handgun: items.some((item: any) => item.category === 'handgun'),
@@ -586,7 +600,7 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 
 			} catch (error) {
 				const message = error instanceof Error ? error.message : 'Route alternatives generation failed';
-				fastify.log.error('Route alternatives error:', error);
+				fastify.log.error({ error: message }, 'Route alternatives error');
 				return reply.code(500).send({ error: message });
 			} finally {
 				client.release();
@@ -618,8 +632,8 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 			},
 		},
 		async (request, reply) => {
-			const { routeId } = request.params;
-			const { loadout_id, update_route = false } = request.body;
+			const { routeId } = request.params as { routeId: string };
+			const { loadout_id, update_route = false } = request.body as { loadout_id: string; update_route?: boolean };
 			const userId = request.user.id;
 
 			const client = await fastify.pg.connect();
@@ -665,14 +679,14 @@ export async function calculateRoutes(fastify: FastifyInstance) {
 				// Build cargo profile from loadout
 				const cargoProfile: CargoProfile = {
 					has_firearms: items.some((item: any) => ['handgun', 'rifle', 'shotgun'].includes(item.category)),
-					firearm_platforms: [...new Set(items.filter((item: any) => item.platform).map((item: any) => item.platform))],
+					firearm_platforms: [...new Set(items.filter((item: any) => item.platform).map((item: any) => item.platform))] as any,
 					max_ammunition_capacity_by_platform: {
 						handgun: Math.max(0, ...items.filter((item: any) => item.platform === 'handgun').map((item: any) => item.ammunition_capacity || 0)),
 						rifle: Math.max(0, ...items.filter((item: any) => item.platform === 'rifle').map((item: any) => item.ammunition_capacity || 0)),
 						shotgun: Math.max(0, ...items.filter((item: any) => item.platform === 'shotgun').map((item: any) => item.ammunition_capacity || 0)),
 					},
 					has_nfa_items: items.some((item: any) => item.category === 'nfa_item'),
-					nfa_subtypes: [...new Set(items.filter((item: any) => item.nfa_subtype).map((item: any) => item.nfa_subtype))],
+					nfa_subtypes: [...new Set(items.filter((item: any) => item.nfa_subtype).map((item: any) => item.nfa_subtype))] as any,
 					has_concealed_carry_permit: false, // TODO: Get from user permits
 					permit_states: [], // TODO: Get from user permits
 					has_handgun: items.some((item: any) => item.category === 'handgun'),

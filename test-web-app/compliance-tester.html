@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReguRoute - Text Location Tester</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .location-suggestions {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            position: absolute;
+            width: calc(100% - 24px);
+            z-index: 1000;
+        }
+        .suggestion-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-weight: 500;
+            display: none;
+        }
+        .status.success { background: #d5f4e6; color: #27ae60; }
+        .status.error { background: #ffeaa7; color: #e17055; }
+        .status.info { background: #dff2ff; color: #3498db; }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        .alert-item {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+        }
+        .alert-critical {
+            background: #ffeef0;
+            border-color: #e74c3c;
+            color: #c0392b;
+        }
+        .alert-warning {
+            background: #fff8dc;
+            border-color: #f39c12;
+            color: #d68910;
+        }
+        .alert-info {
+            background: #e8f4f8;
+            border-color: #3498db;
+            color: #2980b9;
+        }
+        .route-summary {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .coordinates-display {
+            font-family: monospace;
+            background: #f1f3f4;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛣️ ReguRoute Text Location Tester</h1>
+            <p>Enter city names and test firearm compliance for your route</p>
+        </div>
+
+        <form id="routeForm">
+            <div class="form-group">
+                <label for="origin">📍 Origin (e.g., "Dallas, TX" or "Dallas Texas")</label>
+                <div style="position: relative;">
+                    <input type="text" id="origin" placeholder="Enter starting city..." autocomplete="off">
+                    <div id="origin-suggestions" class="location-suggestions"></div>
+                    <div id="origin-coords" class="coordinates-display" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="destination">🎯 Destination (e.g., "Boston, MA" or "Boston Massachusetts")</label>
+                <div style="position: relative;">
+                    <input type="text" id="destination" placeholder="Enter destination city..." autocomplete="off">
+                    <div id="destination-suggestions" class="location-suggestions"></div>
+                    <div id="destination-coords" class="coordinates-display" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="cargo">🔫 Cargo Profile</label>
+                <select id="cargo">
+                    <option value="basic">Basic Handgun (10 round capacity)</option>
+                    <option value="rifle">Rifle + Handgun (15 round capacity)</option>
+                    <option value="ccw">Concealed Carry (with permit)</option>
+                    <option value="custom">Custom Configuration</option>
+                </select>
+            </div>
+
+            <div id="custom-cargo" style="display: none;">
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="has-handgun" checked> Has Handgun
+                    </label>
+                    <label>
+                        <input type="checkbox" id="has-rifle"> Has Rifle
+                    </label>
+                    <label>
+                        <input type="checkbox" id="has-ccw"> Has Concealed Carry Permit
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="capacity">Magazine Capacity</label>
+                    <input type="number" id="capacity" value="10" min="1" max="100">
+                </div>
+            </div>
+
+            <button type="submit" class="btn" id="analyzeBtn">🔍 Analyze Route Compliance</button>
+        </form>
+
+        <div id="status" class="status"></div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        // Major US cities with coordinates (road-network friendly)
+        const CITY_DATABASE = {
+            "dallas, tx": [-96.7836, 32.7767],
+            "dallas texas": [-96.7836, 32.7767],
+            "dallas": [-96.7836, 32.7767],
+            "boston, ma": [-71.0589, 42.3601],
+            "boston massachusetts": [-71.0589, 42.3601], 
+            "boston": [-71.0589, 42.3601],
+            "new york, ny": [-73.9857, 40.7484],
+            "new york city": [-73.9857, 40.7484],
+            "new york": [-73.9857, 40.7484],
+            "nyc": [-73.9857, 40.7484],
+            "los angeles, ca": [-118.2437, 34.0522],
+            "los angeles": [-118.2437, 34.0522],
+            "la": [-118.2437, 34.0522],
+            "chicago, il": [-87.6298, 41.8781],
+            "chicago illinois": [-87.6298, 41.8781],
+            "chicago": [-87.6298, 41.8781],
+            "houston, tx": [-95.3698, 29.7604],
+            "houston texas": [-95.3698, 29.7604],
+            "houston": [-95.3698, 29.7604],
+            "philadelphia, pa": [-75.1652, 39.9526],
+            "philadelphia": [-75.1652, 39.9526],
+            "phoenix, az": [-112.0740, 33.4484],
+            "phoenix": [-112.0740, 33.4484],
+            "san antonio, tx": [-98.4936, 29.4241],
+            "san antonio": [-98.4936, 29.4241],
+            "san diego, ca": [-117.1611, 32.7157],
+            "san diego": [-117.1611, 32.7157],
+            "san francisco, ca": [-122.4194, 37.7749],
+            "san francisco": [-122.4194, 37.7749],
+            "sf": [-122.4194, 37.7749],
+            "seattle, wa": [-122.3321, 47.6062],
+            "seattle": [-122.3321, 47.6062],
+            "denver, co": [-104.9903, 39.7392],
+            "denver": [-104.9903, 39.7392],
+            "atlanta, ga": [-84.3880, 33.7490],
+            "atlanta": [-84.3880, 33.7490],
+            "miami, fl": [-80.1918, 25.7617],
+            "miami": [-80.1918, 25.7617],
+            "las vegas, nv": [-115.1398, 36.1699],
+            "las vegas": [-115.1398, 36.1699],
+            "vegas": [-115.1398, 36.1699],
+            "nashville, tn": [-86.7816, 36.1627],
+            "nashville": [-86.7816, 36.1627],
+            "austin, tx": [-97.7431, 30.2672],
+            "austin": [-97.7431, 30.2672],
+            "kansas city, mo": [-94.5786, 39.0997],
+            "kansas city": [-94.5786, 39.0997],
+            "oklahoma city, ok": [-97.5164, 35.4676],
+            "oklahoma city": [-97.5164, 35.4676],
+            "orlando, fl": [-81.3792, 28.5383],
+            "orlando": [-81.3792, 28.5383],
+            "washington dc": [-77.0369, 38.9072],
+            "washington d.c.": [-77.0369, 38.9072],
+            "dc": [-77.0369, 38.9072],
+            "richmond, va": [-77.4360, 37.5407],
+            "richmond": [-77.4360, 37.5407],
+            "charlotte, nc": [-80.8431, 35.2271],
+            "charlotte": [-80.8431, 35.2271]
+        };
+
+        let selectedLocations = {
+            origin: null,
+            destination: null
+        };
+
+        // Setup autocomplete for location inputs
+        function setupLocationInput(inputId, suggestionsId, coordsId) {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(suggestionsId);
+            const coordsDisplay = document.getElementById(coordsId);
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                
+                if (query.length < 2) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+
+                const matches = Object.keys(CITY_DATABASE).filter(city => 
+                    city.includes(query)
+                ).slice(0, 8);
+
+                if (matches.length > 0) {
+                    suggestions.innerHTML = matches.map(city => 
+                        `<div class="suggestion-item" onclick="selectLocation('${inputId}', '${city}')">${city}</div>`
+                    ).join('');
+                    suggestions.style.display = 'block';
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+                    suggestions.style.display = 'none';
+                }
+            });
+        }
+
+        function selectLocation(inputId, cityName) {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(inputId.replace('origin', 'origin-suggestions').replace('destination', 'destination-suggestions'));
+            const coordsDisplay = document.getElementById(inputId.replace('origin', 'origin-coords').replace('destination', 'destination-coords'));
+            
+            input.value = cityName;
+            suggestions.style.display = 'none';
+            
+            const coords = CITY_DATABASE[cityName.toLowerCase()];
+            if (coords) {
+                const locationType = inputId === 'origin' ? 'origin' : 'destination';
+                selectedLocations[locationType] = {
+                    name: cityName,
+                    coordinates: coords
+                };
+                
+                coordsDisplay.textContent = `Coordinates: ${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`;
+                coordsDisplay.style.display = 'block';
+            }
+        }
+
+        // Setup cargo profile selector
+        document.getElementById('cargo').addEventListener('change', (e) => {
+            const customDiv = document.getElementById('custom-cargo');
+            customDiv.style.display = e.target.value === 'custom' ? 'block' : 'none';
+        });
+
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        function getCargoProfile() {
+            const cargoType = document.getElementById('cargo').value;
+            
+            const profiles = {
+                basic: {
+                    has_firearms: true,
+                    has_handgun: true,
+                    ammunition_capacity: 10
+                },
+                rifle: {
+                    has_firearms: true,
+                    has_handgun: true,
+                    has_rifle: true,
+                    ammunition_capacity: 15
+                },
+                ccw: {
+                    has_firearms: true,
+                    has_handgun: true,
+                    has_concealed_carry_permit: true,
+                    permit_holder_state: 'TX',
+                    ammunition_capacity: 10
+                },
+                custom: {
+                    has_firearms: true,
+                    has_handgun: document.getElementById('has-handgun').checked,
+                    has_rifle: document.getElementById('has-rifle').checked,
+                    has_concealed_carry_permit: document.getElementById('has-ccw').checked,
+                    permit_holder_state: document.getElementById('has-ccw').checked ? 'TX' : undefined,
+                    ammunition_capacity: parseInt(document.getElementById('capacity').value)
+                }
+            };
+
+            return profiles[cargoType];
+        }
+
+        function displayResults(analysis) {
+            const resultsDiv = document.getElementById('results');
+            
+            const summary = analysis.route_summary;
+            let html = `
+                <div class="route-summary">
+                    <h3>📊 Route Analysis Summary</h3>
+                    <p><strong>States Crossed:</strong> ${summary.states_crossed}</p>
+                    <p><strong>Cities with Ordinances:</strong> ${summary.cities_with_ordinances}</p>
+                    <p><strong>Route Feasibility:</strong> <span style="color: ${getFeasibilityColor(summary.route_feasibility)}">${summary.route_feasibility.toUpperCase()}</span></p>
+                    <p><strong>Compliance Score:</strong> ${summary.overall_compliance_score}/100</p>
+                    <p><strong>Alerts:</strong> ${summary.critical_alerts} Critical, ${summary.warning_alerts} Warning, ${summary.info_alerts} Info</p>
+                </div>
+            `;
+
+            if (analysis.unified_alerts && analysis.unified_alerts.length > 0) {
+                html += '<h3>🚨 Top Priority Alerts</h3>';
+                analysis.unified_alerts.slice(0, 10).forEach(alert => {
+                    html += `
+                        <div class="alert-item alert-${alert.severity}">
+                            <strong>${alert.jurisdiction} (${alert.postal_code})</strong><br>
+                            <strong>${alert.category}:</strong> ${alert.short_description}<br>
+                            <em>Priority Score: ${alert.priority_score}</em>
+                        </div>
+                    `;
+                });
+            }
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+
+        function getFeasibilityColor(feasibility) {
+            const colors = {
+                recommended: '#27ae60',
+                caution: '#f39c12', 
+                high_risk: '#e74c3c',
+                avoid: '#c0392b'
+            };
+            return colors[feasibility] || '#7f8c8d';
+        }
+
+        // Form submission
+        document.getElementById('routeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!selectedLocations.origin || !selectedLocations.destination) {
+                showStatus('Please select both origin and destination locations', 'error');
+                return;
+            }
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '🔄 Analyzing...';
+            
+            showStatus('Analyzing route compliance...', 'info');
+
+            try {
+                const routeGeometry = {
+                    type: 'LineString',
+                    coordinates: [
+                        selectedLocations.origin.coordinates,
+                        selectedLocations.destination.coordinates
+                    ]
+                };
+
+                const cargoProfile = getCargoProfile();
+
+                const response = await fetch('http://localhost:3000/api/compliance/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        route_geometry: routeGeometry,
+                        cargo_profile: cargoProfile,
+                        analysis_options: {
+                            include_nfa: true,
+                            include_reciprocity: true,
+                            include_local_ordinances: true,
+                            generate_avoidance_zones: true
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+
+                const analysis = await response.json();
+                showStatus('✅ Analysis complete!', 'success');
+                displayResults(analysis);
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyze Route Compliance';
+            }
+        });
+
+        // Initialize autocomplete
+        setupLocationInput('origin', 'origin-suggestions', 'origin-coords');
+        setupLocationInput('destination', 'destination-suggestions', 'destination-coords');
+        
+        console.log('🚀 ReguRoute Text Location Tester Ready!');
+        console.log('📍 Available cities:', Object.keys(CITY_DATABASE).length);
+    </script>
+</body>
+</html>

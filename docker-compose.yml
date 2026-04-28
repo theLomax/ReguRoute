@@ -31,6 +31,7 @@ services:
       - ./ors/config/ors-config.yml:/home/ors/ors-config.yml:ro
     environment:
       - REBUILD_GRAPHS=False
+      - CONTAINER_LOG_LEVEL=INFO
       - XMS=2g
       - XMX=6g
       - ORS_CONFIG_LOCATION=/home/ors/ors-config.yml

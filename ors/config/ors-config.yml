@@ -17,7 +17,7 @@ ors:
   engine:
     profile_default:
       build:
-        source_file: /home/ors/files/us-latest.osm.pbf
+        source_file: /home/ors/files/us-northeast-latest.osm.pbf
       service:
         maximum_distance: 5000000
         maximum_distance_dynamic_weights: 5000000
@@ -38,12 +38,12 @@ ors:
           methods:
             lm:
               enabled: true
-              threads: 1
+              threads: 2
               weightings: recommended,shortest
               landmarks: 16
             core:
               enabled: true
-              threads: 1
+              threads: 2
               weightings: recommended,shortest
         execution:
           methods:

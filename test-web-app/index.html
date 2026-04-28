@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReguRoute Test App</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { color: #2c3e50; margin-top: 0; }
+        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+        h3 { color: #7f8c8d; }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 4px;
+            margin: 16px 0;
+        }
+        .status.success { background: #d5f4e6; border: 1px solid #27ae60; color: #27ae60; }
+        .status.error { background: #ffeaa7; border: 1px solid #e17055; color: #e17055; }
+        .status.info { background: #dff2ff; border: 1px solid #3498db; color: #3498db; }
+        .results {
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 16px;
+        }
+        .alert {
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .alert.critical {
+            background: #ffe6e6;
+            border-left-color: #e74c3c;
+            color: #c0392b;
+        }
+        .alert.warning {
+            background: #fff8dc;
+            border-left-color: #f39c12;
+            color: #d68910;
+        }
+        .alert.info {
+            background: #e8f4f8;
+            border-left-color: #3498db;
+            color: #2980b9;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        .coord-input {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .suggestions-container {
+            position: relative;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .suggestions-container.show {
+            display: block;
+        }
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .location-input {
+            position: relative;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 16px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .equipment-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+        .equipment-item h4 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ ReguRoute Test Application</h1>
+        <p>Test the rule-based compliance system and route planning functionality</p>
+        
+        <div id="status" class="status info">
+            Ready to test - Backend: <span id="backend-status">Checking...</span>
+        </div>
+    </div>
+
+    <div class="grid">
+        <!-- Equipment Testing -->
+        <div class="container">
+            <h2>🔫 Equipment Compliance Test</h2>
+            <p>Test NY regulations against different firearm configurations</p>
+            
+            <div class="form-group">
+                <label>Equipment Type:</label>
+                <select id="equipmentType">
+                    <option value="rifle">Rifle</option>
+                    <option value="handgun">Handgun</option>
+                    <option value="shotgun">Shotgun</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Features (check all that apply):</label>
+                <div id="features">
+                    <label><input type="checkbox" value="pistol_grip"> Pistol Grip</label><br>
+                    <label><input type="checkbox" value="flash_suppressor"> Flash Suppressor</label><br>
+                    <label><input type="checkbox" value="folding_stock"> Folding Stock</label><br>
+                    <label><input type="checkbox" value="telescoping_stock"> Telescoping Stock</label><br>
+                    <label><input type="checkbox" value="bayonet_lug"> Bayonet Lug</label><br>
+                    <label><input type="checkbox" value="featureless"> Featureless (Compliant)</label><br>
+                    <label><input type="checkbox" value="fixed_magazine"> Fixed Magazine</label><br>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Magazine Capacity:</label>
+                <input type="number" id="magazineCapacity" value="15" min="1" max="100">
+            </div>
+
+            <div class="form-group">
+                <label><input type="checkbox" id="detachableMag" checked> Accepts Detachable Magazine</label>
+            </div>
+
+            <button onclick="testEquipmentCompliance()">Test NY Compliance</button>
+            <button onclick="testEquipmentPresets()">Test Preset Scenarios</button>
+        </div>
+
+        <!-- Route Testing -->
+        <div class="container">
+            <h2>🗺️ Route Planning Test</h2>
+            <p>Test route compliance with different locations</p>
+            
+            <div class="form-group">
+                <label>Origin Location:</label>
+                <div class="location-input">
+                    <input type="text" id="originLocation" placeholder="New York, NY" value="New York, NY" autocomplete="off">
+                    <div id="originSuggestions" class="suggestions-container"></div>
+                </div>
+                <small>Selected: <span id="originDisplay">New York City, NY (40.7128, -74.0060)</span></small>
+            </div>
+
+            <div class="form-group">
+                <label>Destination Location:</label>
+                <div class="location-input">
+                    <input type="text" id="destLocation" placeholder="Boston, MA" value="Boston, MA" autocomplete="off">
+                    <div id="destSuggestions" class="suggestions-container"></div>
+                </div>
+                <small>Selected: <span id="destDisplay">Boston, MA (42.3584, -71.0598)</span></small>
+            </div>
+
+            <div class="form-group">
+                <label>Test Loadout:</label>
+                <select id="testLoadout">
+                    <option value="standard_ar">Standard AR-15 (30rd mag, features)</option>
+                    <option value="ny_compliant">NY-Compliant Rifle (10rd, featureless)</option>
+                    <option value="handgun_only">Handgun Only (15rd)</option>
+                    <option value="mixed_loadout">Mixed Loadout</option>
+                </select>
+            </div>
+
+            <button onclick="testRouteCompliance()">Test Route</button>
+            <button onclick="testLocationValidation()">Test Location Validation</button>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="container">
+        <h2>📊 Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        // Location data with coordinates
+        let selectedOrigin = { name: "New York, NY", lat: 40.7128, lng: -74.0060 };
+        let selectedDestination = { name: "Boston, MA", lat: 42.3584, lng: -71.0598 };
+
+        // Debounce timer for geocoding
+        let geocodeTimeout = null;
+
+        // Photon geocoding API
+        async function searchLocations(query) {
+            if (query.length < 2) return [];
+            
+            try {
+                const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=8&lang=en&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`;
+                const response = await fetch(url);
+                
+                if (!response.ok) throw new Error('Geocoding failed');
+                
+                const data = await response.json();
+                
+                // Filter to US locations and format
+                return data.features
+                    .filter(f => f.properties.countrycode === 'US')
+                    .map(f => ({
+                        name: f.properties.name || f.properties.city || '',
+                        state: f.properties.state || '',
+                        lat: f.geometry.coordinates[1],
+                        lng: f.geometry.coordinates[0],
+                        display: `${f.properties.name || f.properties.city || ''}, ${f.properties.state || ''}`
+                    }))
+                    .filter(loc => loc.name && loc.state)
+                    .slice(0, 5);
+            } catch (error) {
+                console.warn('Geocoding error:', error);
+                return [];
+            }
+        }
+
+        // Setup autocomplete for location inputs
+        function setupLocationAutocomplete(inputId, suggestionsId, onSelect) {
+            const input = document.getElementById(inputId);
+            const suggestionsContainer = document.getElementById(suggestionsId);
+            
+            input.addEventListener('input', async (e) => {
+                const query = e.target.value.trim();
+                
+                if (geocodeTimeout) clearTimeout(geocodeTimeout);
+                
+                if (query.length < 2) {
+                    suggestionsContainer.classList.remove('show');
+                    return;
+                }
+                
+                // Show loading
+                suggestionsContainer.innerHTML = '<div class="suggestion-item loading">Searching locations...</div>';
+                suggestionsContainer.classList.add('show');
+                
+                geocodeTimeout = setTimeout(async () => {
+                    const suggestions = await searchLocations(query);
+                    
+                    if (suggestions.length === 0) {
+                        suggestionsContainer.innerHTML = '<div class="suggestion-item">No locations found</div>';
+                        return;
+                    }
+                    
+                    suggestionsContainer.innerHTML = suggestions
+                        .map(loc => `<div class="suggestion-item" data-lat="${loc.lat}" data-lng="${loc.lng}" data-name="${loc.display}">${loc.display}</div>`)
+                        .join('');
+                    
+                    // Add click handlers
+                    suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                        if (item.dataset.lat) {
+                            item.addEventListener('click', () => {
+                                const location = {
+                                    name: item.dataset.name,
+                                    lat: parseFloat(item.dataset.lat),
+                                    lng: parseFloat(item.dataset.lng)
+                                };
+                                onSelect(location);
+                                input.value = location.name;
+                                suggestionsContainer.classList.remove('show');
+                            });
+                        }
+                    });
+                }, 300);
+            });
+            
+            // Hide suggestions on blur
+            input.addEventListener('blur', () => {
+                setTimeout(() => suggestionsContainer.classList.remove('show'), 200);
+            });
+            
+            input.addEventListener('focus', () => {
+                if (input.value.length >= 2) {
+                    input.dispatchEvent(new Event('input'));
+                }
+            });
+        }
+
+        // Update display when location is selected
+        function updateOriginDisplay(location) {
+            selectedOrigin = location;
+            document.getElementById('originDisplay').textContent = `${location.name} (${location.lat.toFixed(4)}, ${location.lng.toFixed(4)})`;
+        }
+
+        function updateDestinationDisplay(location) {
+            selectedDestination = location;
+            document.getElementById('destDisplay').textContent = `${location.name} (${location.lat.toFixed(4)}, ${location.lng.toFixed(4)})`;
+        }
+
+        // Check backend status on load
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                document.getElementById('backend-status').textContent = data.status === 'ok' ? '✅ Connected' : '❌ Error';
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').innerHTML = `✅ Backend Connected - Ready to test functionality`;
+            } catch (error) {
+                document.getElementById('backend-status').textContent = '❌ Offline';
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML = `❌ Backend Offline - Make sure Docker services are running`;
+            }
+        }
+
+        // Test equipment compliance using rule engine
+        async function testEquipmentCompliance() {
+            const equipmentType = document.getElementById('equipmentType').value;
+            const capacity = parseInt(document.getElementById('magazineCapacity').value);
+            const detachableMag = document.getElementById('detachableMag').checked;
+            
+            const features = Array.from(document.querySelectorAll('#features input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+
+            const mockCargoProfile = {
+                has_firearms: true,
+                has_rifle: equipmentType === 'rifle',
+                has_handgun: equipmentType === 'handgun', 
+                has_shotgun: equipmentType === 'shotgun',
+                ammunition_capacity: capacity,
+                firearm_platforms: [equipmentType],
+                max_ammunition_capacity_by_platform: {
+                    [equipmentType]: capacity,
+                    rifle: equipmentType === 'rifle' ? capacity : 0,
+                    handgun: equipmentType === 'handgun' ? capacity : 0,
+                    shotgun: equipmentType === 'shotgun' ? capacity : 0
+                }
+            };
+
+            showResults(`
+                <h3>🧪 Testing Equipment Configuration</h3>
+                <div class="equipment-item">
+                    <h4>${equipmentType.charAt(0).toUpperCase() + equipmentType.slice(1)}</h4>
+                    <p><strong>Features:</strong> ${features.length ? features.join(', ') : 'None'}</p>
+                    <p><strong>Capacity:</strong> ${capacity} rounds</p>
+                    <p><strong>Detachable Magazine:</strong> ${detachableMag ? 'Yes' : 'No'}</p>
+                </div>
+                <p>🔍 Testing against NY regulations...</p>
+            `);
+
+            try {
+                // Test basic route calculation with cargo profile
+                const response = await fetch(`${API_BASE}/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin: { lat: 40.7128, lng: -74.0060 }, // NYC
+                        destination: { lat: 42.3584, lng: -71.0598 }, // Boston
+                        cargo_profile: mockCargoProfile
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    showResults(`<div class="alert critical">❌ API Error: ${data.error}</div>`);
+                    return;
+                }
+
+                displayComplianceResults(data.analysis, {
+                    type: equipmentType,
+                    features: features,
+                    capacity: capacity,
+                    detachable: detachableMag
+                });
+
+            } catch (error) {
+                showResults(`<div class="alert critical">❌ Request failed: ${error.message}</div>`);
+            }
+        }
+
+        // Test preset equipment scenarios
+        async function testEquipmentPresets() {
+            const presets = [
+                {
+                    name: "Standard AR-15 (Restricted in NY)",
+                    type: "rifle",
+                    features: ["pistol_grip", "flash_suppressor"],
+                    capacity: 30,
+                    detachable: true
+                },
+                {
+                    name: "NY-Compliant Featureless Rifle",
+                    type: "rifle", 
+                    features: ["featureless"],
+                    capacity: 10,
+                    detachable: true
+                },
+                {
+                    name: "Fixed Magazine Rifle",
+                    type: "rifle",
+                    features: ["fixed_magazine", "pistol_grip"],
+                    capacity: 10,
+                    detachable: false
+                },
+                {
+                    name: "Standard Glock 17 (High Capacity)",
+                    type: "handgun",
+                    features: [],
+                    capacity: 17,
+                    detachable: true
+                },
+                {
+                    name: "NY-Compliant Handgun",
+                    type: "handgun",
+                    features: [],
+                    capacity: 10,
+                    detachable: true
+                }
+            ];
+
+            showResults('<h3>🧪 Testing Preset Equipment Scenarios</h3>');
+
+            for (const preset of presets) {
+                await testPresetScenario(preset);
+            }
+        }
+
+        async function testPresetScenario(preset) {
+            const mockCargoProfile = {
+                has_firearms: true,
+                has_rifle: preset.type === 'rifle',
+                has_handgun: preset.type === 'handgun',
+                has_shotgun: preset.type === 'shotgun',
+                ammunition_capacity: preset.capacity,
+                firearm_platforms: [preset.type],
+                max_ammunition_capacity_by_platform: {
+                    [preset.type]: preset.capacity,
+                    rifle: preset.type === 'rifle' ? preset.capacity : 0,
+                    handgun: preset.type === 'handgun' ? preset.capacity : 0,
+                    shotgun: preset.type === 'shotgun' ? preset.capacity : 0
+                }
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin: { lat: 40.7128, lng: -74.0060 }, // NYC  
+                        destination: { lat: 42.3584, lng: -71.0598 }, // Boston
+                        cargo_profile: mockCargoProfile
+                    })
+                });
+
+                const data = await response.json();
+                
+                appendResults(`
+                    <div class="equipment-item">
+                        <h4>${preset.name}</h4>
+                        <p><strong>Type:</strong> ${preset.type} | <strong>Features:</strong> ${preset.features.join(', ') || 'None'} | <strong>Capacity:</strong> ${preset.capacity}rd</p>
+                        ${formatAlerts(data.analysis?.alerts || [])}
+                    </div>
+                `);
+
+            } catch (error) {
+                appendResults(`
+                    <div class="equipment-item">
+                        <h4>${preset.name}</h4>
+                        <div class="alert critical">❌ Test failed: ${error.message}</div>
+                    </div>
+                `);
+            }
+        }
+
+        // Test route compliance
+        async function testRouteCompliance() {
+            const loadout = document.getElementById('testLoadout').value;
+
+            const loadoutProfiles = {
+                standard_ar: {
+                    has_firearms: true,
+                    has_rifle: true,
+                    ammunition_capacity: 30,
+                    firearm_platforms: ['rifle'],
+                    max_ammunition_capacity_by_platform: { rifle: 30, handgun: 0, shotgun: 0 }
+                },
+                ny_compliant: {
+                    has_firearms: true,
+                    has_rifle: true,
+                    ammunition_capacity: 10,
+                    firearm_platforms: ['rifle'],
+                    max_ammunition_capacity_by_platform: { rifle: 10, handgun: 0, shotgun: 0 }
+                },
+                handgun_only: {
+                    has_firearms: true,
+                    has_handgun: true,
+                    ammunition_capacity: 15,
+                    firearm_platforms: ['handgun'],
+                    max_ammunition_capacity_by_platform: { rifle: 0, handgun: 15, shotgun: 0 }
+                },
+                mixed_loadout: {
+                    has_firearms: true,
+                    has_rifle: true,
+                    has_handgun: true,
+                    ammunition_capacity: 30,
+                    firearm_platforms: ['rifle', 'handgun'],
+                    max_ammunition_capacity_by_platform: { rifle: 30, handgun: 17, shotgun: 0 }
+                }
+            };
+
+            showResults(`
+                <h3>🗺️ Testing Route: ${selectedOrigin.name} → ${selectedDestination.name}</h3>
+                <p><strong>Loadout:</strong> ${loadout.replace('_', ' ')}</p>
+                <p>🔍 Calculating route and checking regulations...</p>
+            `);
+
+            try {
+                const response = await fetch(`${API_BASE}/calculate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        origin: { lat: selectedOrigin.lat, lng: selectedOrigin.lng },
+                        destination: { lat: selectedDestination.lat, lng: selectedDestination.lng },
+                        cargo_profile: loadoutProfiles[loadout]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    showResults(`<div class="alert critical">❌ API Error: ${data.error}</div>`);
+                    return;
+                }
+
+                displayRouteResults(data);
+
+            } catch (error) {
+                showResults(`<div class="alert critical">❌ Request failed: ${error.message}</div>`);
+            }
+        }
+
+        // Helper functions
+        function showResults(html) {
+            document.getElementById('results').innerHTML = html;
+        }
+
+        function appendResults(html) {
+            document.getElementById('results').innerHTML += html;
+        }
+
+        function displayComplianceResults(analysis, equipment) {
+            if (!analysis) {
+                showResults('<div class="alert error">❌ No analysis data received</div>');
+                return;
+            }
+
+            const alerts = analysis.alerts || [];
+            const summary = analysis.summary || {};
+
+            let html = `
+                <h3>📊 Compliance Analysis Results</h3>
+                <div class="equipment-item">
+                    <h4>Equipment Tested: ${equipment.type}</h4>
+                    <p><strong>Features:</strong> ${equipment.features.join(', ') || 'None'}</p>
+                    <p><strong>Capacity:</strong> ${equipment.capacity} rounds</p>
+                    <p><strong>Detachable Magazine:</strong> ${equipment.detachable ? 'Yes' : 'No'}</p>
+                </div>
+
+                <h4>🚨 Regulation Alerts:</h4>
+                ${formatAlerts(alerts)}
+
+                <h4>📈 Summary:</h4>
+                <p><strong>Jurisdictions Crossed:</strong> ${analysis.jurisdictions_crossed?.length || 0}</p>
+                <p><strong>Critical Alerts:</strong> ${summary.critical_alerts || 0}</p>
+                <p><strong>Warning Alerts:</strong> ${summary.warning_alerts || 0}</p>
+                <p><strong>Info Alerts:</strong> ${summary.info_alerts || 0}</p>
+
+                <h4>🗺️ Jurisdictions:</h4>
+                <p>${analysis.jurisdictions_crossed?.join(', ') || 'None detected'}</p>
+            `;
+
+            showResults(html);
+        }
+
+        function displayRouteResults(data) {
+            const route = data.route || {};
+            const analysis = data.analysis || {};
+            const alerts = analysis.alerts || [];
+
+            let html = `
+                <h3>🗺️ Route Analysis Results</h3>
+                
+                <h4>📏 Route Details:</h4>
+                <p><strong>Distance:</strong> ${route.summary?.distance_miles || '?'} miles (${route.summary?.distance_km || '?'} km)</p>
+                <p><strong>Duration:</strong> ${route.summary?.duration_minutes || '?'} minutes</p>
+                
+                <h4>🚨 Regulation Alerts:</h4>
+                ${formatAlerts(alerts)}
+
+                <h4>🗺️ Jurisdictions Crossed:</h4>
+                <p>${analysis.jurisdictions_crossed?.join(', ') || 'None detected'}</p>
+
+                <h4>📊 Compliance Summary:</h4>
+                <p><strong>Critical Alerts:</strong> ${analysis.summary?.critical_alerts || 0}</p>
+                <p><strong>Warning Alerts:</strong> ${analysis.summary?.warning_alerts || 0}</p>
+                <p><strong>Info Alerts:</strong> ${analysis.summary?.info_alerts || 0}</p>
+            `;
+
+            showResults(html);
+        }
+
+        function formatAlerts(alerts) {
+            if (!alerts || alerts.length === 0) {
+                return '<div class="alert info">✅ No regulation conflicts detected</div>';
+            }
+
+            return alerts.map(alert => `
+                <div class="alert ${alert.severity}">
+                    <strong>${alert.jurisdiction} (${alert.postal_code})</strong> - ${alert.category}<br>
+                    ${alert.message}
+                    ${alert.citation ? `<br><small>Citation: ${alert.citation}</small>` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Test location validation 
+        async function testLocationValidation() {
+            showResults('<h3>📍 Testing Location Validation (Mock)</h3><p>This would test specific location compliance...</p>');
+            
+            // Mock test since we don't have auth setup for this endpoint
+            const mockResults = `
+                <div class="alert info">ℹ️ Location validation requires authentication - showing mock results:</div>
+                <div class="alert critical">
+                    <strong>New York, NY</strong> - Magazine Capacity<br>
+                    Magazine capacity of 30 rounds exceeds NY limit of 10 rounds
+                </div>
+                <div class="alert warning">
+                    <strong>Massachusetts, MA</strong> - Firearm Registration<br>
+                    MA requires firearm registration for possession
+                </div>
+            `;
+            
+            appendResults(mockResults);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkBackendStatus();
+            
+            // Setup location autocomplete
+            setupLocationAutocomplete('originLocation', 'originSuggestions', updateOriginDisplay);
+            setupLocationAutocomplete('destLocation', 'destSuggestions', updateDestinationDisplay);
+        });
+    </script>
+</body>
+</html>

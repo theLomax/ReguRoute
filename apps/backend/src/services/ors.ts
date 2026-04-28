@@ -1,7 +1,9 @@
 /**
- * OpenRouteService (ORS) API client
- * Handles route calculation requests to the local ORS instance
+ * Hybrid Routing Service
+ * Handles route calculation with fallback to external services for complete US coverage
  */
+
+import { externalRouting } from './external-routing.js';
 
 // ORS API base URL - uses Docker service name in container network
 const ORS_BASE_URL = process.env.ORS_URL || 'http://ors-app:8082';
